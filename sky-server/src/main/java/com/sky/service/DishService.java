@@ -1,5 +1,7 @@
 package com.sky.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.sky.dto.DishDTO;
@@ -20,4 +22,11 @@ public interface DishService {
      * @return
      */
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
+
+    /**
+     * 菜品批量删除
+     * @param ids
+     */
+    public void deleteBatch(List<Long> ids);
+    
 }
