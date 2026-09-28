@@ -72,8 +72,8 @@ public class OrderServiceImpl implements OrderService{
     @Value("${sky.shop.address}")
     private String shopAddress;
 
-    @Value("${sky.baidu.ak}")
-    private String ak;
+    @Value("${sky.amap.key}")
+    private String amapKey;
 
     /**    (non-Javadoc)
      * 用户下单
@@ -530,55 +530,51 @@ public class OrderServiceImpl implements OrderService{
         Map map = new HashMap();
         map.put("address",shopAddress);
         map.put("output","json");
-        map.put("ak",ak);
+        map.put("key",amapKey);
 
         //获取店铺的经纬度坐标
-        String shopCoordinate = HttpClientUtil.doGet("https://api.map.baidu.com/geocoding/v3", map);
+        String shopCoordinate = HttpClientUtil.doGet("https://restapi.amap.com/v3/geocode/geo", map);
 
         JSONObject jsonObject = JSON.parseObject(shopCoordinate);
-        if(!jsonObject.getString("status").equals("0")){
+        if(!jsonObject.getString("status").equals("1")){
             throw new OrderBusinessException("店铺地址解析失败");
         }
 
         //数据解析
-        JSONObject location = jsonObject.getJSONObject("result").getJSONObject("location");
-        String lat = location.getString("lat");
-        String lng = location.getString("lng");
+        JSONArray geocodes = jsonObject.getJSONArray("geocodes");
         //店铺经纬度坐标
-        String shopLngLat = lat + "," + lng;
+        String shopLngLat = geocodes.getJSONObject(0).getString("location");
 
         map.put("address",address);
         //获取用户收货地址的经纬度坐标
-        String userCoordinate = HttpClientUtil.doGet("https://api.map.baidu.com/geocoding/v3", map);
+        String userCoordinate = HttpClientUtil.doGet("https://restapi.amap.com/v3/geocode/geo", map);
 
         jsonObject = JSON.parseObject(userCoordinate);
-        if(!jsonObject.getString("status").equals("0")){
+        if(!jsonObject.getString("status").equals("1")){
             throw new OrderBusinessException("收货地址解析失败");
         }
 
         //数据解析
-        location = jsonObject.getJSONObject("result").getJSONObject("location");
-        lat = location.getString("lat");
-        lng = location.getString("lng");
+        geocodes = jsonObject.getJSONArray("geocodes");
         //用户收货地址经纬度坐标
-        String userLngLat = lat + "," + lng;
+        String userLngLat = geocodes.getJSONObject(0).getString("location");
 
+        map.remove("address");
         map.put("origin",shopLngLat);
         map.put("destination",userLngLat);
-        map.put("steps_info","0");
 
         //路线规划
-        String json = HttpClientUtil.doGet("https://api.map.baidu.com/directionlite/v1/driving", map);
+        String json = HttpClientUtil.doGet("https://restapi.amap.com/v5/direction/driving", map);
 
         jsonObject = JSON.parseObject(json);
-        if(!jsonObject.getString("status").equals("0")){
+        if(!jsonObject.getString("status").equals("1")){
             throw new OrderBusinessException("配送路线规划失败");
         }
 
         //数据解析
-        JSONObject result = jsonObject.getJSONObject("result");
-        JSONArray jsonArray = (JSONArray) result.get("routes");
-        Integer distance = (Integer) ((JSONObject) jsonArray.get(0)).get("distance");
+        JSONObject route = jsonObject.getJSONObject("route");
+        JSONArray paths = route.getJSONArray("paths");
+        Integer distance = paths.getJSONObject(0).getInteger("distance");
 
         if(distance > 5000){
             //配送距离超过5000米

@@ -56,6 +56,6 @@ sky:
     notifyUrl: ${sky.wechat.notifyUrl}
     refundNotifyUrl: ${sky.wechat.refundNotifyUrl}
   shop:
-    address: 北京市海淀区上地十街10号
-  baidu:
-    ak: ${BAIDU_AK:}
+    address: 北京市朝阳区新街大道1号
+  amap:
+    key: ${AMAP_KEY:}
