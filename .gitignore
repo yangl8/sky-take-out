@@ -13,3 +13,7 @@
 *.bak
 report.*.json
 .DS_Store
+/mini-program/node_modules/
+/mini-program/unpackage/
+/mini-program/project.private.config.json
+/mini-program/.hbuilderx/
