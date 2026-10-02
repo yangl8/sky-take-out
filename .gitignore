@@ -8,3 +8,8 @@
 .env
 .vscode/*
 !.vscode/launch.json
+/admin-web/node_modules*/
+/admin-web/dist/
+*.bak
+report.*.json
+.DS_Store
