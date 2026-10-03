@@ -16,12 +16,15 @@ import '@/styles/newRJWMsystem.scss'
 import '@/styles/icon/iconfont.css'
 import App from '@/App.vue'
 import store from '@/store'
+import i18n from '@/i18n'
 import router from '@/router'
 import '@/icons/components'
 import '@/permission'
 import { checkProcessEnv } from '@/utils/common'
 
-Vue.use(ElementUI)
+Vue.use(ElementUI, {
+  i18n: (key: string, value: any) => i18n.t(key, value)
+})
 Vue.use(VueAreaLinkage)
 Vue.use(SvgIcon, {
   'tagName': 'svg-icon',
@@ -38,6 +41,7 @@ Router.prototype.push = function push(location) {
 }
 Vue.prototype.$echarts = echarts
 new Vue({
+  i18n,
   router,
   store,
   'render': (h) => h(App)
