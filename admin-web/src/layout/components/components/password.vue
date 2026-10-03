@@ -1,42 +1,42 @@
 <template>
   <el-dialog
-    title="修改密码"
+    :title="String($t('nav.password'))"
     :visible.sync="dialogFormVisible"
     width="568px"
     class="pwdCon"
     @close="handlePwdClose()"
   >
-    <el-form :model="form" label-width="85px" :rules="rules" ref="form">
-      <el-form-item label="原始密码：" prop="oldPassword">
+    <el-form :model="form" label-width="170px" :rules="rules" ref="form">
+      <el-form-item :label="String($t('password.old'))" prop="oldPassword">
         <el-input
           v-model="form.oldPassword"
           type="password"
-          placeholder="请输入"
+          :placeholder="String($t('common.enter'))"
         ></el-input>
       </el-form-item>
-      <el-form-item label="新密码：" prop="newPassword">
+      <el-form-item :label="String($t('password.new'))" prop="newPassword">
         <el-input
           v-model="form.newPassword"
           type="password"
-          placeholder="6 - 20位密码，数字或字母，区分大小写"
+          :placeholder="String($t('password.format'))"
         ></el-input>
       </el-form-item>
-      <el-form-item label="确认密码：" prop="affirmPassword">
+      <el-form-item :label="String($t('password.confirm'))" prop="affirmPassword">
         <el-input
           v-model="form.affirmPassword"
           type="password"
-          placeholder="请输入"
+          :placeholder="String($t('common.enter'))"
         ></el-input>
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
-      <el-button @click="handlePwdClose()">取 消</el-button>
-      <el-button type="primary" @click="handleSave()">保 存</el-button>
+      <el-button @click="handlePwdClose()">{{ $t('common.cancel') }}</el-button>
+      <el-button type="primary" @click="handleSave()">{{ $t('common.save') }}</el-button>
     </div>
   </el-dialog>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 import { Form as ElForm, Input } from 'element-ui'
 // 接口
 import { editPassword } from '@/api/users'
@@ -48,18 +48,18 @@ export default class extends Vue {
   private validatePwd = (rule: any, value: any, callback: Function) => {
     const reg = /^[0-9A-Za-z]{6,20}$/
     if (!value) {
-      callback(new Error('请输入'))
+      callback(new Error(String(this.$t('common.enter'))))
     } else if (!reg.test(value)) {
-      callback(new Error('6 - 20位密码，数字或字母，区分大小写'))
+      callback(new Error(String(this.$t('password.format'))))
     } else {
       callback()
     }
   }
   private validatePass2 = (rule, value, callback) => {
     if (!value) {
-      callback(new Error('请再次输入密码'))
+      callback(new Error(String(this.$t('password.repeat'))))
     } else if (value !== this.form.newPassword) {
-      callback(new Error('密码不一致，请重新输入密码'))
+      callback(new Error(String(this.$t('password.mismatch'))))
     } else {
       callback()
     }
@@ -71,6 +71,12 @@ export default class extends Vue {
   }
   private form = {} as any
   private affirmPassword = ''
+  @Watch('$i18n.locale')
+  onLanguageChange() {
+    this.$nextTick(() => {
+      if (this.$refs.form) (this.$refs.form as ElForm).clearValidate()
+    })
+  }
   handleSave() {
     ;(this.$refs.form as ElForm).validate(async (valid: boolean) => {
       if (valid) {
@@ -97,7 +103,7 @@ export default class extends Vue {
   .pwdCon {
     .el-dialog__body {
       padding-top: 60px;
-      padding: 60px 100px 0;
+      padding: 30px 24px 0;
     }
     .el-input__inner {
       padding: 0 12px;

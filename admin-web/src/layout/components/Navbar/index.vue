@@ -6,13 +6,14 @@
                  class="hamburger-container"
                  @toggleClick="toggleSideBar" />
       <span v-if="status===1"
-            class="businessBtn">营业中</span>
+            class="businessBtn">{{ $t('nav.open') }}</span>
       <span v-else
-            class="businessBtn closing">打烊中</span>
+            class="businessBtn closing">{{ $t('nav.closed') }}</span>
     </div>
 
     <div :key="restKey"
          class="right-menu">
+      <LanguageSwitcher class="navbar-language" />
       <div class="rightStatus">
         <audio ref="audioVo"
                hidden>
@@ -22,7 +23,7 @@
                hidden>
           <source src="./../../../assets/reminder.mp3" type="audio/mp3" />
         </audio>
-        <span class="navicon operatingState" @click="handleStatus"><i />营业状态设置</span>
+        <span class="navicon operatingState" @click="handleStatus"><i />{{ $t('nav.status') }}</span>
       </div>
       <div class="avatar-wrapper">
         <div :class="shopShow?'userInfo':''"
@@ -36,36 +37,36 @@
                class="userList">
             <p class="amendPwdIcon"
                @click="handlePwd">
-              修改密码<i />
+              {{ $t('nav.password') }}<i />
             </p>
             <p class="outLogin"
                @click="logout">
-              退出登录<i />
+              {{ $t('nav.logout') }}<i />
             </p>
           </div>
         </div>
       </div>
     </div>
     <!-- 营业状态弹层 -->
-    <el-dialog title="营业状态设置"
+    <el-dialog :title="String($t('nav.status'))"
                :visible.sync="dialogVisible"
-               width="25%"
+               width="480px"
                :show-close="false">
       <el-radio-group v-model="setStatus">
         <el-radio :label="1">
-          营业中
-          <span>当前餐厅处于营业状态，自动接收任何订单，可点击打烊进入店铺打烊状态。</span>
+          {{ $t('nav.open') }}
+          <span>{{ $t('nav.openDescription') }}</span>
         </el-radio>
         <el-radio :label="0">
-          打烊中
-          <span>当前餐厅处于打烊状态，仅接受营业时间内的预定订单，可点击营业中手动恢复营业状态。</span>
+          {{ $t('nav.closed') }}
+          <span>{{ $t('nav.closedDescription') }}</span>
         </el-radio>
       </el-radio-group>
       <span slot="footer"
             class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
         <el-button type="primary"
-                   @click="handleSave">确 定</el-button>
+                   @click="handleSave">{{ $t('common.confirm') }}</el-button>
       </span>
     </el-dialog>
     <!-- end -->
@@ -82,6 +83,7 @@ import { AppModule } from '@/store/modules/app'
 import { UserModule } from '@/store/modules/user'
 import Breadcrumb from '@/components/Breadcrumb/index.vue'
 import Hamburger from '@/components/Hamburger/index.vue'
+import LanguageSwitcher from '@/components/LanguageSwitcher/index.vue'
 import { getStatus, setStatus } from '@/api/users'
 import Cookies from 'js-cookie'
 import { debounce, throttle } from '@/utils/common'
@@ -97,6 +99,7 @@ import Password from '../components/password.vue'
   components: {
     Breadcrumb,
     Hamburger,
+    LanguageSwitcher,
     Password,
   },
 })
@@ -132,9 +135,16 @@ export default class extends Vue {
   }
 
   get name() {
-    return (UserModule.userInfo as any).name
-      ? (UserModule.userInfo as any).name
-      : JSON.parse(Cookies.get('user_info') as any).name
+    const user = UserModule.userInfo as any
+    let name = user && user.name
+    if (!name) {
+      try {
+        name = JSON.parse(Cookies.get('user_info') || '{}').name
+      } catch (_) {
+        name = ''
+      }
+    }
+    return name === '管理员' ? String(this.$t('nav.administrator')) : name
   }
 
   get getStoreId() {
@@ -175,8 +185,8 @@ export default class extends Vue {
     console.log(socketUrl, 'socketUrl')
     if (typeof WebSocket == 'undefined') {
       that.$notify({
-        title: '提示',
-        message: '当前浏览器无法接收实时报警信息，请使用谷歌浏览器！',
+        title: String(that.$t('nav.notice')),
+        message: String(that.$t('nav.unsupported')),
         type: 'warning',
         duration: 0,
       })
@@ -201,9 +211,9 @@ export default class extends Vue {
           that.$refs.audioVo2.play()
         }
         that.$notify({
-          title: jsonMsg.type === 1 ? '待接单' : '催单',
+          title: String(that.$t(jsonMsg.type === 1 ? 'nav.newOrder' : 'nav.reminder')),
           duration: 0,
-          dangerouslyUseHTMLString: true,
+          dangerouslyUseHTMLString: false,
           onClick: () => {
             that.$router
               .push(`/order?orderId=${jsonMsg.orderId}`)
@@ -215,18 +225,14 @@ export default class extends Vue {
             }, 100)
           },
           // 这里也可以把返回信息加入到message中显示
-          message: `${
-            jsonMsg.type === 1
-              ? `<span>您有1个<span style=color:#419EFF>订单待处理</span>,${jsonMsg.content},请及时接单</span>`
-              : `${jsonMsg.content}<span style='color:#419EFF;cursor: pointer'>去处理</span>`
-          }`,
+          message: String(that.$t(jsonMsg.type === 1 ? 'nav.newOrderMessage' : 'nav.reminderMessage', { orderId: jsonMsg.orderId })),
         })
       }
       // 监听socket错误
       this.websocket.onerror = function () {
         that.$notify({
-          title: '错误',
-          message: '服务器错误，无法接收实时报警信息',
+          title: String(that.$t('nav.error')),
+          message: String(that.$t('nav.connectionError')),
           type: 'error',
           duration: 0,
         })
@@ -335,15 +341,18 @@ export default class extends Vue {
   }
   .right-menu {
     float: right;
-
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 60px;
     margin-right: 20px;
 
     color: #333333;
     font-size: 14px;
 
-    span {
+    .navicon {
       padding: 0 10px;
-      width: 130px;
+      width: auto;
       display: inline-block;
       cursor: pointer;
       &:hover {
@@ -408,12 +417,12 @@ export default class extends Vue {
     float: left;
   }
   .avatar-wrapper {
-    margin-top: 14px;
+    margin-top: 0;
     margin-left: 18px;
     position: relative;
     // vertical-align: middle;
     float: right;
-    width: 120px;
+    width: 210px;
     text-align: left;
     .user-avatar {
       cursor: pointer;
@@ -438,7 +447,7 @@ export default class extends Vue {
       padding-bottom: 0px;
       position: relative;
       // top: -15px;
-      width: 120px;
+      width: 210px;
       // padding: 11px 12px 10px;
       padding-left: 12px;
       text-align: left;

@@ -4,6 +4,7 @@ import { getToken, setToken, removeToken,getStoreId, setStoreId, removeStoreId, 
 import store from '@/store'
 import Cookies from 'js-cookie'
 import { Message } from 'element-ui'
+import i18n from '@/i18n'
 export interface IUserState {
   token: string
   name: string
@@ -87,7 +88,7 @@ class User extends VuexModule implements IUserState {
       Cookies.set('user_info', data.data)
       return data
     } else {
-      return Message.error(data.msg)
+      return Message.error(String(i18n.t('login.failed')))
     }
   }
 

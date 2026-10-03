@@ -1,5 +1,6 @@
 <template>
   <div class="login">
+    <LanguageSwitcher class="login-language" />
     <div class="login-box">
       <img src="@/assets/login/login-l.png" alt="" />
       <div class="login-form">
@@ -17,7 +18,7 @@
               v-model="loginForm.username"
               type="text"
               auto-complete="off"
-              placeholder="账号"
+              :placeholder="String($t('login.username'))"
               prefix-icon="iconfont icon-user"
             />
           </el-form-item>
@@ -25,7 +26,7 @@
             <el-input
               v-model="loginForm.password"
               type="password"
-              placeholder="密码"
+              :placeholder="String($t('login.password'))"
               prefix-icon="iconfont icon-lock"
               @keyup.enter.native="handleLogin"
             />
@@ -39,8 +40,8 @@
               style="width: 100%"
               @click.native.prevent="handleLogin"
             >
-              <span v-if="!loading">登录</span>
-              <span v-else>登录中...</span>
+              <span v-if="!loading">{{ $t('login.submit') }}</span>
+              <span v-else>{{ $t('login.loading') }}</span>
             </el-button>
           </el-form-item>
         </el-form>
@@ -54,22 +55,23 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
 import { Form as ElForm, Input } from 'element-ui'
 import { UserModule } from '@/store/modules/user'
-import { isValidUsername } from '@/utils/validate'
+import LanguageSwitcher from '@/components/LanguageSwitcher/index.vue'
 
 @Component({
   name: 'Login',
+  components: { LanguageSwitcher },
 })
 export default class extends Vue {
   private validateUsername = (rule: any, value: string, callback: Function) => {
     if (!value) {
-      callback(new Error('请输入用户名'))
+      callback(new Error(String(this.$t('login.usernameRequired'))))
     } else {
       callback()
     }
   }
   private validatePassword = (rule: any, value: string, callback: Function) => {
     if (value.length < 6) {
-      callback(new Error('密码必须在6位以上'))
+      callback(new Error(String(this.$t('login.passwordLength'))))
     } else {
       callback()
     }
@@ -92,6 +94,11 @@ export default class extends Vue {
   @Watch('$route', { immediate: true })
   private onRouteChange(route: Route) {}
 
+  @Watch('$i18n.locale')
+  private onLanguageChange() {
+    this.$nextTick(() => (this.$refs.loginForm as ElForm).clearValidate())
+  }
+
   // 登录
   private handleLogin() {
     ;(this.$refs.loginForm as ElForm).validate(async (valid: boolean) => {
@@ -107,7 +114,7 @@ export default class extends Vue {
             }
           })
           .catch(() => {
-            // this.$message.error('用户名或密码错误！')
+            this.$message.error(String(this.$t('login.failed')))
             this.loading = false
           })
       } else {
@@ -120,6 +127,7 @@ export default class extends Vue {
 
 <style lang="scss">
 .login {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -127,6 +135,8 @@ export default class extends Vue {
   // background: #476dbe;
   background-color: #333;
 }
+
+.login-language { position: absolute; top: 24px; right: 24px; padding: 10px; background: #fff; border-radius: 4px; }
 
 .login-box {
   width: 1000px;
