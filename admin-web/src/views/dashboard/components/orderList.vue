@@ -38,9 +38,9 @@
                     title=""
                     width="200"
                     trigger="hover"
-                    :content="scope.row.orderDishes"
+                    :content="orderMenuSummary(scope.row.orderDishes)"
                   >
-                    <span slot="reference">{{ scope.row.orderDishes }}</span>
+                    <span slot="reference">{{ orderMenuSummary(scope.row.orderDishes) }}</span>
                   </el-popover>
                 </div>
               </template>
@@ -257,7 +257,7 @@
                 :key="index"
                 class="dish-item"
               >
-                <span class="dish-name">{{ item.name }}</span>
+                <span class="dish-name">{{ menuName(item.name) }}</span>
                 <span class="dish-num">x{{ item.number }}</span>
                 <span class="dish-price"
                   >￥{{ item.amount ? item.amount.toFixed(2) : '' }}</span
@@ -416,6 +416,7 @@
 </template>
 
 <script lang="ts">
+import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import Empty from '@/components/Empty/index.vue'
 import {
@@ -435,6 +436,9 @@ import {
   },
 })
 export default class extends Vue {
+  orderMenuSummary = orderMenuSummary
+  menuName = menuName
+  menuDescription = menuDescription
   @Prop({ default: '' }) orderStatics!: any
 
   private orderId = '' //订单号

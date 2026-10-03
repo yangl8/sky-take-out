@@ -7,7 +7,7 @@
     ><img
       src="@/assets/icons/btn_back@2x.png"
       alt=""
-    > 返回</span>
+    >{{ $t('catalog.back') }}</span>
     <span v-if="!butList">{{ title }}</span>
     <div v-if="butList">
       <slot />

@@ -21,10 +21,8 @@
       <span v-if="imageUrl"
             class="el-upload-list__item-actions">
         <span class="el-upload-span"
-              @click.stop="oploadImgDel">
-          删除图片
-        </span>
-        <span class="el-upload-span"> 重新上传 </span>
+              @click.stop="oploadImgDel">{{ $t('catalog.removeImage') }}</span>
+        <span class="el-upload-span">{{ $t('catalog.uploadAgain') }}</span>
       </span>
     </el-upload>
     <p class="upload-tips">
@@ -59,7 +57,7 @@ export default class extends Vue {
   handleError(err, file, fileList) {
     console.log(err, file, fileList, 'handleError')
     this.$message({
-      message: '图片上传失败',
+      message: String(this.$t('catalog.uploadFailed')),
       type: 'error'
     })
   }
@@ -81,7 +79,7 @@ export default class extends Vue {
     const isLt2M = file.size / 1024 / 1024 < this.size
     if (!isLt2M) {
       this.$message({
-        message: `上传文件大小不能超过${this.size}M!`,
+        message: String(this.$t('catalog.uploadSize', { size: this.size })),
         type: 'error'
       })
       return false
@@ -169,8 +167,10 @@ export default class extends Vue {
   border-color: #ffc200;
 }
 .el-upload-span {
-  width: 100px;
-  height: 30px;
+  min-width: 100px;
+  padding: 0 8px;
+  height: auto;
+  min-height: 30px;
   border: 1px solid #ffffff;
   border-radius: 4px;
   font-size: 14px;

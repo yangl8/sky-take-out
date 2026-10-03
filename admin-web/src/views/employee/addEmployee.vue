@@ -1,6 +1,6 @@
 <template>
   <div class="addBrand-container">
-    <HeadLable :title="title"
+    <HeadLable :title="String($t(title))"
                :goback="true" />
     <div class="container">
       <el-form ref="ruleForm"
@@ -16,16 +16,16 @@
         <!--            </el-select>-->
         <!--            <el-button @click="submitForm('ruleForm')" type="primary" class="continue" style="margin-left: 10px;" >+新增职级</el-button>-->
         <!--          </el-form-item>-->
-        <el-form-item label="账号:"
+        <el-form-item :label="String($t('catalog.username'))"
                       prop="username">
           <el-input v-model="ruleForm.username"
-                    placeholder="请输入账号"
+                    :placeholder="String($t('catalog.usernameRequired'))"
                     maxlength="20" />
         </el-form-item>
-        <el-form-item label="员工姓名:"
+        <el-form-item :label="String($t('catalog.employeeName'))"
                       prop="name">
           <el-input v-model="ruleForm.name"
-                    placeholder="请输入员工姓名"
+                    :placeholder="String($t('catalog.employeeNameRequired'))"
                     maxlength="12" />
         </el-form-item>
         <!-- <el-form-item
@@ -50,41 +50,35 @@
             placeholder="请输入确认密码"
           />
         </el-form-item> -->
-        <el-form-item label="手机号:"
+        <el-form-item :label="String($t('catalog.phone'))"
                       prop="phone">
           <el-input v-model="ruleForm.phone"
-                    placeholder="请输入手机号"
+                    :placeholder="String($t('catalog.phoneRequired'))"
                     maxlength="11" />
         </el-form-item>
-        <el-form-item label="性别:"
+        <el-form-item :label="String($t('catalog.sex'))"
                       prop="sex">
           <el-radio-group v-model="ruleForm.sex">
-            <el-radio label="男" />
-            <el-radio label="女" />
+            <el-radio label="男">{{ $t('catalog.male') }}</el-radio>
+            <el-radio label="女">{{ $t('catalog.female') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="身份证号:"
+        <el-form-item :label="String($t('catalog.idNumber'))"
                       prop="idNumber"
                       class="idNumber">
           <el-input v-model="ruleForm.idNumber"
-                    placeholder="请输入身份证号"
+                    :placeholder="String($t('catalog.idRequired'))"
                     maxlength="20" />
         </el-form-item>
         <div class="subBox address">
           <!-- <el-form-item> -->
-          <el-button @click="() => $router.push('/employee')">
-            取消
-          </el-button>
+          <el-button @click="() => $router.push('/employee')">{{ $t('catalog.cancel') }}</el-button>
           <el-button type="primary"
                      :class="{ continue: actionType === 'add' }"
-                     @click="submitForm('ruleForm', false)">
-            保存
-          </el-button>
+                     @click="submitForm('ruleForm', false)">{{ $t('catalog.save') }}</el-button>
           <el-button v-if="actionType == 'add'"
                      type="primary"
-                     @click="submitForm('ruleForm', true)">
-            保存并继续添加
-          </el-button>
+                     @click="submitForm('ruleForm', true)">{{ $t('catalog.saveContinue') }}</el-button>
           <!-- </el-form-item> -->
         </div>
       </el-form>
@@ -93,7 +87,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 import HeadLable from '@/components/HeadLable/index.vue'
 import { queryEmployeeById, addEmployee, editEmployee } from '@/api/employee'
 
@@ -104,7 +98,15 @@ import { queryEmployeeById, addEmployee, editEmployee } from '@/api/employee'
   }
 })
 export default class extends Vue {
-  private title = '添加员工'
+  @Watch('$i18n.locale')
+  onLanguageChange() {
+    this.$nextTick(() => {
+      const form = this.$refs.ruleForm as any
+      if (form) form.clearValidate()
+    })
+  }
+
+  private title = 'catalog.addEmployee'
   private actionType = ''
   private ruleForm = {
     name: '',
@@ -137,10 +139,10 @@ export default class extends Vue {
   private checkphone(rule: any, value: any, callback: any) {
     // let phoneReg = /(^1[3|4|5|6|7|8|9]\d{9}$)|(^09\d{8}$)/;
     if (value == '') {
-      callback(new Error('请输入手机号'))
+      callback(new Error(String(this.$t('catalog.phoneRequired'))))
     } else if (!this.isCellPhone(value)) {
       //引入methods中封装的检查手机格式的方法
-      callback(new Error('请输入正确的手机号!'))
+      callback(new Error(String(this.$t('catalog.phoneInvalid'))))
     } else {
       callback()
     }
@@ -150,11 +152,11 @@ export default class extends Vue {
     // 身份证号码为15位或者18位，15位时全为数字，18位前17位为数字，最后一位是校验位，可能为数字或字符X
     let reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/
     if (value == '') {
-      callback(new Error('请输入身份证号码'))
+      callback(new Error(String(this.$t('catalog.idRequired'))))
     } else if (reg.test(value)) {
       callback()
     } else {
-      callback(new Error('身份证号码不正确'))
+      callback(new Error(String(this.$t('catalog.idInvalid'))))
     }
   }
 
@@ -163,10 +165,10 @@ export default class extends Vue {
       name: [
         {
           required: true,
-          // 'message': '请输入员工姓名',
+          // 'message': String(this.$t('catalog.employeeNameRequired')),
           validator: (rule: any, value: string, callback: Function) => {
             if (!value) {
-              callback(new Error('请输入员工姓名'))
+              callback(new Error(String(this.$t('catalog.employeeNameRequired'))))
             } else {
               // const reg = /^[\u4e00-\u9fa5_a-zA-Z]{1,12}$/
               // if (!reg.test(value)) {
@@ -183,14 +185,14 @@ export default class extends Vue {
       username: [
         {
           required: true,
-          // message: '请输入账号',
+          // message: String(this.$t('catalog.usernameRequired')),
           validator: (rule: any, value: string, callback: Function) => {
             if (!value) {
-              callback(new Error('请输入账号'))
+              callback(new Error(String(this.$t('catalog.usernameRequired'))))
             } else {
               const reg = /^([a-z]|[0-9]){3,20}$/
               if (!reg.test(value)) {
-                callback(new Error('账号输入不符，请输入3-20个字符'))
+                callback(new Error(String(this.$t('catalog.usernameInvalid'))))
               } else {
                 callback()
               }
@@ -207,7 +209,7 @@ export default class extends Vue {
   created() {
     this.actionType = this.$route.query.id ? 'edit' : 'add'
     if (this.$route.query.id) {
-      this.title = '修改员工信息'
+      this.title = 'catalog.editEmployee'
       this.init()
     }
   }
@@ -245,7 +247,7 @@ export default class extends Vue {
           addEmployee(params)
             .then((res: any) => {
               if (res.data.code === 1) {
-                this.$message.success('员工添加成功！')
+                this.$message.success(String(this.$t('catalog.employeeAdded')))
                 if (!st) {
                   this.$router.push({ path: '/employee' })
                 } else {
@@ -264,7 +266,7 @@ export default class extends Vue {
               }
             })
             .catch(() => {
-              // this.$message.error('请求出错了：' + err.message)
+              // this.$message.error(String(this.$t('catalog.requestFailed')))
             })
         } else {
           const params = {
@@ -274,14 +276,14 @@ export default class extends Vue {
           editEmployee(params)
             .then((res: any) => {
               if (res.data.code === 1) {
-                this.$message.success('员工信息修改成功！')
+                this.$message.success(String(this.$t('catalog.employeeEdited')))
                 this.$router.push({ path: '/employee' })
               } else {
                 this.$message.error(res.data.msg)
               }
             })
             .catch(() => {
-              // this.$message.error('请求出错了：' + err.message)
+              // this.$message.error(String(this.$t('catalog.requestFailed')))
             })
         }
       } else {

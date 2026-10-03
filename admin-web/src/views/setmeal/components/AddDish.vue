@@ -6,7 +6,7 @@
         <span v-for="(item, index) in dishType"
               :key="index"
               :class="{ act: index == keyInd }"
-              @click="checkTypeHandle(index, item.id)">{{ item.name }}</span>
+              @click="checkTypeHandle(index, item.id)">{{ categoryLabel(item.name) }}</span>
       </div>
       <div class="tabList">
         <div class="table"
@@ -25,9 +25,9 @@
                            :label="item.name">
                 <div class="item">
                   <span style="flex: 3; text-align: left">{{
-                    item.dishName
+                    menuName(item.dishName || item.name)
                   }}</span>
-                  <span>{{ item.status == 0 ? '停售' : '在售' }}</span>
+                  <span>{{ item.status == 0 ? $t('catalog.offSale') : $t('catalog.onSale') }}</span>
                   <span>{{ (Number(item.price) ).toFixed(2)*100/100 }}</span>
                 </div>
               </el-checkbox>
@@ -38,13 +38,13 @@
     </div>
     <div class="ritCont">
       <div class="tit">
-        已选菜品({{ checkedListAll.length }})
+        {{ $t('catalog.selectedDishes') }} ({{ checkedListAll.length }})
       </div>
       <div class="items">
         <div v-for="(item, ind) in checkedListAll"
              :key="ind"
              class="item">
-          <span>{{ item.dishName || item.name }}</span>
+          <span>{{ menuName(item.dishName || item.name) }}</span>
           <span class="price">￥ {{ (Number(item.price) ).toFixed(2)*100/100 }} </span>
           <span class="del"
                 @click="delCheck(item.name)">
@@ -58,6 +58,8 @@
 </template>
 
 <script lang="ts">
+import { menuName, menuDescription } from '@/i18n/menu'
+import { categoryLabel } from '@/i18n/categories'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 // import {getDishTypeList, getDishListType} from '@/api/dish';
 import { getCategoryList, queryDishList } from '@/api/dish'
@@ -70,6 +72,9 @@ import Empty from '@/components/Empty/index.vue'
   }
 })
 export default class extends Vue {
+  menuName = menuName
+  menuDescription = menuDescription
+  categoryLabel = categoryLabel
   @Prop({ default: '' }) private value!: number
   @Prop({ default: [] }) private checkList!: any[]
   @Prop({ default: '' }) private seachKey!: string

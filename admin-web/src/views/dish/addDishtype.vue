@@ -10,41 +10,41 @@
                label-width="180px"
                class="demo-ruleForm">
         <div>
-          <el-form-item label="菜品名称:"
+          <el-form-item :label="String($t('catalog.dishName'))"
                         prop="name">
             <el-input v-model="ruleForm.name"
-                      placeholder="请填写菜品名称"
+                      :placeholder="String($t('catalog.dishRequired'))"
                       maxlength="20" />
+            <p v-if="menuName(ruleForm.name) !== ruleForm.name" class="translation-preview">{{ $t('catalog.translationPreview') }}: {{ menuName(ruleForm.name) }}</p>
           </el-form-item>
-          <el-form-item label="菜品分类:"
+          <el-form-item :label="String($t('catalog.dishCategory'))"
                         prop="categoryId">
             <el-select v-model="ruleForm.categoryId"
-                       placeholder="请选择菜品分类">
+                       :placeholder="String($t('catalog.chooseDishCategory'))">
               <el-option v-for="(item, index) in dishList"
                          :key="index"
-                         :label="item.name"
+                         :label="categoryLabel(item.name)"
                          :value="item.id" />
             </el-select>
           </el-form-item>
         </div>
         <div>
-          <el-form-item label="菜品价格:"
+          <el-form-item :label="String($t('catalog.dishPrice'))"
                         prop="price">
             <el-input v-model="ruleForm.price"
-                      placeholder="请设置菜品价格" />
+                      :placeholder="String($t('catalog.pricePlaceholder'))" />
           </el-form-item>
         </div>
-        <el-form-item label="口味做法配置:">
+        <el-form-item :label="String($t('catalog.flavors'))">
           <el-form-item>
             <div class="flavorBox">
               <span v-if="dishFlavors.length == 0"
                     class="addBut"
-                    @click="addFlavore">
-                + 添加口味</span>
+                    @click="addFlavore">+ {{ $t('catalog.addFlavor') }}</span>
               <div v-if="dishFlavors.length != 0"
                    class="flavor">
                 <div class="title">
-                  <span>口味名（3个字内）</span>
+                  <span>{{ $t('catalog.flavorName') }}</span>
                   <!-- <span class="des-box">口味标签（输入标签回车添加）</span> -->
                 </div>
                 <div class="cont">
@@ -61,13 +61,13 @@
                     <div class="labItems"
                          style="display: flex">
                       <span v-for="(it, ind) in item.value"
-                            :key="ind">{{ it }}
+                            :key="ind">{{ flavorLabel(it) }}
                         <i @click="delFlavorLabel(index, ind)">X</i></span>
                       <div class="inputBox"
                            :style="inputStyle" />
                     </div>
                     <span class="delFlavor delBut non"
-                          @click="delFlavor(item.name)">删除</span>
+                          @click="delFlavor(item.name)">{{ $t('catalog.delete') }}</span>
                   </div>
                 </div>
                 <div v-if="
@@ -75,46 +75,37 @@
                          this.dishFlavors.length < this.dishFlavorsData.length
                      "
                      class="addBut"
-                     @click="addFlavore">
-                  添加口味
-                </div>
+                     @click="addFlavore">{{ $t('catalog.addFlavor') }}</div>
               </div>
             </div>
           </el-form-item>
         </el-form-item>
         <div>
-          <el-form-item label="菜品图片:"
+          <el-form-item :label="String($t('catalog.dishImage'))"
                         prop="image">
             <image-upload :prop-image-url="imageUrl"
-                          @imageChange="imageChange">
-              图片大小不超过2M<br>仅能上传 PNG JPEG JPG类型图片<br>建议上传200*200或300*300尺寸的图片
-            </image-upload>
+                          @imageChange="imageChange">{{ $t('catalog.imageSize') }}<br>{{ $t('catalog.imageTypes') }}<br>{{ $t('catalog.imageDimensions') }}</image-upload>
           </el-form-item>
         </div>
         <div class="address">
-          <el-form-item label="菜品描述:"
+          <el-form-item :label="String($t('catalog.dishDescription'))"
                         prop="region">
             <el-input v-model="ruleForm.description"
                       type="textarea"
                       :rows="3"
                       maxlength="200"
-                      placeholder="菜品描述，最长200字" />
+                      :placeholder="String($t('catalog.descriptionHint'))" />
+            <p v-if="menuDescription(ruleForm.description) !== ruleForm.description" class="translation-preview">{{ $t('catalog.translationPreview') }}: {{ menuDescription(ruleForm.description) }}</p>
           </el-form-item>
         </div>
         <div class="subBox address">
-          <el-button @click="() => $router.back()">
-            取消
-          </el-button>
+          <el-button @click="() => $router.back()">{{ $t('catalog.cancel') }}</el-button>
           <el-button type="primary"
                      :class="{ continue: actionType === 'add' }"
-                     @click="submitForm('ruleForm')">
-            保存
-          </el-button>
+                     @click="submitForm('ruleForm')">{{ $t('catalog.save') }}</el-button>
           <el-button v-if="actionType == 'add'"
                      type="primary"
-                     @click="submitForm('ruleForm', 'goAnd')">
-            保存并继续添加
-          </el-button>
+                     @click="submitForm('ruleForm', 'goAnd')">{{ $t('catalog.saveContinue') }}</el-button>
         </div>
       </el-form>
     </div>
@@ -122,7 +113,10 @@
 </template>
 
 <script lang="ts">
+import { menuName, menuDescription } from '@/i18n/menu'
+import { categoryLabel } from '@/i18n/categories'
 import { Component, Vue, Watch } from 'vue-property-decorator'
+import { flavorLabel } from '@/i18n/flavors'
 import HeadLable from '@/components/HeadLable/index.vue'
 import SelectInput from './components/SelectInput.vue'
 import ImageUpload from '@/components/ImgUpload/index.vue'
@@ -145,6 +139,18 @@ import { getToken } from '@/utils/cookies'
   }
 })
 export default class extends Vue {
+  menuName = menuName
+  menuDescription = menuDescription
+  categoryLabel = categoryLabel
+  flavorLabel = flavorLabel
+  @Watch('$i18n.locale')
+  onLanguageChange() {
+    this.$nextTick(() => {
+      const form = this.$refs.ruleForm as any
+      if (form) form.clearValidate()
+    })
+  }
+
   private restKey: number = 0
   private textarea: string = ''
   private value: string = ''
@@ -178,12 +184,12 @@ export default class extends Vue {
         {
           required: true,
           validator: (rule: any, value: string, callback: Function) => {
-            if (!value) {
-              callback(new Error('请输入菜品名称'))
+            if (!value || !value.trim()) {
+              callback(new Error(String(this.$t('catalog.dishRequired'))))
             } else {
-              const reg = /^([A-Za-z0-9\u4e00-\u9fa5]){2,20}$/
+              const reg = /^[\p{L}\p{M}\p{N} '\u2019-]{2,20}$/u
               if (!reg.test(value)) {
-                callback(new Error('菜品名称输入不符，请输入2-20个字符'))
+                callback(new Error(String(this.$t('catalog.dishLength'))))
               } else {
                 callback()
               }
@@ -193,11 +199,11 @@ export default class extends Vue {
         }
       ],
       categoryId: [
-        { required: true, message: '请选择菜品分类', trigger: 'change' }
+        { required: true, message: String(this.$t('catalog.chooseDishCategory')), trigger: 'change' }
       ],
       image: {
         required: true,
-        message: '菜品图片不能为空'
+        message: String(this.$t('catalog.imageRequired'))
       },
       price: [
         {
@@ -208,7 +214,7 @@ export default class extends Vue {
             if (!reg.test(value) || Number(value) <= 0) {
               callback(
                 new Error(
-                  '菜品价格格式有误，请输入大于零且最多保留两位小数的金额'
+                  String(this.$t('catalog.priceInvalid'))
                 )
               )
             } else {
@@ -218,7 +224,7 @@ export default class extends Vue {
           trigger: 'blur'
         }
       ],
-      code: [{ required: true, message: '请填写商品码', trigger: 'blur' }]
+      code: [{ required: true, message: String(this.$t('catalog.codeRequired')), trigger: 'blur' }]
     }
   }
 
@@ -346,7 +352,7 @@ export default class extends Vue {
     ;(this.$refs[formName] as any).validate((valid: any) => {
       console.log(valid, 'valid')
       if (valid) {
-        if (!this.ruleForm.image) return this.$message.error('菜品图片不能为空')
+        if (!this.ruleForm.image) return this.$message.error(String(this.$t('catalog.imageRequired')))
         let params: any = { ...this.ruleForm }
         // params.flavors = this.dishFlavors
         params.status =
@@ -363,7 +369,7 @@ export default class extends Vue {
           addDish(params)
             .then(res => {
               if (res.data.code === 1) {
-                this.$message.success('菜品添加成功！')
+                this.$message.success(String(this.$t('catalog.dishAdded')))
                 if (!st) {
                   this.$router.push({ path: '/dish' })
                 } else {
@@ -388,7 +394,7 @@ export default class extends Vue {
               }
             })
             .catch(err => {
-              this.$message.error('请求出错了：' + err.message)
+              this.$message.error(String(this.$t('catalog.requestFailed')))
             })
         } else {
           delete params.createTime
@@ -397,19 +403,19 @@ export default class extends Vue {
             .then(res => {
               if (res && res.data && res.data.code === 1) {
                 this.$router.push({ path: '/dish' })
-                this.$message.success('菜品修改成功！')
+                this.$message.success(String(this.$t('catalog.dishEdited')))
               } else {
                 this.$message.error(res.data.desc || res.data.msg)
               }
               // if (res.data.code == 200) {
               //   this.$router.push({'path': '/dish'})
-              //   this.$message.success('菜品修改成功！')
+              //   this.$message.success(String(this.$t('catalog.dishEdited')))
               // } else {
               //   this.$message.error(res.data.desc || res.data.message)
               // }
             })
             .catch(err => {
-              this.$message.error('请求出错了：' + err.message)
+              this.$message.error(String(this.$t('catalog.requestFailed')))
             })
         }
       } else {
@@ -558,4 +564,8 @@ export default class extends Vue {
     }
   }
 }
+</style>
+
+<style scoped>
+.translation-preview { max-width: 480px; margin: 6px 0 0; color: #666; font-size: 12px; line-height: 1.5; overflow-wrap: break-word; }
 </style>

@@ -55,7 +55,9 @@
           key="orderDishes"
           prop="orderDishes"
           label="订单菜品"
-        />
+        >
+          <template slot-scope="scope">{{ orderMenuSummary(scope.row.orderDishes) }}</template>
+        </el-table-column>
         <el-table-column
           v-if="[0].includes(orderStatus)"
           key="status"
@@ -315,7 +317,7 @@
                 class="dish-item"
               >
                 <div class="dish-item-box">
-                  <span class="dish-name">{{ item.name }}</span>
+                  <span class="dish-name">{{ menuName(item.name) }}</span>
                   <span class="dish-num">x{{ item.number }}</span>
                 </div>
                 <span class="dish-price"
@@ -473,6 +475,7 @@
 </template>
 
 <script lang="ts">
+import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
 import { Component, Vue } from 'vue-property-decorator'
 import HeadLable from '@/components/HeadLable/index.vue'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
@@ -498,6 +501,9 @@ import {
   },
 })
 export default class extends Vue {
+  orderMenuSummary = orderMenuSummary
+  menuName = menuName
+  menuDescription = menuDescription
   private defaultActivity: any = 0
   private orderStatics = {}
   private row = {}

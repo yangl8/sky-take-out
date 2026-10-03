@@ -7,7 +7,7 @@
            alt="">
       <img v-else
            src="../../assets/search_table_empty.png">
-      <p>{{ !isSearch ? '这里空空如也~' : 'Sorry，木有找到您搜索的内容哦~' }}</p>
+      <p>{{ !isSearch ? $t('catalog.empty') : $t('catalog.noResults') }}</p>
     </div>
   </div>
 </template>
