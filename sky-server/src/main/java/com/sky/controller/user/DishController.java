@@ -4,6 +4,7 @@ import com.sky.constant.StatusConstant;
 import com.sky.entity.Dish;
 import com.sky.result.Result;
 import com.sky.service.DishService;
+import com.sky.service.MenuCacheService;
 import com.sky.vo.DishVO;
 
 import io.swagger.annotations.Api;
@@ -17,8 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import org.springframework.data.redis.core.RedisTemplate;
-
 @RestController("userDishController")
 @RequestMapping("/user/dish")
 @Slf4j
@@ -27,7 +26,7 @@ public class DishController {
     @Autowired
     private DishService dishService;
     @Autowired 
-    private RedisTemplate redisTemplate;
+    private MenuCacheService menuCacheService;
 
     /**
      * 根据分类id查询菜品
@@ -39,12 +38,8 @@ public class DishController {
     @ApiOperation("根据分类id查询菜品")
     public Result<List<DishVO>> list(Long categoryId) {
 
-        //构造redis中的key，规则：dish_分类id
-        String key = "dish_" + categoryId;
-
-        //查询redis中是否存在菜品数据
-        List<DishVO> list = (List<DishVO>)redisTemplate.opsForValue().get(key);
-        if(list != null && list.size()>0){
+        List<DishVO> list = menuCacheService.getDishes(categoryId);
+        if(list != null){
             //如果存在，直接返回，无需查询数据库
             return Result.success(list);
         }
@@ -55,7 +50,7 @@ public class DishController {
 
         //如果不存在，查询数据库，将查询到的数据放入redis中
         list = dishService.listWithFlavor(dish);
-        redisTemplate.opsForValue().set(key, list);
+        menuCacheService.cacheDishes(categoryId, list);
 
         return Result.success(list);
     }
