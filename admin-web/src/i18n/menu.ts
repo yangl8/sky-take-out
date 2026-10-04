@@ -26,7 +26,9 @@ const nameKeys: { [value: string]: string } = {
   "鮰鱼2斤": "menuNames.catfish",
   "鸡蛋汤": "menuNames.eggSoup",
   "平菇豆腐汤": "menuNames.tofuSoup",
-  "套餐A": "menuNames.comboA"
+  "套餐A": "menuNames.comboA",
+  "人气套餐A": "menuNames.popularComboA",
+  "商务套餐A": "menuNames.businessComboA"
 }
 const descriptionKeys: { [value: string]: string } = {
   "还是小时候的味道": "menuDescriptions.childhood",

@@ -242,7 +242,9 @@ export default {
     "catfish": "鮰鱼2斤",
     "eggSoup": "鸡蛋汤",
     "tofuSoup": "平菇豆腐汤",
-    "comboA": "套餐A"
+    "comboA": "套餐A",
+    "popularComboA": "人气套餐A",
+    "businessComboA": "商务套餐A"
   },
   "menuDescriptions": {
     "childhood": "还是小时候的味道",

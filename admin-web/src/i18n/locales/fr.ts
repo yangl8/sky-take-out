@@ -242,7 +242,9 @@ export default {
     "catfish": "Poisson-chat (1 kg)",
     "eggSoup": "Soupe aux œufs",
     "tofuSoup": "Soupe aux pleurotes et au tofu",
-    "comboA": "Menu A"
+    "comboA": "Menu A",
+    "popularComboA": "Menu populaire A",
+    "businessComboA": "Menu d’affaires A"
   },
   "menuDescriptions": {
     "childhood": "La saveur de votre enfance",

@@ -242,7 +242,9 @@ export default {
     "catfish": "Catfish (1 kg)",
     "eggSoup": "Egg soup",
     "tofuSoup": "Oyster mushroom and tofu soup",
-    "comboA": "Meal combo A"
+    "comboA": "Meal combo A",
+    "popularComboA": "Popular meal combo A",
+    "businessComboA": "Business meal combo A"
   },
   "menuDescriptions": {
     "childhood": "The familiar taste of childhood",
