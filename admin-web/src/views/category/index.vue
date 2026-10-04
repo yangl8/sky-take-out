@@ -3,27 +3,29 @@
     <div class="container">
       <div class="tableBar"
            style="width: 100%">
-        <label style="margin-right: 10px">{{ $t('catalog.categoryName') }}</label>
-        <el-input v-model="name"
-                  :placeholder="String($t('catalog.categoryRequired'))"
-                  style="width: 15%"
-                  clearable
-                  @clear="init"
-                  @keyup.enter.native="init" />
+        <div class="filter-item">
+          <label>{{ $t('catalog.categoryName') }}</label>
+          <el-input v-model="name"
+                    :placeholder="String($t('catalog.categoryRequired'))"
+                    clearable
+                    @clear="init"
+                    @keyup.enter.native="init" />
+        </div>
 
-        <label style="margin-right: 5px; margin-left: 20px">{{ $t('catalog.categoryType') }}</label>
-        <el-select v-model="categoryType"
-                   :placeholder="String($t('catalog.select'))"
-                   clearable
-                   style="width: 15%"
-                   @clear="init">
-          <el-option v-for="item in options"
-                     :key="item.value"
-                     :label="item.label"
-                     :value="item.value" />
-        </el-select>
+        <div class="filter-item">
+          <label>{{ $t('catalog.categoryType') }}</label>
+          <el-select v-model="categoryType"
+                     :placeholder="String($t('catalog.select'))"
+                     clearable
+                     @clear="init">
+            <el-option v-for="item in options"
+                       :key="item.value"
+                       :label="item.label"
+                       :value="item.value" />
+          </el-select>
+        </div>
 
-        <div style="float: right">
+        <div class="table-actions">
           <el-button type="primary"
                      class="continue"
                      @click="addClass('class')">+ {{ $t('catalog.addDishCategory') }}</el-button>
@@ -469,7 +471,10 @@ export default class extends Vue {
 
 <style scoped>
 .tableBar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 8px; height: auto; }
-.tableBar label { white-space: normal; }
-.tableBar .el-input, .tableBar .el-select { min-width: 180px; }
+.tableBar .filter-item { display: flex; flex: 1 1 300px; min-width: 0; align-items: center; gap: 10px; }
+.tableBar .filter-item label { flex: 0 0 auto; white-space: nowrap; }
+.tableBar .filter-item .el-input, .tableBar .filter-item .el-select { flex: 1 1 auto; width: auto !important; min-width: 0; }
+.tableBar .normal-btn { margin-left: 0 !important; }
+.tableBar .table-actions { flex: 1 0 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; order: 2; }
 .tableBar .tableLab { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 </style>

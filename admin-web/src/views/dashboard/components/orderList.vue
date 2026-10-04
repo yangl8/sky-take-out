@@ -2,7 +2,7 @@
   <div>
     <div class="container homecon">
       <h2 class="homeTitle homeTitleBtn">
-        订单信息
+        {{ $t('orders.orderInformation') }}
         <ul class="conTab">
           <li
             v-for="(item, index) in tabList"
@@ -29,8 +29,8 @@
             style="width: 100%"
             @row-click="handleTable"
           >
-            <el-table-column prop="number" label="订单号"> </el-table-column>
-            <el-table-column label="订单菜品">
+            <el-table-column prop="number" :label="String($t('orders.orderNumber'))"> </el-table-column>
+            <el-table-column :label="String($t('orders.orderItems'))">
               <template slot-scope="scope">
                 <div class="ellipsisHidden">
                   <el-popover
@@ -46,7 +46,7 @@
               </template>
             </el-table-column>
             <el-table-column
-              label="地址"
+              :label="String($t('orders.address'))"
               :class-name="dialogOrderStatus === 2 ? 'address' : ''"
             >
               <template slot-scope="scope">
@@ -66,14 +66,14 @@
 
             <el-table-column
               prop="estimatedDeliveryTime"
-              label="预计送达时间"
+              :label="String($t('orders.estimatedDeliveryTime'))"
               sortable
               class-name="orderTime"
               min-width="130"
             >
             </el-table-column>
-            <el-table-column prop="amount" label="实收金额"> </el-table-column>
-            <el-table-column label="备注">
+            <el-table-column prop="amount" :label="String($t('orders.amountReceived'))"> </el-table-column>
+            <el-table-column :label="String($t('orders.remark'))">
               <template slot-scope="scope">
                 <div class="ellipsisHidden">
                   <el-popover
@@ -90,14 +90,14 @@
             </el-table-column>
             <el-table-column
               prop="tablewareNumber"
-              label="餐具数量"
+              :label="String($t('orders.tablewareNumber'))"
               min-width="80"
               align="center"
               v-if="status === 3"
             >
             </el-table-column>
             <el-table-column
-              label="操作"
+              :label="String($t('catalog.actions'))"
               align="center"
               :class-name="dialogOrderStatus === 0 ? 'operate' : 'otherOperate'"
               :min-width="
@@ -119,7 +119,7 @@
                       orderAccept(row, $event), (isTableOperateBtn = true)
                     "
                   >
-                    接单
+                    {{ $t('orders.accept') }}
                   </el-button>
                   <el-button
                     v-if="row.status === 3"
@@ -127,7 +127,7 @@
                     class="blueBug"
                     @click="cancelOrDeliveryOrComplete(3, row.id, $event)"
                   >
-                    派送
+                    {{ $t('orders.deliver') }}
                   </el-button>
                 </div>
                 <div class="middle">
@@ -139,7 +139,7 @@
                       orderReject(row, $event), (isTableOperateBtn = true)
                     "
                   >
-                    拒单
+                    {{ $t('orders.reject') }}
                   </el-button>
                   <el-button
                     v-if="[1, 3, 4, 5].includes(row.status)"
@@ -147,7 +147,7 @@
                     class="delBut"
                     @click="cancelOrder(row, $event)"
                   >
-                    取消
+                    {{ $t('common.cancel') }}
                   </el-button>
                 </div>
                 <div class="after">
@@ -156,7 +156,7 @@
                     class="blueBug non"
                     @click="goDetail(row.id, row.status, row, $event)"
                   >
-                    查看
+                    {{ $t('orders.view') }}
                   </el-button>
                 </div>
               </template>
@@ -178,7 +178,7 @@
     </div>
     <!-- 查看弹框部分 -->
     <el-dialog
-      title="订单信息"
+      :title="String($t('orders.orderInformation'))"
       :visible.sync="dialogVisible"
       width="53%"
       :before-close="handleClose"
@@ -188,7 +188,7 @@
         <div class="order-top">
           <div>
             <div style="display: inline-block">
-              <label style="font-size: 16px">订单号：</label>
+              <label style="font-size: 16px">{{ $t('orders.orderNumber') }}：</label>
               <div class="order-num">
                 {{ diaForm.number }}
               </div>
@@ -204,18 +204,18 @@
               }}
             </div>
           </div>
-          <p><label>下单时间：</label>{{ diaForm.orderTime }}</p>
+          <p><label>{{ $t('orders.orderTime') }}：</label>{{ diaForm.orderTime }}</p>
         </div>
 
         <div class="order-middle">
           <div class="user-info">
             <div class="user-info-box">
               <div class="user-name">
-                <label>用户名：</label>
+                <label>{{ $t('orders.customerName') }}：</label>
                 <span>{{ diaForm.consignee }}</span>
               </div>
               <div class="user-phone">
-                <label>手机号：</label>
+                <label>{{ $t('orders.phone') }}：</label>
                 <span>{{ diaForm.phone }}</span>
               </div>
               <div
@@ -223,7 +223,7 @@
                 class="user-getTime"
               >
                 <label>{{
-                  dialogOrderStatus === 5 ? '送达时间：' : '预计送达时间：'
+                  dialogOrderStatus === 5 ? $t('orders.deliveryTime') + '：' : $t('orders.estimatedDeliveryTime') + '：'
                 }}</label>
                 <span>{{
                   dialogOrderStatus === 5
@@ -232,7 +232,7 @@
                 }}</span>
               </div>
               <div class="user-address">
-                <label>地址：</label>
+                <label>{{ $t('orders.address') }}：</label>
                 <span>{{ diaForm.address }}</span>
               </div>
             </div>
@@ -240,17 +240,17 @@
               class="user-remark"
               :class="{ orderCancel: dialogOrderStatus === 6 }"
             >
-              <div>{{ dialogOrderStatus === 6 ? '取消原因' : '备注' }}</div>
+              <div>{{ dialogOrderStatus === 6 ? $t('orders.cancelReason') : $t('orders.remark') }}</div>
               <span>{{
                 dialogOrderStatus === 6
-                  ? diaForm.cancelReason || diaForm.rejectionReason
+                  ? orderReasonLabel(diaForm.cancelReason || diaForm.rejectionReason)
                   : diaForm.remark
               }}</span>
             </div>
           </div>
 
           <div class="dish-info">
-            <div class="dish-label">菜品</div>
+            <div class="dish-label">{{ $t('orders.dishes') }}</div>
             <div class="dish-list">
               <div
                 v-for="(item, index) in diaForm.orderDetailList"
@@ -265,7 +265,7 @@
               </div>
             </div>
             <div class="dish-all-amount">
-              <label>菜品小计</label>
+              <label>{{ $t('orders.dishSubtotal') }}</label>
               <span
                 >￥{{
                   (diaForm.amount - 6 - diaForm.packAmount).toFixed(2)
@@ -277,10 +277,10 @@
 
         <div class="order-bottom">
           <div class="amount-info">
-            <div class="amount-label">费用</div>
+            <div class="amount-label">{{ $t('orders.fees') }}</div>
             <div class="amount-list">
               <div class="dish-amount">
-                <span class="amount-name">菜品小计：</span>
+                <span class="amount-name">{{ $t('orders.dishSubtotal') }}：</span>
                 <span class="amount-price"
                   >￥{{
                     ((diaForm.amount - 6 - diaForm.packAmount).toFixed(2) *
@@ -290,11 +290,11 @@
                 >
               </div>
               <div class="send-amount">
-                <span class="amount-name">派送费：</span>
+                <span class="amount-name">{{ $t('orders.deliveryFee') }}：</span>
                 <span class="amount-price">￥{{ 6 }}</span>
               </div>
               <div class="package-amount">
-                <span class="amount-name">打包费：</span>
+                <span class="amount-name">{{ $t('orders.packingFee') }}：</span>
                 <span class="amount-price"
                   >￥{{
                     diaForm.packAmount
@@ -304,7 +304,7 @@
                 >
               </div>
               <div class="all-amount">
-                <span class="amount-name">合计：</span>
+                <span class="amount-name">{{ $t('orders.total') }}：</span>
                 <span class="amount-price"
                   >￥{{
                     diaForm.amount
@@ -314,13 +314,13 @@
                 >
               </div>
               <div class="pay-type">
-                <span class="pay-name">支付渠道：</span>
+                <span class="pay-name">{{ $t('orders.paymentMethod') }}：</span>
                 <span class="pay-value">{{
-                  diaForm.payMethod === 1 ? '微信支付' : '支付宝支付'
+                  diaForm.payMethod === 1 ? $t('orders.wechatPay') : $t('orders.alipayPay')
                 }}</span>
               </div>
               <div class="pay-time">
-                <span class="pay-name">支付时间：</span>
+                <span class="pay-name">{{ $t('orders.paymentTime') }}：</span>
                 <span class="pay-value">{{ diaForm.checkoutTime }}</span>
               </div>
             </div>
@@ -331,84 +331,84 @@
         <el-checkbox
           v-if="dialogOrderStatus === 2 && status === 2"
           v-model="isAutoNext"
-          >处理完自动跳转下一条</el-checkbox
+          >{{ $t('orders.autoNext') }}</el-checkbox
         >
         <el-button
           v-if="dialogOrderStatus === 2"
           @click="orderReject(row, $event), (isTableOperateBtn = false)"
-          >拒 单</el-button
+          >{{ $t('orders.reject') }}</el-button
         >
         <el-button
           v-if="dialogOrderStatus === 2"
           type="primary"
           @click="orderAccept(row, $event), (isTableOperateBtn = false)"
-          >接 单</el-button
+          >{{ $t('orders.accept') }}</el-button
         >
 
         <el-button
           v-if="[1, 3, 4, 5].includes(dialogOrderStatus)"
           @click="dialogVisible = false"
-          >返 回</el-button
+          >{{ $t('catalog.back') }}</el-button
         >
         <el-button
           v-if="dialogOrderStatus === 3"
           type="primary"
           @click="cancelOrDeliveryOrComplete(3, row.id, $event)"
-          >派 送</el-button
+          >{{ $t('orders.deliver') }}</el-button
         >
         <el-button
           v-if="dialogOrderStatus === 4"
           type="primary"
           @click="cancelOrDeliveryOrComplete(4, row.id, $event)"
-          >完 成</el-button
+          >{{ $t('orders.complete') }}</el-button
         >
         <el-button
           v-if="[1].includes(dialogOrderStatus)"
           type="primary"
           @click="cancelOrder(row, $event)"
-          >取消订单</el-button
+          >{{ $t('orders.cancelOrder') }}</el-button
         >
       </span>
     </el-dialog>
     <!-- end -->
     <!-- 拒单，取消弹窗 -->
     <el-dialog
-      :title="cancelDialogTitle + '原因'"
+      :title="String($t(cancelDialogTitle === '取消' ? 'orders.cancelReason' : 'orders.rejectionReason'))"
       :visible.sync="cancelDialogVisible"
       width="42%"
       :before-close="() => ((cancelDialogVisible = false), (cancelReason = ''))"
       class="cancelDialog"
     >
       <el-form label-width="90px">
-        <el-form-item :label="cancelDialogTitle + '原因：'">
+        <el-form-item :label="String($t(cancelDialogTitle === '取消' ? 'orders.cancelReason' : 'orders.rejectionReason')) + '：'">
           <el-select
             v-model="cancelReason"
-            :placeholder="'请选择' + cancelDialogTitle + '原因'"
+            :placeholder="String($t('orders.selectReason'))"
           >
             <el-option
               v-for="(item, index) in cancelDialogTitle === '取消'
                 ? cancelrReasonList
                 : cancelOrderReasonList"
               :key="index"
-              :label="item.label"
+              :label="orderReasonLabel(item.label)"
               :value="item.label"
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="cancelReason === '自定义原因'" label="原因：">
+        <el-form-item v-if="cancelReason === '自定义原因'" :label="String($t('orders.reason')) + '：'">
           <el-input
             v-model.trim="remark"
             type="textarea"
-            :placeholder="'请填写您' + cancelDialogTitle + '的原因（限20字内）'"
+            :placeholder="String($t('orders.enterCustomReason'))"
             maxlength="20"
           />
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click=";(cancelDialogVisible = false), (cancelReason = '')"
-          >取 消</el-button
+          >{{ $t('common.cancel') }}</el-button
         >
-        <el-button type="primary" @click="confirmCancel">确 定</el-button>
+        <el-button type="primary" @click="confirmCancel">{{ $t('common.confirm') }}</el-button>
       </span>
     </el-dialog>
     <!-- end -->
@@ -417,6 +417,7 @@
 
 <script lang="ts">
 import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
+import { orderReasonLabel } from '@/i18n/orders'
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import Empty from '@/components/Empty/index.vue'
 import {
@@ -439,6 +440,7 @@ export default class extends Vue {
   orderMenuSummary = orderMenuSummary
   menuName = menuName
   menuDescription = menuDescription
+  orderReasonLabel = orderReasonLabel
   @Prop({ default: '' }) orderStatics!: any
 
   private orderId = '' //订单号
@@ -501,45 +503,47 @@ export default class extends Vue {
       label: '自定义原因',
     },
   ]
-  private orderList = [
+  get orderList() {
+    return [
     {
-      label: '全部订单',
+      label: this.$t('orders.allOrders'),
       value: 0,
     },
     {
-      label: '待付款',
+      label: this.$t('orders.pendingPayment'),
       value: 1,
     },
     {
-      label: '待接单',
+      label: this.$t('orders.awaitingAcceptance'),
       value: 2,
     },
     {
-      label: '待派送',
+      label: this.$t('orders.awaitingDelivery'),
       value: 3,
     },
     {
-      label: '派送中',
+      label: this.$t('orders.delivering'),
       value: 4,
     },
     {
-      label: '已完成',
+      label: this.$t('orders.completed'),
       value: 5,
     },
     {
-      label: '已取消',
+      label: this.$t('orders.cancelled'),
       value: 6,
     },
-  ]
+    ]
+  }
   get tabList() {
     return [
       {
-        label: '待接单',
+        label: this.$t('orders.awaitingAcceptance'),
         value: 2,
         num: this.orderStatics.toBeConfirmed,
       },
       {
-        label: '待派送',
+        label: this.$t('orders.awaitingDelivery'),
         value: 3,
         num: this.orderStatics.confirmed,
       },
@@ -581,7 +585,7 @@ export default class extends Vue {
     orderAccept({ id: this.orderId })
       .then((res) => {
         if (res.data.code === 1) {
-          this.$message.success('操作成功')
+          this.$message.success(String(this.$t('orders.operationSuccessful')))
           this.orderId = ''
           // this.dialogOrderStatus = 0
           this.dialogVisible = false
@@ -591,7 +595,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error('请求出错了：' + err.message)
+        this.$message.error(String(this.$t('orders.requestError')) + err.message)
       })
   }
   //打开取消订单弹窗
@@ -617,9 +621,9 @@ export default class extends Vue {
   //确认取消或拒绝订单并填写原因
   confirmCancel(type) {
     if (!this.cancelReason) {
-      return this.$message.error(`请选择${this.cancelDialogTitle}原因`)
+      return this.$message.error(String(this.$t('orders.selectReason')))
     } else if (this.cancelReason === '自定义原因' && !this.remark) {
-      return this.$message.error(`请输入${this.cancelDialogTitle}原因`)
+      return this.$message.error(String(this.$t('orders.enterCustomReason')))
     }
 
     ;(this.cancelDialogTitle === '取消' ? orderCancel : orderReject)({
@@ -630,7 +634,7 @@ export default class extends Vue {
     })
       .then((res) => {
         if (res.data.code === 1) {
-          this.$message.success('操作成功')
+          this.$message.success(String(this.$t('orders.operationSuccessful')))
           this.cancelDialogVisible = false
           this.orderId = ''
           // this.dialogOrderStatus = 0
@@ -640,7 +644,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error('请求出错了：' + err.message)
+        this.$message.error(String(this.$t('orders.requestError')) + err.message)
       })
   }
 
@@ -654,7 +658,7 @@ export default class extends Vue {
     ;(status === 3 ? deliveryOrder : completeOrder)(params)
       .then((res) => {
         if (res.data.code === 1) {
-          this.$message.success('操作成功')
+          this.$message.success(String(this.$t('orders.operationSuccessful')))
           this.orderId = ''
           // this.dialogOrderStatus = 0
           this.dialogVisible = false
@@ -664,7 +668,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error('请求出错了：' + err.message)
+        this.$message.error(String(this.$t('orders.requestError')) + err.message)
       })
   }
   // 查看详情
@@ -929,6 +933,24 @@ export default class extends Vue {
 }
 </style>
 <style  lang="scss">
+.dashboard-container.home .homeTitleBtn {
+  .conTab {
+    width: auto;
+    min-width: 390px;
+
+    li {
+      flex: 1 0 auto;
+      min-width: 190px;
+      padding: 0 18px;
+      white-space: nowrap;
+    }
+
+    .el-badge {
+      white-space: nowrap;
+    }
+  }
+}
+
 .dashboard-container {
   .cancelTime {
     padding-left: 30px;

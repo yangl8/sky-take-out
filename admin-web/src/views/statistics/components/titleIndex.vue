@@ -9,14 +9,14 @@
           :class="{ active: index === nowIndex }"
           :key="index"
         >
-          {{ item }}
+          {{ $t(item) }}
           <span></span>
         </li>
       </ul>
     </div>
     <div class="get-time">
       <p>
-        已选时间：{{ tateData[0] }} 至
+        {{ $t('statistics.selectedPeriod') }}{{ tateData[0] }} {{ $t('statistics.to') }}
         {{ tateData[tateData.length - 1] }}
       </p>
     </div>
@@ -24,7 +24,7 @@
       icon="iconfont icon-download"
       class="right-el-button"
       @click="handleExport"
-      >数据导出</el-button
+      >{{ $t('statistics.exportData') }}</el-button
     >
   </div>
 </template>
@@ -42,7 +42,13 @@ export default class extends Vue {
 
   nowIndex = 2 - 1
   value = []
-  tabsParam = ['昨日', '近7日', '近30日', '本周', '本月']
+  tabsParam = [
+    'statistics.yesterday',
+    'statistics.last7Days',
+    'statistics.last30Days',
+    'statistics.thisWeek',
+    'statistics.thisMonth',
+  ]
   @Watch('flag')
   getNowIndex(val) {
     this.nowIndex = val
@@ -56,18 +62,18 @@ export default class extends Vue {
   //  数据导出
   /** 导出按钮操作 */
   handleExport() {
-    this.$confirm('是否确认导出最近30天运营数据?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    this.$confirm(String(this.$t('statistics.exportConfirm')), String(this.$t('statistics.notice')), {
+      confirmButtonText: String(this.$t('common.confirm')),
+      cancelButtonText: String(this.$t('common.cancel')),
       type: 'warning',
     })
-      .then(async function () {
+      .then(async () => {
         const { data } = await exportInfor()
         let url = window.URL.createObjectURL(data)
         var a = document.createElement('a')
         document.body.appendChild(a)
         a.href = url
-        a.download = '运营数据统计报表.xlsx'
+        a.download = String(this.$t('statistics.fileName'))
         a.click()
         window.URL.revokeObjectURL(url)
       })
@@ -75,3 +81,47 @@ export default class extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.title-index {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+
+  .month {
+    display: block;
+    flex: 0 0 auto;
+
+    .tabs {
+      width: auto;
+
+      .li-tab {
+        flex: 0 0 auto;
+        min-width: 88px;
+        padding: 0 16px;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .get-time {
+    padding-left: 0;
+    white-space: nowrap;
+  }
+
+  .right-el-button {
+    float: none;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .title-index {
+    .get-time {
+      order: 3;
+      width: 100%;
+    }
+  }
+}
+</style>

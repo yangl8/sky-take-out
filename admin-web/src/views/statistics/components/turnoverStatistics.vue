@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <h2 class="homeTitle">营业额统计</h2>
+    <h2 class="homeTitle">{{ $t('statistics.turnoverStatistics') }}</h2>
     <div class="charBox">
       <div id="main" style="width: 100%; height: 320px"></div>
       <ul class="orderListLine turnover">
-        <li>营业额(元)</li>
+        <li>{{ $t('statistics.turnoverYuan') }}</li>
       </ul>
     </div>
   </div>
@@ -24,10 +24,14 @@ export default class extends Vue {
       this.initChart()
     })
   }
+  @Watch('$i18n.locale')
+  relocalizeChart() {
+    this.$nextTick(() => this.initChart())
+  }
   initChart() {
     type EChartsOption = echarts.EChartsOption
     const chartDom = document.getElementById('main') as any
-    const myChart = echarts.init(chartDom)
+    const myChart = echarts.getInstanceByDom(chartDom) || echarts.init(chartDom)
 
     var option: any
     option = {
@@ -87,7 +91,7 @@ export default class extends Vue {
       ],
       series: [
         {
-          name: '营业额',
+          name: String(this.$t('dashboard.turnover')),
           type: 'line',
           // stack: 'Total',
           smooth: false, //否平滑曲线

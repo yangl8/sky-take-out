@@ -614,9 +614,13 @@ display: -webkit-box;
 
 }
 .orderListLine{
-  width: 360px;
+  width: fit-content;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 24px;
   margin-top: -10px;
 
   li{
@@ -625,9 +629,11 @@ display: -webkit-box;
     padding: 0 6px;
     align-items: center;
     display: flex;
-    height: 20px;
+    min-height: 20px;
+    white-space: nowrap;
     span{
       display: inline-block;
+      flex: 0 0 12px;
       width: 12px;
       height: 2px;
       overflow: hidden;
@@ -654,10 +660,10 @@ display: -webkit-box;
   }
 }
 .orderListLine.user{
-  width: 260px;
+  width: fit-content;
 }
 .orderListLine.turnover{
-  width: 70px;
+  width: fit-content;
 }
 // .el-popover
 // {

@@ -22,5 +22,8 @@ export default class extends Vue {}
 .app-main {
   height: calc(100% - 64px);
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  min-width: 0;
 }
 </style>

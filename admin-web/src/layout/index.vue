@@ -50,8 +50,8 @@ export default class extends mixins(ResizeMixin) {
   position: relative;
   height: 100%;
   width: 100%;
-  min-width: 1366px;
-  overflow-x: auto;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: hidden;
 }
 
@@ -60,6 +60,7 @@ export default class extends mixins(ResizeMixin) {
   background: #f3f4f7;
   position: relative;
   width: calc(100% - 190px);
+  min-width: 0;
 }
 
 .drawer-bg {
@@ -108,6 +109,7 @@ export default class extends mixins(ResizeMixin) {
 .mobile {
   .main-container {
     margin-left: 0px;
+    width: 100%;
   }
 
   .sidebar-container {

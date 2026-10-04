@@ -1,14 +1,14 @@
 <template>
   <div class="container">
     <h2 class="homeTitle">
-      订单管理<i>{{ days[1] }}</i
-      ><span><router-link to="/order">订单明细</router-link></span>
+      {{ $t('dashboard.orderManagement') }}<i>{{ days[1] }}</i
+      ><span><router-link to="/order">{{ $t('dashboard.orderDetails') }}</router-link></span>
     </h2>
     <div class="orderviewBox">
       <ul>
         <li>
           <span class="status"
-            ><i class="iconfont icon-waiting"></i>待接单</span
+            ><i class="iconfont icon-waiting"></i>{{ $t('orders.awaitingAcceptance') }}</span
           >
           <span class="num tip"
             ><router-link to="/order?status=2">{{
@@ -18,7 +18,7 @@
         </li>
         <li>
           <span class="status"
-            ><i class="iconfont icon-staySway"></i>待派送</span
+            ><i class="iconfont icon-staySway"></i>{{ $t('orders.awaitingDelivery') }}</span
           >
           <span class="num tip"
             ><router-link to="/order?status=3">{{
@@ -28,7 +28,7 @@
         </li>
         <li>
           <span class="status"
-            ><i class="iconfont icon-complete"></i>已完成</span
+            ><i class="iconfont icon-complete"></i>{{ $t('orders.completed') }}</span
           >
           <span class="num"
             ><router-link to="/order?status=5">{{
@@ -37,7 +37,7 @@
           >
         </li>
         <li>
-          <span class="status"><i class="iconfont icon-cancel"></i>已取消</span>
+          <span class="status"><i class="iconfont icon-cancel"></i>{{ $t('orders.cancelled') }}</span>
           <span class="num"
             ><router-link to="/order?status=6">{{
               orderviewData.cancelledOrders
@@ -45,7 +45,7 @@
           >
         </li>
         <li>
-          <span class="status"><i class="iconfont icon-all"></i>全部订单</span>
+          <span class="status"><i class="iconfont icon-all"></i>{{ $t('orders.allOrders') }}</span>
           <span class="num"
             ><router-link to="/order">{{
               orderviewData.allOrders
@@ -70,3 +70,32 @@ export default class extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.orderviewBox {
+  ul {
+    flex-wrap: wrap;
+    row-gap: 20px;
+
+    li {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 12px;
+      min-width: 220px;
+
+      .status {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        white-space: nowrap;
+      }
+
+      .num {
+        float: none;
+        justify-self: end;
+      }
+    }
+  }
+}
+</style>

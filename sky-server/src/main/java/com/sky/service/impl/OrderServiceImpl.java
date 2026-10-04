@@ -115,6 +115,7 @@ public class OrderServiceImpl implements OrderService{
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setPhone(addressBook.getPhone());
         orders.setConsignee(addressBook.getConsignee());
+        orders.setAddress(buildDeliveryAddress(addressBook));
         orders.setUserId(userId);
 
         orderMapper.insert(orders);
@@ -260,7 +261,28 @@ public class OrderServiceImpl implements OrderService{
         BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
 
+        // Older orders may not have persisted the delivery address. Rebuild it
+        // from the address book so the management detail view can still show it.
+        if ((orderVO.getAddress() == null || orderVO.getAddress().isBlank())
+                && orderVO.getAddressBookId() != null) {
+            AddressBook addressBook = addressBookMapper.getById(orderVO.getAddressBookId());
+            if (addressBook != null) {
+                orderVO.setAddress(buildDeliveryAddress(addressBook));
+            }
+        }
+
         return orderVO;
+    }
+
+    private String buildDeliveryAddress(AddressBook addressBook) {
+        return valueOrEmpty(addressBook.getProvinceName())
+                + valueOrEmpty(addressBook.getCityName())
+                + valueOrEmpty(addressBook.getDistrictName())
+                + valueOrEmpty(addressBook.getDetail());
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     /**

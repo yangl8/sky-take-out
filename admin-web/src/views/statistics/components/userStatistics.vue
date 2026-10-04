@@ -1,11 +1,11 @@
 <template>
   <div class="container">
-    <h2 class="homeTitle">用户统计</h2>
+    <h2 class="homeTitle">{{ $t('statistics.userStatistics') }}</h2>
     <div class="charBox">
       <div id="usermain" style="width: 100%; height: 320px"></div>
       <ul class="orderListLine user">
-        <li class="one"><span></span>用户总量（个）</li>
-        <li class="three"><span></span>新增用户（个）</li>
+        <li class="one"><span></span>{{ $t('statistics.totalUsersCount') }}</li>
+        <li class="three"><span></span>{{ $t('statistics.newUsersCount') }}</li>
       </ul>
     </div>
   </div>
@@ -25,10 +25,14 @@ export default class extends Vue {
       this.initChart()
     })
   }
+  @Watch('$i18n.locale')
+  relocalizeChart() {
+    this.$nextTick(() => this.initChart())
+  }
   initChart() {
     type EChartsOption = echarts.EChartsOption
     const chartDom = document.getElementById('usermain') as any
-    const myChart = echarts.init(chartDom)
+    const myChart = echarts.getInstanceByDom(chartDom) || echarts.init(chartDom)
     var option: any
     option = {
       // legend: {
@@ -92,7 +96,7 @@ export default class extends Vue {
       ],
       series: [
         {
-          name: '用户总量',
+          name: String(this.$t('statistics.totalUsers')),
           type: 'line',
           // stack: 'Total',
           smooth: false, //否平滑曲线
@@ -116,7 +120,7 @@ export default class extends Vue {
           data: this.userdata.totalUserList,
         },
         {
-          name: '新增用户',
+          name: String(this.$t('dashboard.newUsers')),
           type: 'line',
           // stack: 'Total',
           smooth: false, //否平滑曲线

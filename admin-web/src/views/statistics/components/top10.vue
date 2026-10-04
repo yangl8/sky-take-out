@@ -1,6 +1,6 @@
 <template>
   <div class="container top10">
-    <h2 class="homeTitle">销量排名TOP10</h2>
+    <h2 class="homeTitle">{{ $t('statistics.salesTop10') }}</h2>
     <div class="charBox">
       <div id="top" style="width: 100%; height: 380px"></div>
     </div>
@@ -10,10 +10,12 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 import * as echarts from 'echarts'
+import { menuName } from '@/i18n/menu'
 @Component({
   name: 'Top',
 })
 export default class extends Vue {
+  menuName = menuName
   @Prop() private top10data!: any
   @Watch('top10data')
   getData() {
@@ -21,10 +23,14 @@ export default class extends Vue {
       this.initChart()
     })
   }
+  @Watch('$i18n.locale')
+  relocalizeChart() {
+    this.$nextTick(() => this.initChart())
+  }
   initChart() {
     type EChartsOption = echarts.EChartsOption
     const chartDom = document.getElementById('top') as any
-    const myChart = echarts.init(chartDom)
+    const myChart = echarts.getInstanceByDom(chartDom) || echarts.init(chartDom)
     var option: any
     option = {
       tooltip: {
@@ -66,7 +72,7 @@ export default class extends Vue {
           },
           // formatter: "{value} ml",//单位
         },
-        data: this.top10data.nameList,
+        data: this.top10data.nameList.map((name) => this.menuName(name)),
       },
       series: [
         {

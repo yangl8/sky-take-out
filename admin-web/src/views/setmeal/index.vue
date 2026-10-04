@@ -2,40 +2,44 @@
   <div class="dashboard-container">
     <div class="container">
       <div class="tableBar">
-        <label style="margin-right: 10px">{{ $t('catalog.setmealName') }}</label>
-        <el-input v-model="input"
-                  :placeholder="String($t('catalog.setmealRequired'))"
-                  style="width: 14%"
-                  clearable
-                  @clear="init"
-                  @keyup.enter.native="initFun" />
+        <div class="filter-item">
+          <label>{{ $t('catalog.setmealName') }}</label>
+          <el-input v-model="input"
+                    :placeholder="String($t('catalog.setmealRequired'))"
+                    clearable
+                    @clear="init"
+                    @keyup.enter.native="initFun" />
+        </div>
 
-        <label style="margin-right: 10px; margin-left: 20px">{{ $t('catalog.setmealCategory') }}</label>
-        <el-select v-model="categoryId"
-                   style="width: 14%"
-                   :placeholder="String($t('catalog.select'))"
-                   clearable
-                   @clear="init">
-          <el-option v-for="item in dishCategoryList"
-                     :key="item.value"
-                     :label="categoryLabel(item.label)"
-                     :value="item.value" />
-        </el-select>
+        <div class="filter-item">
+          <label>{{ $t('catalog.setmealCategory') }}</label>
+          <el-select v-model="categoryId"
+                     :placeholder="String($t('catalog.select'))"
+                     clearable
+                     @clear="init">
+            <el-option v-for="item in dishCategoryList"
+                       :key="item.value"
+                       :label="categoryLabel(item.label)"
+                       :value="item.value" />
+          </el-select>
+        </div>
 
-        <label style="margin-right: 10px; margin-left: 20px">{{ $t('catalog.saleStatus') }}</label>
-        <el-select v-model="dishStatus"
-                   style="width: 14%"
-                   :placeholder="String($t('catalog.select'))"
-                   clearable
-                   @clear="init">
-          <el-option v-for="item in saleStatus"
-                     :key="item.value"
-                     :label="item.label"
-                     :value="item.value" />
-        </el-select>
+        <div class="filter-item">
+          <label>{{ $t('catalog.saleStatus') }}</label>
+          <el-select v-model="dishStatus"
+                     :placeholder="String($t('catalog.select'))"
+                     clearable
+                     @clear="init">
+            <el-option v-for="item in saleStatus"
+                       :key="item.value"
+                       :label="item.label"
+                       :value="item.value" />
+          </el-select>
+        </div>
         <el-button class="normal-btn continue"
                    @click="init(true)">{{ $t('catalog.search') }}</el-button>
-        <div class="tableLab">
+      </div>
+      <div class="table-actions-row">
           <span class="delBut non"
                 @click="deleteHandle('批量')">{{ $t('catalog.batchDelete') }}</span>
           <!-- <span class="blueBug non" @click="statusHandle('1')">批量启售</span>
@@ -48,7 +52,6 @@
           <el-button type="primary"
                      style="margin-left: 15px"
                      @click="addSetMeal('add')">+ {{ $t('catalog.newSetmeal') }}</el-button>
-        </div>
       </div>
       <el-table v-if="tableData.length"
                 :data="tableData"
@@ -389,7 +392,9 @@ export default class extends Vue {
 
 <style scoped>
 .tableBar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 8px; height: auto; }
-.tableBar label { white-space: normal; }
-.tableBar .el-input, .tableBar .el-select { min-width: 180px; }
-.tableBar .tableLab { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tableBar .filter-item { display: flex; flex: 1 1 0; min-width: 250px; align-items: center; gap: 10px; }
+.tableBar .filter-item label { flex: 0 0 auto; white-space: nowrap; }
+.tableBar .filter-item .el-input, .tableBar .filter-item .el-select { flex: 1 1 auto; width: auto !important; min-width: 0; }
+.tableBar .normal-btn { flex: 0 0 auto; margin-left: 0 !important; }
+.table-actions-row { width: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; margin: 0 0 20px; }
 </style>

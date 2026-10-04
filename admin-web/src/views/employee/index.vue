@@ -2,15 +2,16 @@
   <div class="dashboard-container">
     <div class="container">
       <div class="tableBar">
-        <label style="margin-right: 5px">{{ $t('catalog.employeeName') }}</label>
-        <el-input
-          v-model="input"
-          :placeholder="String($t('catalog.employeeNameRequired'))"
-          style="width: 15%"
-          clearable
-          @clear="init"
-          @keyup.enter.native="initFun"
-        />
+        <div class="filter-item">
+          <label>{{ $t('catalog.employeeName') }}</label>
+          <el-input
+            v-model="input"
+            :placeholder="String($t('catalog.employeeNameRequired'))"
+            clearable
+            @clear="init"
+            @keyup.enter.native="initFun"
+          />
+        </div>
         <el-button class="normal-btn continue" @click="init(true)"
           >{{ $t('catalog.search') }}</el-button
         >
@@ -208,7 +209,10 @@ export default class extends Vue {
 
 <style scoped>
 .tableBar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 8px; height: auto; }
-.tableBar label { white-space: normal; }
-.tableBar .el-input, .tableBar .el-select { min-width: 180px; }
+.tableBar .filter-item { display: flex; flex: 1 1 300px; max-width: 520px; min-width: 0; align-items: center; gap: 10px; }
+.tableBar .filter-item label { flex: 0 0 auto; white-space: nowrap; }
+.tableBar .filter-item .el-input { flex: 1 1 auto; width: auto !important; min-width: 0; }
+.tableBar .normal-btn { margin-left: 0 !important; }
+.tableBar > .el-button--primary { margin-left: auto; }
 .tableBar .tableLab { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 </style>

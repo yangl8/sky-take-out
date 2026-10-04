@@ -7,7 +7,8 @@
 
 body {
   height: 100%;
-  min-width: 1000px;
+  min-width: 0;
+  overflow-x: hidden;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   font-size: 14px;
@@ -128,6 +129,26 @@ div:focus {
 
 .app-container {
   padding: 20px;
+}
+
+.dashboard-container,
+.dashboard-container .container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-container .el-table th .cell {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+@media only screen and (max-width: 767px) {
+  .el-dialog {
+    width: calc(100% - 30px) !important;
+    min-width: 0 !important;
+  }
 }
 
 .continue {
