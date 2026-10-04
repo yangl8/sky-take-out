@@ -33,7 +33,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import { baseUrl } from '@/config.json'
 import { getToken } from '@/utils/cookies'
 @Component({
   name: 'UploadImage'
@@ -51,7 +50,7 @@ export default class extends Vue {
 
   @Watch('propImageUrl')
   private onChange(val) {
-    this.imageUrl = val
+    this.imageUrl = val && val !== 'null' ? val : ''
   }
 
   handleError(err, file, fileList) {
@@ -63,11 +62,15 @@ export default class extends Vue {
   }
 
   handleAvatarSuccess(response: any, file: any, fileList: any) {
-    // this.imageUrl = response.data
-    // this.imageUrl = `http://172.17.2.120:8080/common/download?name=${response.data}`
-    this.imageUrl = `${response.data}`
-    // this.imageUrl = `${baseUrl}/common/download?name=${response.data}`
+    if (response.code !== 1 || !response.data) {
+      this.$message({
+        message: response.msg || String(this.$t('catalog.uploadFailed')),
+        type: 'error'
+      })
+      return
+    }
 
+    this.imageUrl = `${response.data}`
     this.$emit('imageChange', this.imageUrl)
   }
 
