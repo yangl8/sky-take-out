@@ -16,6 +16,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.service.MenuCacheService;
 import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import java.util.List;
@@ -38,6 +39,8 @@ public class SetmealServiceImpl implements SetmealService {
     private SetmealDishMapper setmealDishMapper;
     @Autowired
     private DishMapper dishMapper;
+    @Autowired
+    private MenuCacheService menuCacheService;
 
     /**
      * 新增套餐，同时需要保存套餐和菜品的关联关系
@@ -61,6 +64,8 @@ public class SetmealServiceImpl implements SetmealService {
 
         //保存套餐和菜品的关联关系
         setmealDishMapper.insertBatch(setmealDishes);
+
+        menuCacheService.evictSetmeals(setmealDTO.getCategoryId());
     }
 
     /**
@@ -83,6 +88,8 @@ public class SetmealServiceImpl implements SetmealService {
     */
     @Transactional
     public void deleteBatch(List<Long> ids) {
+        List<Long> categoryIds = setmealMapper.getCategoryIdsByIds(ids);
+
         ids.forEach(id -> {
             Setmeal setmeal = setmealMapper.getById(id);
             if(StatusConstant.ENABLE == setmeal.getStatus()){
@@ -97,6 +104,8 @@ public class SetmealServiceImpl implements SetmealService {
             //删除套餐菜品关系表中的数据
             setmealDishMapper.deleteBySetmealId(setmealId);
         });
+
+        evictSetmealCategories(categoryIds);
     }
 
     /**
@@ -123,6 +132,8 @@ public class SetmealServiceImpl implements SetmealService {
     */
     @Transactional
     public void update(SetmealDTO setmealDTO) {
+        Setmeal existingSetmeal = setmealMapper.getById(setmealDTO.getId());
+
         Setmeal setmeal = new Setmeal();
         BeanUtils.copyProperties(setmealDTO, setmeal);
 
@@ -141,6 +152,11 @@ public class SetmealServiceImpl implements SetmealService {
         });
         //3、重新插入套餐和菜品的关联关系，操作setmeal_dish表，执行insert
         setmealDishMapper.insertBatch(setmealDishes);
+
+        menuCacheService.evictSetmeals(existingSetmeal.getCategoryId());
+        if (!existingSetmeal.getCategoryId().equals(setmealDTO.getCategoryId())) {
+            menuCacheService.evictSetmeals(setmealDTO.getCategoryId());
+        }
     }
 
     /**
@@ -148,7 +164,10 @@ public class SetmealServiceImpl implements SetmealService {
          * @param status
          * @param id
     */
+    @Transactional
     public void startOrStop(Integer status, Long id) {
+        Setmeal existingSetmeal = setmealMapper.getById(id);
+
         //起售套餐时，判断套餐内是否有停售菜品，有停售菜品提示"套餐内包含未启售菜品，无法启售"
         if(status == StatusConstant.ENABLE){
             //select a.* from dish a left join setmeal_dish b on a.id = b.dish_id where b.setmeal_id = ?
@@ -167,6 +186,7 @@ public class SetmealServiceImpl implements SetmealService {
             .status(status)
             .build();
         setmealMapper.update(setmeal);
+        menuCacheService.evictSetmeals(existingSetmeal.getCategoryId());
     }
 
     /**
@@ -186,5 +206,9 @@ public class SetmealServiceImpl implements SetmealService {
      */
     public List<DishItemVO> getDishItemById(Long id) {
         return setmealMapper.getDishItemBySetmealId(id);
+    }
+
+    private void evictSetmealCategories(List<Long> categoryIds) {
+        categoryIds.forEach(menuCacheService::evictSetmeals);
     }
 }

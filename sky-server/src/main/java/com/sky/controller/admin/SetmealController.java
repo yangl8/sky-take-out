@@ -5,7 +5,6 @@ import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.SetmealService;
-import com.sky.service.MenuCacheService;
 import com.sky.vo.SetmealVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,8 +32,6 @@ public class SetmealController {
 
     @Autowired
     private SetmealService setmealService;
-    @Autowired
-    private MenuCacheService menuCacheService;
 
     /**
      * 新增套餐
@@ -45,7 +42,6 @@ public class SetmealController {
     @ApiOperation("新增套餐")
     public Result save(@RequestBody SetmealDTO setmealDTO) {
         setmealService.saveWithDish(setmealDTO);
-        menuCacheService.evictSetmeals(setmealDTO.getCategoryId());
         return Result.success();
     }
 
@@ -70,7 +66,6 @@ public class SetmealController {
     @ApiOperation("批量删除套餐")
     public Result delete(@RequestParam List<Long> ids){
         setmealService.deleteBatch(ids);
-        menuCacheService.evictAllSetmeals();
         return Result.success();
     }
 
@@ -97,7 +92,6 @@ public class SetmealController {
     @ApiOperation("修改套餐")
     public Result update(@RequestBody SetmealDTO setmealDTO) {
         setmealService.update(setmealDTO);
-        menuCacheService.evictAllSetmeals();
         return Result.success();
     }
 
@@ -111,7 +105,6 @@ public class SetmealController {
     @ApiOperation("套餐起售停售")
     public Result startOrStop(@PathVariable Integer status, Long id) {
         setmealService.startOrStop(status, id);
-        menuCacheService.evictAllSetmeals();
         return Result.success();
     }
 }

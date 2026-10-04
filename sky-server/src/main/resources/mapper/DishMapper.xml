@@ -16,6 +16,15 @@
         </foreach>
     </delete>
 
+    <select id="getCategoryIdsByIds" resultType="java.lang.Long">
+        select distinct category_id
+        from dish
+        where id in
+        <foreach collection="ids" open="(" close=")" separator="," item="id">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="pageQuery" resultType="com.sky.vo.DishVO">
         select d.* , c.name as categoryName from dish d left outer join category c on d.category_id = c.id
         <where>

@@ -24,6 +24,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
+import com.sky.service.MenuCacheService;
 import com.sky.vo.DishVO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,8 @@ public class DishServiceImpl implements DishService{
     private SetmealDishMapper setmealDishMapper;
     @Autowired
     private SetmealMapper setmealMapper;
+    @Autowired
+    private MenuCacheService menuCacheService;
 
     /**
      * 新增菜品和对应的口味
@@ -65,6 +68,8 @@ public class DishServiceImpl implements DishService{
             //向口味表插入n条数据
             dishflavorMapper.insertBatch(flavors);
         }
+
+        menuCacheService.evictDishes(dishDTO.getCategoryId());
     }
 
     /**
@@ -82,6 +87,8 @@ public class DishServiceImpl implements DishService{
      */
     @Transactional
     public void deleteBatch(List<Long> ids){
+        List<Long> categoryIds = dishMapper.getCategoryIdsByIds(ids);
+
         //判断当前菜品是否能够删除——是否存在启售中的菜品？
         for(Long id : ids){
             Dish dish = dishMapper.getById(id);
@@ -113,6 +120,8 @@ public class DishServiceImpl implements DishService{
         //sql : delete from dish_flavor where dish_id in (?,?,?)
         dishflavorMapper.deleteByDishIds(ids);
 
+        evictDishCategories(categoryIds);
+
     }
 
 
@@ -140,7 +149,10 @@ public class DishServiceImpl implements DishService{
      * 根据id修改菜品基本信息和对应的口味信息
      * @param dishDTO
      */
+    @Transactional
     public void updateWithFlavor(DishDTO dishDTO){
+        Dish existingDish = dishMapper.getById(dishDTO.getId());
+
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO,dish);
         //修改菜品表基本信息
@@ -158,6 +170,11 @@ public class DishServiceImpl implements DishService{
             //向口味表插入n条数据
             dishflavorMapper.insertBatch(flavors);
         }
+
+        menuCacheService.evictDishes(existingDish.getCategoryId());
+        if (!existingDish.getCategoryId().equals(dishDTO.getCategoryId())) {
+            menuCacheService.evictDishes(dishDTO.getCategoryId());
+        }
     }
 
     /**
@@ -168,6 +185,11 @@ public class DishServiceImpl implements DishService{
     */
     @Transactional
     public void startOrStop(Integer status, Long id) {
+        Dish existingDish = dishMapper.getById(id);
+        List<Long> affectedSetmealCategoryIds = status == StatusConstant.DISABLE
+            ? setmealMapper.getCategoryIdsByDishId(id)
+            : new ArrayList<>();
+
         Dish dish = Dish.builder()
             .id(id)
             .status(status)
@@ -190,6 +212,9 @@ public class DishServiceImpl implements DishService{
                 }
             }
         }
+
+        menuCacheService.evictDishes(existingDish.getCategoryId());
+        evictSetmealCategories(affectedSetmealCategoryIds);
     }
 
     /**
@@ -227,5 +252,13 @@ public class DishServiceImpl implements DishService{
         }
 
         return dishVOList;
+    }
+
+    private void evictDishCategories(List<Long> categoryIds) {
+        categoryIds.forEach(menuCacheService::evictDishes);
+    }
+
+    private void evictSetmealCategories(List<Long> categoryIds) {
+        categoryIds.forEach(menuCacheService::evictSetmeals);
     }
 }

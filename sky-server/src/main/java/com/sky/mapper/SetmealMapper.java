@@ -51,6 +51,23 @@ public interface SetmealMapper {
     @Delete("delete from setmeal where id = #{id}")
     void deleteById(Long setmealId);
 
+    /**
+     * 根据套餐id集合查询分类id
+     * @param ids
+     * @return
+     */
+    List<Long> getCategoryIdsByIds(List<Long> ids);
+
+    /**
+     * 根据菜品id查询关联套餐的分类id
+     * @param dishId
+     * @return
+     */
+    @Select("select distinct s.category_id from setmeal s " +
+            "inner join setmeal_dish sd on s.id = sd.setmeal_id " +
+            "where sd.dish_id = #{dishId}")
+    List<Long> getCategoryIdsByDishId(Long dishId);
+
     /** 根据id动态修改套餐 */
     @AutoFill(OperationType.UPDATE)
     void update(Setmeal setmeal);

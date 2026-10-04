@@ -1,7 +1,7 @@
 package com.sky.constant;
 
 /**
- * Redis cache key prefixes for customer-facing menu data.
+ * 菜单缓存键常量
  */
 public class CacheKeyConstant {
 

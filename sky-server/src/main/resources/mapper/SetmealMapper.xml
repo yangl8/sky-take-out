@@ -10,6 +10,15 @@
         #{createUser}, #{updateUser})
     </insert>
 
+    <select id="getCategoryIdsByIds" resultType="java.lang.Long">
+        select distinct category_id
+        from setmeal
+        where id in
+        <foreach collection="ids" open="(" close=")" separator="," item="id">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="pageQuery" resultType="com.sky.vo.SetmealVO">
         select
             s.*,c.name categoryName
