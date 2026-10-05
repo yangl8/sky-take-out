@@ -1,10 +1,12 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import { getInitialLocale, saveLocale } from '@/locales'
 
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
 	state: {
+		locale: getInitialLocale(),
 		storeInfo: {}, // 店铺请求的id信息
 		shopInfo: '',  // 店铺详细信息
 		orderListData: [],// 购物车列表信息
@@ -24,6 +26,10 @@ const store = new Vuex.Store({
 		gender: 0 // 收货地址对应的 性别  0 先生  1 女士
 	},
 	mutations: {
+		setLocale(state, locale) {
+			state.locale = locale
+			saveLocale(locale)
+		},
 		setStoreInfo(state, provider) {
 			state.storeInfo = provider
 		},

@@ -4,7 +4,7 @@
       @clickLeft="goBack"
       left-icon="back"
       leftIcon="arrowleft"
-      title="地址管理"
+      :title="$t('my.title')"
       statusBar="true"
       fixed="true"
       color="#ffffff"
@@ -22,6 +22,16 @@
       ></head>
 
       <view class="container">
+        <view class="language-setting">
+          <text>{{ $t("common.language") }}</text>
+          <picker
+            :value="languageIndex"
+            :range="languageNames"
+            @change="changeLanguage"
+          >
+            <view class="language-value">{{ languageNames[languageIndex] }}</view>
+          </picker>
+        </view>
         <!-- 地址和历史订单 -->
         <order-info @goAddress="goAddress" @goOrder="goOrder"></order-info>
         <!-- 最近订单 -->
@@ -53,6 +63,7 @@
 import { getOrderPage, repetitionOrder, delShoppingCart } from "../api/api.js";
 import { mapMutations } from "vuex";
 import { statusWord, getOvertime } from "@/utils/index.js";
+import { supportedLocales } from "@/locales";
 
 import HeadInfo from "./components/headInfo.vue"; //头部
 import OrderInfo from "./components/orderInfo.vue"; //地址
@@ -85,6 +96,17 @@ export default {
     OrderInfo,
     OrderList,
   },
+  computed: {
+    languageNames() {
+      return supportedLocales.map((locale) => this.$t(locale.labelKey));
+    },
+    languageIndex() {
+      const index = supportedLocales.findIndex(
+        (locale) => locale.code === this.$store.state.locale
+      );
+      return index === -1 ? 0 : index;
+    },
+  },
   filters: {
     getPhoneNum(str) {
       return str.replace(/\-/g, "");
@@ -111,7 +133,13 @@ export default {
     });
   },
   methods: {
-    ...mapMutations(["setAddressBackUrl"]),
+    ...mapMutations(["setAddressBackUrl", "setLocale"]),
+    changeLanguage(event) {
+      const locale = supportedLocales[Number(event.detail.value)];
+      if (locale) {
+        this.setLocale(locale.code);
+      }
+    },
     statusWord(obj) {
       return statusWord(obj.status, obj.time);
     },
@@ -205,6 +233,20 @@ export default {
   .container {
     margin-top: 20rpx;
     height: calc(100% - 194rpx);
+  }
+
+  .language-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20rpx;
+    padding: 28rpx 30rpx;
+    background: #ffffff;
+    font-size: 28rpx;
+
+    .language-value {
+      color: #666666;
+    }
   }
 }
 ::v-deep .uni-navbar--border {

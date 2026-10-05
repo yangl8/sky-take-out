@@ -16,7 +16,7 @@
               <view class="right_title">
                 <text>苍穹外卖</text>
                 <view class="businessStatus" v-if="shopStatus === 1">营业中</view>
-                <view class="businessStatus close" v-else>休息中</view>
+                <view class="businessStatus close" v-else-if="shopStatus === 0">休息中</view>
               </view>
               <view class="right_details">
                 <!-- 中 -->
@@ -97,7 +97,7 @@
           <view v-if="typeListData.length > 0">该分类下暂无菜品</view>
         </view>
       </view>
-      <view class="restaurant_close">店铺已打烊</view>
+      <view class="restaurant_close" v-if="shopStatus === 0">店铺已打烊</view>
       <!-- end -->
       <view class="mask-box"></view>
       <!-- 底部去结算 -->

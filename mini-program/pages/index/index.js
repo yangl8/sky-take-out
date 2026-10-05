@@ -192,63 +192,24 @@ export default {
 					showCancel: false,
 					success(res) {
 						if (res.confirm) {
-							let jsCode = ""
-							uni.login({
-								provider: "weixin",
-								success: (loginRes) => {
-									if (loginRes.errMsg === "login:ok") {
-										jsCode = loginRes.code
-									}
-								},
-							})
 							// 授权
 							uni.getUserProfile({
 								desc: "登录",
-								success: function (userInfo) {
+								success: async function (userInfo) {
 									_this.setBaseUserInfo(userInfo.userInfo)
-									const params = {
-										code: jsCode,
-										// 传递地理位置信息
-									}
-									// 获取定位信息
-									uni.getLocation({
-										type: 'gcj02', isHighAccuracy: true
-									}).then(([err, result]) => {
-										if (err) {
-											uni.showToast({
-												title: "获取地理位置失败",
-												icon: "none"
-											})
-										} else {
-											if (process.env.NODE_ENV === '"development"') {
-												params.location = `116.481488,39.990464`//	先写死在北京
-											} else {
-												params.location = `${result.longitude},${result.latitude}`
-											}
-
-											userLogin(params)
-												.then((success) => {
-													if (success.code === 1) {
-														_this.setToken(success.data.token)
-														// 保存配送费
-														_this.setDeliveryFee(success.data.deliveryFee)
-														// 保存商铺信息
-														_this.setShopInfo({
-															shopName: success.data.shopName,
-															shopAddress: success.data.shopAddress,
-															shopId: success.data.shopId,
-														})
-														_this.init()
-													}
-												})
-												.catch((err) => { })
-
-
-
+									try {
+										const jsCode = await _this.loginSync()
+										const success = await userLogin({ code: jsCode })
+										if (success.code === 1) {
+											_this.setToken(success.data.token)
+											_this.init()
 										}
-
-									})
-
+									} catch (err) {
+										uni.showToast({
+											title: "登录失败",
+											icon: "none",
+										})
+									}
 								},
 								fail: function (err) { },
 							})
