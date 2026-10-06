@@ -10,5 +10,31 @@
         (#{od.name}, #{od.image}, #{od.orderId}, #{od.dishId}, #{od.setmealId}, #{od.dishFlavor}, #{od.number}, #{od.amount})
         </foreach>
     </insert>
+
+    <select id="getDishMonthlySales" resultType="com.sky.vo.ItemSalesVO">
+        select od.dish_id as item_id, sum(od.number) as monthly_sales
+        from order_detail od inner join orders o on od.order_id = o.id
+        where o.status = 5
+          and o.order_time &gt;= #{begin}
+          and o.order_time &lt; #{end}
+          and od.dish_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by od.dish_id
+    </select>
+
+    <select id="getSetmealMonthlySales" resultType="com.sky.vo.ItemSalesVO">
+        select od.setmeal_id as item_id, sum(od.number) as monthly_sales
+        from order_detail od inner join orders o on od.order_id = o.id
+        where o.status = 5
+          and o.order_time &gt;= #{begin}
+          and o.order_time &lt; #{end}
+          and od.setmeal_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by od.setmeal_id
+    </select>
     
 </mapper>

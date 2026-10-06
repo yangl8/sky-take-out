@@ -5,6 +5,7 @@ import com.sky.entity.Setmeal;
 import com.sky.result.Result;
 import com.sky.service.SetmealService;
 import com.sky.service.MenuCacheService;
+import com.sky.service.OrderService;
 import com.sky.vo.DishItemVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController("userSetmealController")
 @RequestMapping("/user/setmeal")
@@ -23,6 +26,8 @@ public class SetmealController {
     private SetmealService setmealService;
     @Autowired
     private MenuCacheService menuCacheService;
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 条件查询
@@ -35,7 +40,7 @@ public class SetmealController {
     public Result<List<Setmeal>> list(Long categoryId) {
         List<Setmeal> list = menuCacheService.getSetmeals(categoryId);
         if (list != null) {
-            return Result.success(list);
+            return Result.success(addMonthlySales(list));
         }
 
         Setmeal setmeal = new Setmeal();
@@ -44,7 +49,14 @@ public class SetmealController {
 
         list = setmealService.list(setmeal);
         menuCacheService.cacheSetmeals(categoryId, list);
-        return Result.success(list);
+        return Result.success(addMonthlySales(list));
+    }
+
+    private List<Setmeal> addMonthlySales(List<Setmeal> setmeals) {
+        List<Long> ids = setmeals.stream().map(Setmeal::getId).collect(Collectors.toList());
+        Map<Long, Integer> sales = orderService.getSetmealMonthlySales(ids);
+        setmeals.forEach(setmeal -> setmeal.setMonthlySales(sales.getOrDefault(setmeal.getId(), 0)));
+        return setmeals;
     }
 
     /**

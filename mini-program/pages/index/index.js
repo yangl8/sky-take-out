@@ -396,19 +396,7 @@ export default {
 		},
 		// 加菜 - 添加菜品
 		async addDishAction(item, form) {
-			// 规格
-			if (
-				this.openMoreNormPop &&
-				(!this.flavorDataes || this.flavorDataes.length <= 0)
-			) {
-				uni.showToast({
-					title: "请选择规格",
-					icon: "none",
-				})
-				return false
-			}
 			this.openMoreNormPop = false
-			// 实时更新obj.newCardNumber新添加的字段----加入购物车数量number
 			this.tablewareNumber++
 			this.dishDetailes.dishNumber++
 			if (
@@ -567,26 +555,28 @@ export default {
 				...obj,
 				value: JSON.parse(obj.value),
 			}))
-			this.moreNormdata.forEach((item) => {
-				if (item.value && item.value.length > 0) {
-					this.flavorDataes.push(item.value[0])
+			// 忌口类默认不选；辣度、温度等单选类默认选第一项
+			this.moreNormdata.forEach((group) => {
+				if (!this.isMultiSelectFlavor(group) && group.value && group.value.length > 0) {
+					this.flavorDataes.push(group.value[0])
 				}
 			})
 		},
-		// 选规格 处理一行只能选择一种
+		isMultiSelectFlavor(group) {
+			const name = String(group.name || '')
+			return /忌口|不要|去除|exclude/i.test(name) ||
+				(group.value || []).some(value => /^(不要|去掉|不加)/.test(String(value)))
+		},
+		// 忌口组选项可多选；辣度、温度等组只能选择一个
 		checkMoreNormPop(val) {
-			let obj = val.obj
+			const group = this.moreNormdata.find(obj => obj.value === val.obj ||
+				obj.value.every((value, index) => value === val.obj[index]))
 			let item = val.item
-			let ind
-			let findst = obj.some((n) => {
-				ind = this.flavorDataes.findIndex((o) => o == n)
-				return ind != -1
-			})
 			const num = this.flavorDataes.findIndex((it) => it == item)
-			if (num == -1 && !findst) {
+			if (group && !this.isMultiSelectFlavor(group)) {
+				this.flavorDataes = this.flavorDataes.filter(value => !group.value.includes(value))
 				this.flavorDataes.push(item)
-			} else if (findst) {
-				this.flavorDataes.splice(ind, 1)
+			} else if (num === -1) {
 				this.flavorDataes.push(item)
 			} else {
 				this.flavorDataes.splice(num, 1)

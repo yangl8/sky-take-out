@@ -231,7 +231,7 @@ $desc-font-color: #818693;
       overflow: hidden;
       background-color: #f3f4f7;
       width: 168rpx;
-      padding-top: 140rpx;
+      padding-top: 160rpx;
       box-sizing: border-box;
       padding-bottom: 60rpx;
       position: relative;
@@ -286,15 +286,17 @@ $desc-font-color: #818693;
     }
     .vegetable_order_list {
       background-color: #fff;
-      padding-top: 140rpx;
+      padding-top: 160rpx;
       box-sizing: border-box;
       height: calc(100% - 0rpx);
       flex: 1;
       position: relative;
       .type_item {
         display: flex;
-        // margin: 20rpx 0;
         padding-top: 20rpx;
+        padding-bottom: 24rpx;
+        min-height: 230rpx;
+        box-sizing: border-box;
         .dish_img {
           width: 172rpx;
           margin: 0 30rpx;
@@ -308,6 +310,9 @@ $desc-font-color: #818693;
         .dish_info {
           position: relative;
           flex: 1;
+          min-height: 206rpx;
+          padding-bottom: 72rpx;
+          box-sizing: border-box;
           .dish_name {
             font-size: 32rpx;
             font-family: PingFangSC, PingFangSC-Semibold;
@@ -331,13 +336,15 @@ $desc-font-color: #818693;
             width: calc(100vw - 452rpx);
           }
           .dish_price {
+            position: absolute;
+            left: 0;
+            bottom: 0;
             height: 72rpx;
             line-height: 72rpx;
             font-size: 36rpx;
             color: #e94e3c;
             font-family: DIN, DIN-Medium;
             font-weight: 500;
-            bottom: 0;
             letter-spacing: -0.8px;
             .ico {
               font-size: 24rpx;
@@ -365,16 +372,19 @@ $desc-font-color: #818693;
           .dish_active_btn {
             position: absolute;
             right: 20rpx;
-            bottom: 15rpx;
+            bottom: 10rpx;
             display: flex;
             .check_but {
-              width: 128rpx;
-              height: 48rpx;
-              line-height: 48rpx;
+              min-width: 128rpx;
+              max-width: 180rpx;
+              min-height: 48rpx;
+              line-height: 30rpx;
+              padding: 9rpx 14rpx;
+              box-sizing: border-box;
               text-align: center;
               opacity: 1;
               background: #ffc200;
-              border-radius: 24rpx;
+              border-radius: 32rpx;
               font-size: 12px;
               font-family: PingFangSC, PingFangSC-Medium;
               font-weight: 500;

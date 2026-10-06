@@ -2,6 +2,7 @@ package com.sky.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.vo.ItemSalesVO;
 import com.sky.websocket.WebSocketServer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -267,6 +269,47 @@ public class OrderServiceImpl implements OrderService{
             }
         }
         return new PageResult(page.getTotal(), list);
+    }
+
+    /**
+     * 查询指定菜品的本月销量
+     * @param dishIds 菜品id集合
+     * @return 菜品id与本月销量的映射
+     */
+    public Map<Long, Integer> getDishMonthlySales(List<Long> dishIds) {
+        return getMonthlySales(dishIds, true);
+    }
+
+    /**
+     * 查询指定套餐的本月销量
+     * @param setmealIds 套餐id集合
+     * @return 套餐id与本月销量的映射
+     */
+    public Map<Long, Integer> getSetmealMonthlySales(List<Long> setmealIds) {
+        return getMonthlySales(setmealIds, false);
+    }
+
+    /**
+     * 查询指定菜品或套餐的本月销量
+     * @param itemIds 菜品或套餐id集合
+     * @param dish 是否查询菜品销量
+     * @return 商品id与本月销量的映射
+     */
+    private Map<Long, Integer> getMonthlySales(List<Long> itemIds, boolean dish) {
+        if (CollectionUtils.isEmpty(itemIds)) {
+            return new HashMap<>();
+        }
+
+        LocalDateTime begin = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime end = begin.plusMonths(1);
+        List<ItemSalesVO> sales = dish
+                ? orderDetailMapper.getDishMonthlySales(itemIds, begin, end)
+                : orderDetailMapper.getSetmealMonthlySales(itemIds, begin, end);
+
+        return sales.stream().collect(Collectors.toMap(
+                ItemSalesVO::getItemId,
+                ItemSalesVO::getMonthlySales
+        ));
     }
 
     /**

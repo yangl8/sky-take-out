@@ -14,15 +14,15 @@
             </view>
             <view class="info_top_right">
               <view class="right_title">
-                <text>苍穹外卖</text>
-                <view class="businessStatus" v-if="shopStatus === 1">营业中</view>
-                <view class="businessStatus close" v-else-if="shopStatus === 0">休息中</view>
+                <text>{{ $t("home.brand") }}</text>
+                <view class="businessStatus" v-if="shopStatus === 1">{{ $t("home.open") }}</view>
+                <view class="businessStatus close" v-else-if="shopStatus === 0">{{ $t("home.closed") }}</view>
               </view>
               <view class="right_details">
                 <!-- 中 -->
                 <view class="details_flex">
                   <image class="top_icon" src="../../static/money.png"></image>
-                  <text class="icon_text">配送费{{ deliveryFee() }}元</text>
+                  <text class="icon_text">{{ $t("home.deliveryFee", { amount: deliveryFee() }) }}</text>
                 </view>
               </view>
             </view>
@@ -30,10 +30,10 @@
           <!-- 下部---信息简介 -->
           <view class="info_bottom">
             <view>
-              <view class="word">苍穹餐厅为顾客打造专业的大众化美食外送餐饮</view>
+              <view class="word">{{ $t("home.description") }}</view>
               <view class="address">
                 <icon></icon>
-                {{ shopInfo().shopAddress || "商家店铺获取中.." }}
+                {{ shopInfo().shopAddress || $t("home.loadingAddress") }}
               </view>
             </view>
             <view>
@@ -71,7 +71,7 @@
               <view class="dish_label" @click="openDetailHandle(item)">{{
                 item.description || item.name
               }}</view>
-              <view class="dish_label" @click="openDetailHandle(item)">月销量0</view>
+              <view class="dish_label" @click="openDetailHandle(item)">{{ $t("home.monthlySales", { count: item.monthlySales || 0 }) }}</view>
               <view class="dish_price">
                 <text class="ico">￥</text>
                 {{ item.price.toFixed(2) }}
@@ -87,17 +87,17 @@
                 <image src="../../static/btn_add.png" class="dish_add" @click="addDishAction(item, '普通')"></image>
               </view>
               <view class="dish_active_btn" v-else>
-                <view class="check_but" @click="moreNormDataesHandle(item)">选择规格</view>
+                <view class="check_but" @click="moreNormDataesHandle(item)">{{ $t("home.selectOptions") }}</view>
               </view>
             </view>
           </view>
           <view class="seize_seat"></view>
         </scroll-view>
         <view class="no_dish" v-else>
-          <view v-if="typeListData.length > 0">该分类下暂无菜品</view>
+          <view v-if="typeListData.length > 0">{{ $t("home.emptyCategory") }}</view>
         </view>
       </view>
-      <view class="restaurant_close" v-if="shopStatus === 0">店铺已打烊</view>
+      <view class="restaurant_close" v-if="shopStatus === 0">{{ $t("home.shopClosed") }}</view>
       <!-- end -->
       <view class="mask-box"></view>
       <!-- 底部去结算 -->
@@ -110,7 +110,7 @@
           <text class="ico">￥</text>
           0
         </view>
-        <view class="ord<strong></strong>er_but">去结算</view>
+        <view class="order_but">{{ $t("home.checkout") }}</view>
       </view>
       <!-- end -->
       <!-- 购物车里有订单结算 -->
@@ -125,7 +125,7 @@
             {{ orderDishPrice.toFixed(2) }}
           </view>
         </view>
-        <view class="order_but" @click="goOrder()">去结算</view>
+        <view class="order_but" @click="goOrder()">{{ $t("home.checkout") }}</view>
       </view>
       <!-- end -->
       <!-- 选择多规格弹层 - start -->
@@ -158,7 +158,7 @@
       <!-- end -->
       <!-- 店面打烊弹层 -->
       <view class="colseShop" v-if="shopStatus === 0">
-        <view class="shop">本店已打样</view>
+        <view class="shop">{{ $t("home.shopClosed") }}</view>
       </view>
       <!-- end -->
     </view>

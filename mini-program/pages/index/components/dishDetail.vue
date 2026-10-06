@@ -35,7 +35,7 @@
 
       <view class="active" v-if="dishDetailes.flavors.length > 0"
         ><view class="dish_card_add" @click="moreNormDataesHandle(dishDetailes)"
-          >选择规格</view
+          >{{ $t("home.selectOptions") }}</view
         ></view
       >
       <view
@@ -45,7 +45,7 @@
         "
       >
         <view class="dish_card_add" @click="addDishAction(dishDetailes, '普通')"
-          >加入购物车</view
+          >{{ $t("home.addToCart") }}</view
         >
       </view>
     </view>
@@ -101,7 +101,7 @@
         ><view
           class="dish_card_add"
           @click="addDishAction(dishDetailes, '普通')"
-          >加入购物车</view
+          >{{ $t("home.addToCart") }}</view
         ></view
       >
     </view>
@@ -136,10 +136,10 @@ export default {
     // 加入购物车
     addDishAction(obj, item) {
       console.log(obj, item);
-      this.$emit("addDishAction", { obj: obj, item: item });
+      this.$emit("addDishAction", obj, item);
     },
     redDishAction(obj, item) {
-      this.$emit("redDishAction", { obj: obj, item: item });
+      this.$emit("redDishAction", obj, item);
     },
     // 选择规格
     moreNormDataesHandle(obj) {
@@ -179,8 +179,9 @@ export default {
   }
   .but_item {
     display: flex;
-    position: relative;
-    flex: 1;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20rpx;
     .price {
       text-align: left;
       color: #e94e3c;
@@ -193,10 +194,8 @@ export default {
       }
     }
     .active {
-      position: absolute;
-      right: 0rpx;
-      bottom: 20rpx;
       display: flex;
+      flex-shrink: 0;
       .dish_add,
       .dish_red {
         display: block;
@@ -211,14 +210,19 @@ export default {
         font-weight: 500;
       }
       .dish_card_add {
-        width: 200rpx;
-        line-height: 60rpx;
+        width: auto;
+        min-width: 200rpx;
+        max-width: 260rpx;
+        min-height: 60rpx;
+        line-height: 36rpx;
+        padding: 12rpx 22rpx;
+        box-sizing: border-box;
         text-align: center;
         font-weight: 500;
         font-size: 28rpx;
         opacity: 1;
         background: #ffc200;
-        border-radius: 30rpx;
+        border-radius: 40rpx;
       }
     }
   }

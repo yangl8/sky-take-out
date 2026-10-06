@@ -1,5 +1,8 @@
 package com.sky.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersConfirmDTO;
 import com.sky.dto.OrdersPageQueryDTO;
@@ -42,6 +45,20 @@ public interface OrderService {
      * @return
      */
     PageResult pageQuery4User(int page, int pageSize, Integer status, Integer payStatus);
+
+    /**
+     * 查询指定菜品的本月销量
+     * @param dishIds 菜品id集合
+     * @return 菜品id与本月销量的映射
+     */
+    Map<Long, Integer> getDishMonthlySales(List<Long> dishIds);
+
+    /**
+     * 查询指定套餐的本月销量
+     * @param setmealIds 套餐id集合
+     * @return 套餐id与本月销量的映射
+     */
+    Map<Long, Integer> getSetmealMonthlySales(List<Long> setmealIds);
 
     /**
      * 查询订单详情

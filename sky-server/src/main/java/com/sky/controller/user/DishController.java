@@ -5,6 +5,7 @@ import com.sky.entity.Dish;
 import com.sky.result.Result;
 import com.sky.service.DishService;
 import com.sky.service.MenuCacheService;
+import com.sky.service.OrderService;
 import com.sky.vo.DishVO;
 
 import io.swagger.annotations.Api;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController("userDishController")
 @RequestMapping("/user/dish")
@@ -27,6 +30,8 @@ public class DishController {
     private DishService dishService;
     @Autowired 
     private MenuCacheService menuCacheService;
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 根据分类id查询菜品
@@ -41,7 +46,7 @@ public class DishController {
         List<DishVO> list = menuCacheService.getDishes(categoryId);
         if(list != null){
             //如果存在，直接返回，无需查询数据库
-            return Result.success(list);
+            return Result.success(addMonthlySales(list));
         }
 
         Dish dish = new Dish();
@@ -52,7 +57,14 @@ public class DishController {
         list = dishService.listWithFlavor(dish);
         menuCacheService.cacheDishes(categoryId, list);
 
-        return Result.success(list);
+        return Result.success(addMonthlySales(list));
+    }
+
+    private List<DishVO> addMonthlySales(List<DishVO> dishes) {
+        List<Long> ids = dishes.stream().map(DishVO::getId).collect(Collectors.toList());
+        Map<Long, Integer> sales = orderService.getDishMonthlySales(ids);
+        dishes.forEach(dish -> dish.setMonthlySales(sales.getOrDefault(dish.getId(), 0)));
+        return dishes;
     }
 
 }

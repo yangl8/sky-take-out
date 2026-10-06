@@ -9,11 +9,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 菜单缓存服务，统一管理缓存键、过期时间和Redis操作
  */
 @Service
+@Slf4j
 public class MenuCacheService {
 
     private static final int DATA_TTL_MINUTES = 60;
@@ -26,7 +28,15 @@ public class MenuCacheService {
 
     @SuppressWarnings("unchecked")
     public List<DishVO> getDishes(Long categoryId) {
-        return (List<DishVO>) redisTemplate.opsForValue().get(dishKey(categoryId));
+        String key = dishKey(categoryId);
+        try {
+            return (List<DishVO>) redisTemplate.opsForValue().get(key);
+        } catch (RuntimeException exception) {
+            // 缓存对象结构发生变化时删除旧缓存，下一次从数据库重新加载
+            log.warn("菜品缓存读取失败，删除旧缓存：{}", key, exception);
+            redisTemplate.delete(key);
+            return null;
+        }
     }
 
     public void cacheDishes(Long categoryId, List<DishVO> dishes) {
@@ -35,7 +45,15 @@ public class MenuCacheService {
 
     @SuppressWarnings("unchecked")
     public List<Setmeal> getSetmeals(Long categoryId) {
-        return (List<Setmeal>) redisTemplate.opsForValue().get(setmealKey(categoryId));
+        String key = setmealKey(categoryId);
+        try {
+            return (List<Setmeal>) redisTemplate.opsForValue().get(key);
+        } catch (RuntimeException exception) {
+            // 缓存对象结构发生变化时删除旧缓存，下一次从数据库重新加载
+            log.warn("套餐缓存读取失败，删除旧缓存：{}", key, exception);
+            redisTemplate.delete(key);
+            return null;
+        }
     }
 
     public void cacheSetmeals(Long categoryId, List<Setmeal> setmeals) {
