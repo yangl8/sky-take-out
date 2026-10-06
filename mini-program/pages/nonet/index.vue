@@ -2,8 +2,8 @@
   <view class="nonet_content">
     <view class="success_info">
       <image class="success_icon" src="../../static/noNet.png" mode=""></image>
-      <view class="success_title"> 网络无法连接 </view>
-      <view class="go_dish" @click="goIndex()"> 点击刷新 </view>
+      <view class="success_title">{{ $t("network.unavailable") }}</view>
+      <view class="go_dish" @click="goIndex()">{{ $t("network.refresh") }}</view>
     </view>
   </view>
 </template>
@@ -14,6 +14,9 @@ export default {
     tableInfo: function () {
       return this.shopInfo();
     },
+  },
+  onShow() {
+    uni.setNavigationBarTitle({ title: this.$t("network.title") });
   },
   methods: {
     ...mapState(["shopInfo"]),
@@ -55,4 +58,3 @@ export default {
   }
 }
 </style>
- 

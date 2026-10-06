@@ -10,11 +10,11 @@
       >
         <picker-view-column>
           <view class="item" v-for="(item, index) in baseData" :key="index">
-            <view class="itemTit" v-if="item === '无需餐具'">
-              <view>无需餐具</view>
-              <view>（筷子、调羹、叉子、刀）</view>
+            <view class="itemTit" v-if="item === $t('order.noTableware')">
+              <view>{{ $t("order.noTableware") }}</view>
+              <view>{{ $t("order.tablewareTypes") }}</view>
             </view>
-            <text>{{ item }}份</text>
+            <text v-else>{{ $t("order.tablewareCount", { count: item }) }}</text>
           </view>
         </picker-view-column>
       </picker-view>

@@ -3,7 +3,7 @@
 		<!-- 个人中心 -->
 		<view @click="myCenterFun" class="person-box" :style="{top:ht + 'px'}">
 			<image class="test_image" src="../../../static/center.png"></image>
-			<span class="person-title">个人中心</span>
+			<span class="person-title">{{ $t("my.title") }}</span>
 		</view>
 		<image class="index_bg" src="../../../static/bg.png"></image>
 		<!-- <view class="leftNav" >

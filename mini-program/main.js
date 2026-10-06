@@ -6,7 +6,7 @@ import "@/styles/common.scss"
 
 Vue.config.productionTip = false
 Vue.prototype.$store = store
-Vue.prototype.$t = key => translate(store.state.locale, key)
+Vue.prototype.$t = (key, params) => translate(store.state.locale, key, params)
 
 App.mpType = 'app'
 

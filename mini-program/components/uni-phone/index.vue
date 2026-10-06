@@ -4,8 +4,8 @@
     <uni-popup ref="popup" @change="change" class="popupBox">
       <view class="popup-content">
         <view>{{ phoneData }}</view>
-        <view @click="call">呼叫</view>
-        <view @click="closePopup" class="closePopup">取消</view>
+        <view @click="call">{{ $t("common.call") }}</view>
+        <view @click="closePopup" class="closePopup">{{ $t("common.cancel") }}</view>
       </view>
     </uni-popup>
   </view>

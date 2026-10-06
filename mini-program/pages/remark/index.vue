@@ -4,7 +4,7 @@
       @clickLeft="goBack"
       left-icon="back"
       leftIcon="arrowleft"
-      title="订单备注"
+      :title="$t('remark.title')"
       statusBar="true"
       fixed="true"
       color="#ffffff"
@@ -20,7 +20,7 @@
                 :class="{ beizhu_text_ios: platform === 'ios' }"
                 placeholder-class="textarea-placeholder"
                 v-model="remark"
-                placeholder="无接触配送，将商品挂家门口或放前台，地址封闭管理时请电话联系"
+                :placeholder="$t('remark.placeholder')"
                 >{{ getVal }}</textarea
               >
               <text class="numText"
@@ -38,7 +38,7 @@
           plain="true"
           @click="handleSaveRemark"
         >
-          完成
+          {{ $t("remark.done") }}
         </button>
       </view>
     </view>

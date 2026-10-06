@@ -39,17 +39,17 @@ export function saveLocale(locale) {
   }
 }
 
-export function translate(locale, key) {
+export function translate(locale, key, params = {}) {
   const keys = key.split(".");
   const value = keys.reduce((result, currentKey) => {
     return result && result[currentKey];
   }, messages[locale]);
 
-  if (value) {
-    return value;
-  }
-
-  return keys.reduce((result, currentKey) => {
+  const message = value || keys.reduce((result, currentKey) => {
     return result && result[currentKey];
   }, messages.zh) || key;
+
+  return Object.keys(params).reduce((result, param) => {
+    return result.replace(new RegExp(`\\{${param}\\}`, "g"), params[param]);
+  }, message);
 }

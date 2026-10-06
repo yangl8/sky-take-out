@@ -4,7 +4,7 @@
       @clickLeft="goBack"
       left-icon="back"
       leftIcon="arrowleft"
-      title="地址管理"
+      :title="$t('address.title')"
       statusBar="true"
       fixed="true"
       color="#ffffff"
@@ -43,9 +43,9 @@
               <!-- 性别及手机号 -->
               <view class="sale">
                 <text class="name">{{
-                  item.sex === "0"
-                    ? item.consignee + " 先生"
-                    : item.consignee + " 女士"
+                  Number(item.sex) === 0
+                    ? $t("common.sir", { name: item.consignee })
+                    : $t("common.madam", { name: item.consignee })
                 }}</text>
                 <text class="num">{{ item.phone }}</text>
               </view>
@@ -69,7 +69,7 @@
                 :value="item.id"
                 :checked="item.isDefault === 1 && isActive === index"
                 @click.stop="getRadio(index, item)"
-              />设为默认地址</label
+              />{{ $t("address.defaultAddress") }}</label
             >
           </view>
         </view>
@@ -78,7 +78,7 @@
       <empty
         v-if="isEmpty"
         boxHeight="100%"
-        textLabel="一个地址都没有哦"
+        :textLabel="$t('address.empty')"
       ></empty>
       <view class="add_address">
         <button
@@ -88,7 +88,7 @@
           @click="addOrEdit('新增')"
         >
           <text class="add-icon">+</text>
-          新增收货地址
+          {{ $t("address.add") }}
         </button>
       </view>
     </view>
@@ -137,18 +137,18 @@ export default {
     getLableVal(item) {
       switch (item) {
         case "1":
-          return "公司";
+          return this.$t("address.company");
         case "2":
-          return "家";
+          return this.$t("address.home");
         case "3":
-          return "学校";
+          return this.$t("address.school");
         default:
-          return "其他";
+          return this.$t("address.other");
       }
     },
     getAddressList() {
       this.testValue = false;
-      uni.showLoading({ title: "加载中", mask: true });
+      uni.showLoading({ title: this.$t("common.loading"), mask: true });
       queryAddressBookList().then((res) => {
         if (res.code === 1) {
           setTimeout(function () {
@@ -202,7 +202,7 @@ export default {
       putAddressBookDefault({ id: item.id }).then((res) => {
         if (res.code === 1) {
           uni.showToast({
-            title: "默认地址设置成功",
+            title: this.$t("address.defaultSuccess"),
             duration: 2000,
             icon: "none",
           });

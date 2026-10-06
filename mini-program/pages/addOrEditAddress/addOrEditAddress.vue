@@ -5,7 +5,7 @@
       @clickLeft="goBack"
       left-icon="back"
       leftIcon="arrowleft"
-      :title="delId ? '编辑收货地址' : '新增收货地址'"
+      :title="delId ? $t('address.edit') : $t('address.add')"
       statusBar="true"
       fixed="true"
       color="#ffffff"
@@ -17,12 +17,12 @@
     >
       <form class="form_address">
         <view class="uni-form-item uni-column form_item">
-          <view class="title">联系人:</view>
+          <view class="title">{{ $t("address.contact") }}</view>
           <uni-easyinput
             class="uni-input"
             v-model="form.name"
             placeholder-class="uni-place"
-            placeholder="请填写收货人的姓名"
+            :placeholder="$t('address.contactPlaceholder')"
             minlength="2"
             maxlength="12"
           />
@@ -48,18 +48,18 @@
           </view>
         </view>
         <view class="uni-form-item uni-column form_item">
-          <view class="title">手机号:</view>
+          <view class="title">{{ $t("address.phone") }}</view>
           <uni-easyinput
             class="uni-input"
             v-model="form.phone"
             type="number"
             placeholder-class="uni-place"
-            placeholder="请填写收货人手机号码"
+            :placeholder="$t('address.phonePlaceholder')"
             maxlength="11"
           />
         </view>
         <view class="uni-form-item uni-column form_item pad">
-          <view class="title">收货地址:</view>
+          <view class="title">{{ $t("address.deliveryAddress") }}</view>
           <!-- 联动省市县 -->
           <view class="update-input">
             <view class="update-adress" @click="openAddres">
@@ -67,7 +67,7 @@
                 v-if="showInput"
                 class="uni-input"
                 :class="address !== '' ? '' : 'uni-place'"
-                >{{ address !== "" ? address : "省/市/区" }}</text
+                >{{ address !== "" ? address : $t("address.region") }}</text
               >
               <text class="addressIcon">
                 <text class="icon" :class="showClass ? 'iconOn' : ''"></text>
@@ -80,12 +80,12 @@
               :class="{ 'detail-ios': platform == 'ios' }"
               placeholder-class="uni-place"
               v-model="form.detail"
-              placeholder="详细地址（精确到门牌号）"
+              :placeholder="$t('address.detailPlaceholder')"
             ></textarea>
           </view>
         </view>
         <view class="uni-form-item uni-column form_item tag-box">
-          <view class="title">标签:</view>
+          <view class="title">{{ $t("address.label") }}</view>
           <text
             :class="{ active: form.type === item.type }"
             class="tag_text"
@@ -104,7 +104,7 @@
           plain="true"
           @click="addAddressFun()"
         >
-          保存地址
+          {{ $t("address.save") }}
         </button>
         <button
           v-if="showDel"
@@ -113,7 +113,7 @@
           plain="true"
           @click="deleteAddressFun()"
         >
-          删除地址
+          {{ $t("address.delete") }}
         </button>
       </view>
     </view>
@@ -151,25 +151,25 @@ export default {
       items: [
         {
           value: "0",
-          name: "先生",
+          name: this.$t("common.sir", { name: "" }).trim(),
         },
         {
           value: "1",
-          name: "女士",
+          name: this.$t("common.madam", { name: "" }).trim(),
         },
       ],
       current: 0,
       options: [
         {
-          name: "公司",
+          name: this.$t("address.company"),
           type: 1,
         },
         {
-          name: "家",
+          name: this.$t("address.home"),
           type: 2,
         },
         {
-          name: "学校",
+          name: this.$t("address.school"),
           type: 3,
         },
       ],
@@ -203,7 +203,7 @@ export default {
       this.delId = ""
       this.showDel = true
       uni.setNavigationBarTitle({
-        title: "编辑收获地址",
+        title: this.$t("address.edit"),
       })
       // 保存将要删除的id
       this.delId = options.id
@@ -295,31 +295,31 @@ export default {
     addAddressFun () {
       if (this.form.name === "") {
         return uni.showToast({
-          title: "联系人不能为空",
+          title: this.$t("address.contactRequired"),
           duration: 1000,
           icon: "none",
         })
       } else if (this.form.phone === "") {
         return uni.showToast({
-          title: "手机号不能为空",
+          title: this.$t("address.phoneRequired"),
           duration: 1000,
           icon: "none",
         })
       } else if (this.form.type === "") {
         return uni.showToast({
-          title: "所属标签不能为空",
+          title: this.$t("address.labelRequired"),
           duration: 1000,
           icon: "none",
         })
       } else if (this.address === "") {
         return uni.showToast({
-          title: "所在地区不能为空",
+          title: this.$t("address.regionRequired"),
           duration: 1000,
           icon: "none",
         })
       } else if (this.form.detail === "") {
         return uni.showToast({
-          title: "详细地址不能为空不能为空",
+          title: this.$t("address.detailRequired"),
           duration: 1000,
           icon: "none",
         })
@@ -330,7 +330,7 @@ export default {
           /^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/
         if (!reg.test(this.form.phone)) {
           return uni.showToast({
-            title: "手机号输入有误",
+            title: this.$t("address.phoneInvalid"),
             duration: 1000,
             icon: "none",
           })
@@ -340,7 +340,7 @@ export default {
         const reg = /^[\u0391-\uFFE5A-Za-z0-9]{2,12}$/
         if (!reg.test(this.form.name)) {
           return uni.showToast({
-            title: "请输入合法的2-12个字符",
+            title: this.$t("address.nameInvalid"),
             duration: 1000,
             icon: "none",
           })
@@ -382,7 +382,7 @@ export default {
             url: "/pages/address/address",
           })
           uni.showToast({
-            title: "地址删除成功",
+            title: this.$t("address.deleteSuccess"),
             duration: 1000,
             icon: "none",
           })

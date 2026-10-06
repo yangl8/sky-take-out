@@ -2,7 +2,7 @@
 <template>
   <view class="empty-box">
     <image class="empty-img" src="./../../static/no_adress.png" mode="" />
-    <view class="empty-des">{{textLabel}}</view>
+    <view class="empty-des">{{ textLabel || $t("address.empty") }}</view>
   </view>
 </template>
 <script>
@@ -12,7 +12,7 @@ export default {
     // 空页面提示
     'textLabel':{
       type: String,
-      default: '暂无数据'
+      default: ''
     }
   }
 }
