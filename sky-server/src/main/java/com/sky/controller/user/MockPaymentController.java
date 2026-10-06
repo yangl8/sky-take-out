@@ -26,9 +26,9 @@ public class MockPaymentController {
      * @param orderNumber 订单号
      * @return
      */
-    @PostMapping("/mockPaySuccess/{orderNumber}")
+    @PostMapping("/mockPaySuccess/{orderNumber}/{orderId}")
     @ApiOperation("模拟支付成功")
-    public Result mockPaySuccess(@PathVariable String orderNumber) {
+    public Result mockPaySuccess(@PathVariable String orderNumber, @PathVariable Long orderId) {
         orderService.paySuccess(orderNumber);
         return Result.success();
     }

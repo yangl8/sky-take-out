@@ -6,18 +6,17 @@
         src="../../static/success.png"
         mode=""
       ></image>
-      <view class="success_title"> 下单成功 </view>
+      <view class="success_title">{{ $t("success.title") }}</view>
       <view class="word-box">
         <text class="word_bottom"
-          >预计<text class="word_date">{{ arrivalTime }}</text
-          >送达</text
+          ><text class="word_date">{{ $t("success.arrival", { time: arrivalTime }) }}</text></text
         >
       </view>
-      <view class="success_desc"> 后厨已开始疯狂备餐中, 请耐心等待~ </view>
+      <view class="success_desc">{{ $t("success.preparing") }}</view>
       <!-- 新添加 -->
       <view class="btns">
-        <view class="go_dish defaultBtn" @click="goIndex()"> 返回首页 </view>
-        <view class="go_dish" @click="goOrder"> 查看订单 </view>
+        <view class="go_dish defaultBtn" @click="goIndex()">{{ $t("success.home") }}</view>
+        <view class="go_dish" @click="goOrder">{{ $t("success.order") }}</view>
       </view>
     </view>
   </view>
@@ -41,17 +40,20 @@ export default {
     this.getHarfAnOur();
     this.orderId = options.orderId;
   },
+  onShow() {
+    uni.setNavigationBarTitle({ title: this.$t("success.title") });
+  },
   methods: {
     ...mapState(["shopInfo", "arrivals"]),
     // 回首页
     goIndex() {
-      uni.navigateTo({
-        url: "/pages/index/index?status=" + "不验证",
+      uni.reLaunch({
+        url: "/pages/index/index",
       });
     },
     // 查看订单
     goOrder() {
-      uni.navigateTo({
+      uni.redirectTo({
         url: "/pages/details/index?orderId=" + this.orderId,
       });
     },
@@ -136,4 +138,3 @@ export default {
   }
 }
 </style>
- 

@@ -5,15 +5,15 @@
       <view class="contion">
         <view class="orderPay">
           <view>
-            <view v-if="timeout">订单已超时</view>
+            <view v-if="timeout">{{ $t("payment.timedOut") }}</view>
             <view v-else
-              >支付剩余时间<text>{{ rocallTime }}</text></view
+              >{{ $t("payment.remaining") }}<text>{{ rocallTime }}</text></view
             >
           </view>
           <view class="money"
             >￥<text>{{ orderDataInfo.orderAmount }}</text></view
           >
-          <view>{{ shopInfo().shopName }}-{{ orderDataInfo.orderNumber }}</view>
+          <view>{{ shopInfo().shopName }}<text v-if="orderDataInfo.orderNumber">-{{ orderDataInfo.orderNumber }}</text></view>
         </view>
       </view>
       <view class="box payBox">
@@ -48,7 +48,7 @@
       </view>
       <view class="bottomBox btnBox">
         <button class="add_btn" type="primary" plain="true" @click="handleSave">
-          确认支付
+          {{ $t("payment.confirm") }}
         </button>
       </view>
     </view>
@@ -56,8 +56,9 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-import { paymentOrder, cancelOrder } from "@/pages/api/api.js";
+import { mapState, mapMutations } from "vuex";
+import { paymentOrder, mockPaymentSuccess, cancelOrder, getOrderDetail } from "@/pages/api/api.js";
+import { isLocalDevelopment } from "@/utils/env.js";
 export default {
   data() {
     return {
@@ -66,7 +67,7 @@ export default {
       orderId: null,
       orderDataInfo: {},
       activeRadio: 0,
-      payMethodList: ["微信支付"],
+      payMethodList: [this.$t("payment.wechat")],
       times: null,
     };
   },
@@ -79,8 +80,12 @@ export default {
   onLoad(options) {
     this.orderId = options.orderId;
   },
+  onShow() {
+    uni.setNavigationBarTitle({ title: this.$t("payment.title") });
+  },
   methods: {
     ...mapState(["orderData", "shopInfo"]),
+    ...mapMutations(["setSelectedOrder"]),
     // 支付详情
     handleSave() {
       if (this.timeout) {
@@ -88,9 +93,47 @@ export default {
         uni.redirectTo({
           url: "/pages/details/index?orderId=" + this.orderId,
         });
-      } else {
-        // 如果支付成功进入成功页
+        return;
+      }
+      uni.showModal({
+        title: this.$t("payment.confirmTitle"),
+        content: this.$t("payment.confirmMessage"),
+        confirmText: this.$t("common.confirm"),
+        cancelText: this.$t("common.cancel"),
+        success: ({ confirm }) => {
+          if (confirm) {
+            this.submitPayment();
+          }
+        },
+      });
+    },
+    async submitPayment() {
         clearTimeout(this.times);
+        if (isLocalDevelopment) {
+          try {
+            await mockPaymentSuccess(this.orderDataInfo.orderNumber, this.orderId);
+            try {
+              const detail = await getOrderDetail(this.orderId);
+              if (detail.code === 1 && detail.data) {
+                this.setSelectedOrder(detail.data);
+              }
+            } catch (detailError) {
+              // 支付已经成功，详情页会再次请求订单数据
+            }
+            uni.showToast({ title: this.$t("payment.successful"), icon: "success" });
+            setTimeout(() => {
+              uni.redirectTo({
+                url: "/pages/success/index?orderId=" + this.orderId,
+              });
+            }, 800);
+          } catch (error) {
+            uni.showToast({
+              title: error.msg || this.$t("payment.failed"),
+              icon: "none",
+            });
+          }
+          return;
+        }
         const params = {
           orderNumber: this.orderDataInfo.orderNumber,
           payMethod: this.activeRadio === 0 ? 1 : 2,
@@ -103,7 +146,7 @@ export default {
             });
             console.log(err, payRes);
             if (err) {
-              await uni.showToast({ title: "支付失败", icon: "error" });
+              await uni.showToast({ title: this.$t("payment.failed"), icon: "error" });
               setTimeout(() => {
                 // 下单失败!!
                 uni.redirectTo({
@@ -111,7 +154,7 @@ export default {
                 });
               }, 1500);
             } else {
-              await uni.showToast({ title: "支付成功", icon: "success" });
+              await uni.showToast({ title: this.$t("payment.successful"), icon: "success" });
               setTimeout(() => {
                 // 下单成功!!
                 uni.redirectTo({
@@ -127,7 +170,6 @@ export default {
             });
           }
         });
-      }
     },
     // // 订单倒计时
     runTimeBack() {

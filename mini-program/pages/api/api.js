@@ -342,6 +342,12 @@ export const paymentOrder = (params) =>
 		method: 'PUT',
 		params
 	})
+// 本地开发环境模拟支付成功
+export const mockPaymentSuccess = (orderNumber, orderId) =>
+	request({
+		url: `/user/order/mockPaySuccess/${orderNumber}/${orderId}`,
+		method: 'POST'
+	})
 // 再来一单
 export const repetitionOrder = (params) =>
 	request({
@@ -365,5 +371,3 @@ export const queryOrdersCheckStatus = (params) =>
 		method: 'get',
 		params
 	})
-
-
