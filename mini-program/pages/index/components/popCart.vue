@@ -2,14 +2,14 @@
 <template>
   <view class="cart_pop" @click.stop="openOrderCartList = openOrderCartList">
     <view class="top_title">
-      <view class="tit">购物车</view>
+      <view class="tit">{{ $t("home.cart") }}</view>
       <view class="clear" @click.stop="clearCardOrder()">
         <image
           class="clear_icon"
           src="../../../static/clear.png"
           mode=""
         ></image>
-        <text class="clear-des">清空</text>
+        <text class="clear-des">{{ $t("home.clear") }}</text>
       </view>
     </view>
     <scroll-view class="card_order_list" scroll-y="true" scroll-top="40rpx">
@@ -83,10 +83,10 @@ export default {
     },
     // 加入购物车
     addDishAction(obj, item) {
-      this.$emit("addDishAction", { obj: obj, item: item });
+      this.$emit("addDishAction", obj, item);
     },
     redDishAction(obj, item) {
-      this.$emit("redDishAction", { obj: obj, item: item });
+      this.$emit("redDishAction", obj, item);
     },
   },
 };
@@ -139,7 +139,8 @@ export default {
     background-color: #fff;
     padding-top: 40rpx;
     box-sizing: border-box;
-    height: calc(100% - 0rpx);
+    // 扣除购物车标题栏，并为底部固定结算栏保留滚动空间
+    height: calc(100% - 88rpx);
     flex: 1;
     position: relative;
     .type_item_cont {
@@ -217,23 +218,9 @@ export default {
         }
       }
     }
-    &::before {
-      content: "";
-      position: absolute;
-      width: 100vw;
-      height: 120rpx;
-      z-index: 99;
-      background: linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 1) 10%,
-        rgba(255, 255, 255, 0)
-      );
-      bottom: 0px;
-      left: 0px;
-    }
     .seize_seat {
       width: 100%;
-      height: 120rpx;
+      height: 200rpx;
     }
   }
   .dish_dishFlavor {

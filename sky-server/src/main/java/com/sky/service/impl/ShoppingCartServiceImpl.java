@@ -72,6 +72,25 @@ public class ShoppingCartServiceImpl implements ShoppingCartService{
     }
 
     /**
+     * 减少购物车商品数量
+     * @param shoppingCartDTO
+     */
+    public void subtractShoppingCart(ShoppingCartDTO shoppingCartDTO){
+        ShoppingCart cart = shoppingCartMapper.getByIdAndUserId(
+                shoppingCartDTO.getId(), BaseContext.getCurrentId());
+        if (cart == null) {
+            return;
+        }
+
+        if (cart.getNumber() > 1) {
+            cart.setNumber(cart.getNumber() - 1);
+            shoppingCartMapper.updateNumberById(cart);
+        } else {
+            shoppingCartMapper.deleteById(cart.getId());
+        }
+    }
+
+    /**
      * 查看购物车
      * @return
      */

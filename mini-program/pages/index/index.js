@@ -445,16 +445,8 @@ export default {
 					setmealId: item.id,
 				}
 			} else if (form === "购物车") {
-				if (item.dishId) {
-					params = {
-						...params,
-						dishId: item.dishId,
-					}
-				} else {
-					params = {
-						setmealId: item.setmealId,
-					}
-				}
+				// 购物车中的每一条记录都有唯一id，直接按点击的记录增加
+				params = { id: item.id }
 			}
 			newAddShoppingCartAdd(params)
 				.then((res) => {
@@ -476,9 +468,6 @@ export default {
 		},
 		// 减菜 - 添加菜品
 		async redDishAction(item, form) {
-			// 实时更新obj.newCardNumber新添加的字段----加入购物车数量number
-			this.tablewareNumber--
-			this.dishDetailes.dishNumber--
 			let dishFlavorDatas = ""
 			let flavorRemark = []
 			if (item.flavorRemark) {
@@ -505,20 +494,28 @@ export default {
 					setmealId: item.id,
 				}
 			} else if (form === "购物车") {
-				if (item.dishId) {
-					params = {
-						...params,
-						dishId: item.dishId,
+				// 购物车中的每一条记录都有唯一id，直接按点击的记录减少
+				params = { id: item.id }
+			}
+			if (form !== "购物车") {
+				const cartItem = this.orderListDataes.find((cart) => {
+					if (item.type === 1) {
+						return cart.dishId === item.id &&
+							(cart.dishFlavor || null) === dishFlavorDatas
 					}
-				} else {
-					params = {
-						setmealId: item.setmealId,
-					}
+					return item.type === 2 && cart.setmealId === item.id
+				})
+				if (cartItem) {
+					params = { id: cartItem.id }
 				}
 			}
 			await newShoppingCartSub(params)
 				.then((res) => {
 					if (res.code === 1) {
+						// 请求成功后再更新页面数量，避免接口失败时与数据库不一致
+						if (form !== "购物车" && this.dishDetailes.dishNumber > 0) {
+							this.dishDetailes.dishNumber--
+						}
 						// 调用一次购物车集合---初始化
 						this.getTableOrderDishListes()
 						// 重新调取刷新右侧具体菜品列表

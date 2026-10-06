@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.sky.entity.ShoppingCart;
@@ -13,6 +15,15 @@ import com.sky.entity.ShoppingCart;
 public interface ShoppingCartMapper {
     
     List<ShoppingCart> list(ShoppingCart shoppingCart);
+
+    /**
+     * 根据购物车记录id和用户id查询单条购物车数据
+     * @param id 购物车记录id
+     * @param userId 用户id
+     * @return 购物车数据
+     */
+    @Select("select * from shopping_cart where id = #{id} and user_id = #{userId}")
+    ShoppingCart getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * 根据商品id扩展数量
@@ -35,6 +46,13 @@ public interface ShoppingCartMapper {
      */
     @Delete("delete from shopping_cart where user_id = #{userId}")
     void deleteByUserId(Long userId);
+
+    /**
+     * 根据id删除购物车商品
+     * @param id
+     */
+    @Delete("delete from shopping_cart where id = #{id}")
+    void deleteById(Long id);
 
     /**
      * 批量插入购物车数据
