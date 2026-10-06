@@ -31,8 +31,8 @@ export default {
     "connectionError": "无法连接服务器接收实时通知。",
     "newOrder": "待接单",
     "reminder": "催单",
-    "newOrderMessage": "您有新的订单待处理：{orderId}",
-    "reminderMessage": "订单 {orderId} 的客户提醒您及时处理。"
+    "newOrderMessage": "您有新的订单待处理：{orderNumber}",
+    "reminderMessage": "订单 {orderNumber} 的客户提醒您及时处理。"
   },
   "password": {
     "old": "原始密码",

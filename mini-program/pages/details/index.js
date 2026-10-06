@@ -1,6 +1,7 @@
 
 import {
 	getOrderDetail,
+	getOrderPage,
 	repetitionOrder,
 	delShoppingCart,
 	reminderOrder,
@@ -58,23 +59,68 @@ export default {
 	//   组件
 	components: { Status, OrderDetail, DeliveryInfo, OrderInfo },
 	onLoad(options) {
-		this.getBaseData(options.orderId)
+		this.orderId = options.orderId
+		const selectedOrder = this.selectedOrder()
+		if (selectedOrder && String(selectedOrder.id) === String(options.orderId)) {
+			const merchant = this.shopInfo() || {}
+			this.orderDetailsData = {
+				...selectedOrder,
+				shopName: selectedOrder.shopName || merchant.shopName,
+				shopTelephone: selectedOrder.shopTelephone || merchant.phone,
+				deliveryFee: selectedOrder.deliveryFee ?? merchant.deliveryFee ?? 0,
+			}
+			this.initdishListMut(selectedOrder.orderDetailList || [])
+		}
+		if (this.orderId) {
+			this.getBaseData(this.orderId)
+		} else {
+			uni.showToast({ title: this.$t('order.operationFailed'), icon: 'none' })
+		}
 	},
 
 	methods: {
 		...mapMutations(['setOrderData', 'initdishListMut']),
-		...mapState(['shopInfo', 'orderListData', 'shopPhone', 'orderData']),
+		...mapState(['shopInfo', 'orderListData', 'shopPhone', 'orderData', 'selectedOrder']),
 		// 获取订单详情
-		getBaseData(id) {
-			getOrderDetail(id).then(res => {
-				if (res.code === 1) {
-					this.orderDetailsData = res.data
-					this.initdishListMut(this.orderDetailsData.orderDetailList)
-					if (this.orderDetailsData.status === 1) {
-						this.runTimeBack(this.orderDetailsData.orderTime)
+		async getBaseData(id) {
+			uni.showLoading({ title: this.$t('common.loading'), mask: true })
+			let failed = false
+			try {
+				const res = await getOrderDetail(id)
+				if (res.code === 1 && res.data) this.applyOrderDetail(res.data)
+			} catch (error) {
+				try {
+					const page = await getOrderPage({ page: 1, pageSize: 50 })
+					const order = page.code === 1 && page.data && page.data.records
+						? page.data.records.find(item => String(item.id) === String(id))
+						: null
+					if (order) {
+						this.applyOrderDetail(order)
+					} else {
+						failed = true
 					}
+				} catch (fallbackError) {
+					failed = true
 				}
-			})
+			} finally {
+				uni.hideLoading()
+			}
+			if (failed && !this.orderDetailsData.id) {
+				uni.showToast({ title: this.$t('order.operationFailed'), icon: 'none' })
+			}
+		},
+		applyOrderDetail(order) {
+			const merchant = this.shopInfo() || {}
+			this.orderDetailsData = {
+				...order,
+				shopName: order.shopName || merchant.shopName,
+				shopTelephone: order.shopTelephone || merchant.phone || this.shopPhone(),
+				deliveryFee: order.deliveryFee ?? merchant.deliveryFee ?? 0,
+			}
+			this.initdishListMut(this.orderDetailsData.orderDetailList || [])
+			if (this.orderDetailsData.status === 1 && this.orderDetailsData.orderTime) {
+				this.runTimeBack(this.orderDetailsData.orderTime)
+			}
 		},
 
 		// 催单
@@ -82,8 +128,8 @@ export default {
 			reminderOrder(val.id).then(res => {
 				if (res.code === 1) {
 					this.showConfirm = true
-					this.textTip = '您的催单信息已发出！'
-					this.$refs.status.$refs.commonPopup.open(val.type)
+					this.textTip = this.$t('popup.reminderSent')
+					this.$refs.commonPopup.open(val.type)
 					this.orderId = val.id
 				}
 			})
@@ -93,21 +139,35 @@ export default {
 			cancelOrder(obj.id).then(res => {
 				if (res.code === 1) {
 					this.isPayment = true
-					this.showConfirm = true
-					this.textTip = '您的订单已取消！'
-					this.$refs.status.$refs.commonPopup.open(type)
+					this.orderDetailsData = {
+						...this.orderDetailsData,
+						status: 6,
+						payStatus: Number(this.orderDetailsData.payStatus) === 1 ? 2 : this.orderDetailsData.payStatus,
+					}
+					uni.showToast({ title: this.$t('popup.orderCancelled'), icon: 'none' })
 					this.orderId = obj.id
 				}
+			}).catch(error => {
+				uni.showToast({ title: error.msg || this.$t('order.operationFailed'), icon: 'none' })
 			})
 		},
 		// 取消订单
 		handleCancel(val) {
 			if (val.obj.status === 1 || val.obj.status === 2) {
-				this.cancel(val.type, val.obj)
+				uni.showModal({
+					title: this.$t('popup.cancelOrderTitle'),
+					content: this.$t('popup.cancelOrderConfirm'),
+					confirmText: this.$t('common.confirm'),
+					cancelText: this.$t('common.cancel'),
+					success: ({ confirm }) => {
+						if (confirm) this.cancel(val.type, val.obj)
+					}
+				})
 			} else {
+				this.phone = val.obj.shopTelephone || this.shopPhone() || (this.shopInfo() || {}).phone
 				this.showConfirm = false
-				this.$refs.status.$refs.commonPopup.open(val.type)
-				this.textTip = '请联系商家进行取消！'
+				this.$refs.commonPopup.open(val.type)
+				this.textTip = this.$t('popup.contactMerchantCancel', { phone: this.phone || '-' })
 			}
 		},
 		// 再来一单
@@ -125,17 +185,17 @@ export default {
 		// 处理状态
 		statusWord(status) {
 			if (this.timeout && status === 1 || this.orderDetailsData.status === 6) {
-				return '订单已取消'
+				return this.$t('status.cancelled')
 			}
 			switch (status) {
 				case 2:
-					return '等待商户接单'
+					return this.$t('status.awaitingMerchant')
 				case 3:
-					return '商家已接单'
+					return this.$t('status.merchantAccepted')
 				case 4:
-					return '订单派送中'
+					return this.$t('status.delivering')
 				case 5:
-					return '订单已完成'
+					return this.$t('status.completed')
 			}
 		},
 		// 订单倒计时
@@ -182,27 +242,31 @@ export default {
 		getNewImage(image) {
 			return `${baseUrl}/common/download?name=${image}`
 		},
+		// 展开或收起订单中的全部商品
+		toggleDisplay() {
+			this.showDisplay = !this.showDisplay
+		},
 		// 返回上一级
 		goBack() {
-			uni.redirectTo({
-				url: '/pages/historyOrder/historyOrder'
-			})
+			uni.navigateBack({ delta: 1 })
 		},
 		openPopuos(type) {
-			this.$refs.status.$refs.commonPopup.open(type)
+			this.$refs.commonPopup.open(type)
 		},
 		// 联系商家进行退款弹层
 		handleRefund(type) {
 			this.showConfirm = false
 			this.openPopuos(type)
-			this.textTip = '请联系商家进行退款！'
+			this.textTip = this.$t('order.contactRefund')
 		},
 		// 拨打电话弹层
 		handlePhone(type, phone) {
-			// 暂时关闭打电话
+			if (phone) this.phone = phone
+			if (!this.phone) {
+				uni.showToast({ title: this.$t('order.operationFailed'), icon: 'none' })
+				return
+			}
 			this.$refs.phone.open(type)
-
-			this.phone = phone;
 		},
 		// 关闭弹层
 		closePopup(type) {
@@ -210,7 +274,7 @@ export default {
 		},
 		// closePopupInfo
 		closePopupInfo(type) {
-			this.$refs.status.$refs.commonPopup.close(type)
+			this.$refs.commonPopup.close(type)
 			this.getBaseData(this.orderId)
 		},
 		// 立即支付

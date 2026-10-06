@@ -3,26 +3,26 @@
   <view class="box">
     <view class="orderBaseInfo">
       <view>
-        <view>订单号码</view>
-        <view>{{ orderDetailsData.number }}</view>
+        <view class="info-label">{{ $t("details.orderNumber") }}</view>
+        <view class="info-value">{{ orderDetailsData.number }}</view>
       </view>
       <view>
-        <view>订单时间</view>
-        <view>{{ orderDetailsData.orderTime }}</view>
+        <view class="info-label">{{ $t("details.orderTime") }}</view>
+        <view class="info-value">{{ orderDetailsData.orderTime }}</view>
       </view>
       <view>
-        <view>支付方式</view>
-        <view>{{ orderDetailsData.payMethod === 1 ? "微信" : "支付宝" }}</view>
+        <view class="info-label">{{ $t("details.paymentMethod") }}</view>
+        <view class="info-value">{{ orderDetailsData.payMethod === 1 ? $t("details.wechat") : $t("details.alipay") }}</view>
       </view>
       <view>
-        <view>订单备注</view>
-        <view class="orderinfo-remak">{{
-          orderDetailsData.remark ? orderDetailsData.remark : "暂无信息"
+        <view class="info-label">{{ $t("details.orderRemark") }}</view>
+        <view class="info-value orderinfo-remak">{{
+          orderDetailsData.remark ? orderDetailsData.remark : $t("details.noInformation")
         }}</view>
       </view>
       <view>
-        <view>餐具数量</view>
-        <view>{{
+        <view class="info-label">{{ $t("details.tablewareQuantity") }}</view>
+        <view class="info-value">{{
           orderDetailsData.tablewareStatus === 1
             ? orderDetailsData.tablewareNumber
             : orderDetailsData.tablewareNumber
@@ -44,3 +44,15 @@ export default {
 };
 </script>
 <style src="../../order/style.scss" lang="scss"></style>
+<style lang="scss" scoped>
+.info-label {
+  width: 320rpx !important;
+  padding-right: 20rpx !important;
+  box-sizing: border-box;
+}
+.info-value {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+</style>

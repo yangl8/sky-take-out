@@ -19,7 +19,7 @@ export default {
 			reminderOrder(id).then(res => {
 				if(res.code===1){
 					this.showConfirm=true
-					this.textTip='您的催单信息已发出！'
+					this.textTip=this.$t('popup.reminderSent')
 					this.$refs.commonPopup.open(type)
 				}
 			})
@@ -30,14 +30,14 @@ export default {
 				cancelOrder(obj.id).then(res => {
 					if(res.code===1){
 						this.showConfirm=true
-						this.textTip='您的订单已取消！'
+						this.textTip=this.$t('popup.orderCancelled')
 						this.$refs.commonPopup.open(type)
 					}
 				})
 			}else{
 				this.showConfirm=false
 				this.$refs.commonPopup.open(type)
-				this.textTip='请联系商家进行取消！'
+				this.textTip=this.$t('popup.contactMerchant')
 			}	
 		},
 		// 再来一单

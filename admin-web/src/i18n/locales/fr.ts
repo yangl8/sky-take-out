@@ -31,8 +31,8 @@ export default {
     "connectionError": "Impossible de recevoir les notifications du serveur.",
     "newOrder": "Nouvelle commande",
     "reminder": "Rappel de commande",
-    "newOrderMessage": "Une nouvelle commande est à traiter : {orderId}",
-    "reminderMessage": "Le client demande des nouvelles de la commande {orderId}."
+    "newOrderMessage": "Une nouvelle commande est à traiter : {orderNumber}",
+    "reminderMessage": "Le client demande des nouvelles de la commande {orderNumber}."
   },
   "password": {
     "old": "Mot de passe actuel",

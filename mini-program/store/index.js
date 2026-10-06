@@ -18,6 +18,7 @@ const store = new Vuex.Store({
 		shopPhone: '', //店铺电话
 		shopStatus: {}, //店铺状态
 		orderData: {},
+		selectedOrder: {}, // 进入详情页前暂存选中的订单
 		token: '',
 		arrivals: '',
 		remarkData: '',//备注
@@ -63,6 +64,9 @@ const store = new Vuex.Store({
 		setOrderData(state, provider) {
 			state.orderData = provider
 
+		},
+		setSelectedOrder(state, provider) {
+			state.selectedOrder = provider
 		},
 		setToken(state, provider) {
 			state.token = provider

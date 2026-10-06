@@ -31,8 +31,8 @@ export default {
     "connectionError": "Unable to connect to the server for live notifications.",
     "newOrder": "New order",
     "reminder": "Order reminder",
-    "newOrderMessage": "A new order needs your attention: {orderId}",
-    "reminderMessage": "The customer requests an update on order {orderId}."
+    "newOrderMessage": "A new order needs your attention: {orderNumber}",
+    "reminderMessage": "The customer requests an update on order {orderNumber}."
   },
   "password": {
     "old": "Current password",

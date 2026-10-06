@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -69,14 +71,35 @@ public class OrderServiceImpl implements OrderService{
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
-    @Autowired 
+    @Autowired
     private WebSocketServer webSocketServer;
+    @Autowired
+    private Environment environment;
+
+    @Value("${sky.shop.delivery-fee:0}")
+    private BigDecimal deliveryFee;
 
     @Value("${sky.shop.address}")
     private String shopAddress;
 
     @Value("${sky.amap.key}")
     private String amapKey;
+
+    /**
+     * 开发环境使用模拟支付，因此退款也只模拟成功；其他环境调用微信退款。
+     */
+    private void refundPaidOrder(Orders orders) throws Exception {
+        if (environment.acceptsProfiles(Profiles.of("dev"))) {
+            log.info("开发环境模拟退款成功，订单号：{}", orders.getNumber());
+            return;
+        }
+        String refund = weChatPayUtil.refund(
+                orders.getNumber(),
+                orders.getNumber(),
+                new BigDecimal(0.01),
+                new BigDecimal(0.01));
+        log.info("申请退款：{}", refund);
+    }
 
     /**    (non-Javadoc)
      * 用户下单
@@ -198,7 +221,8 @@ public class OrderServiceImpl implements OrderService{
         Map map = new HashMap();
         map.put("type",1); //1表示来单提醒 2表示客户催单
         map.put("orderId", ordersDB.getId());
-        map.put("content", "订单号: " + outTradeNo);
+        map.put("orderNumber", ordersDB.getNumber());
+        map.put("content", "订单号: " + ordersDB.getNumber());
 
         String json = JSON.toJSONString(map);
         webSocketServer.sendToAllClient(json);
@@ -212,13 +236,14 @@ public class OrderServiceImpl implements OrderService{
      * @param status
      * @return
      */
-    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) {
+    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status, Integer payStatus) {
         // 设置分页
         PageHelper.startPage(pageNum, pageSize);
 
         OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
         ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
         ordersPageQueryDTO.setStatus(status);
+        ordersPageQueryDTO.setPayStatus(payStatus);
 
         // 分页条件查询
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
@@ -236,6 +261,7 @@ public class OrderServiceImpl implements OrderService{
                 OrderVO orderVO = new OrderVO();
                 BeanUtils.copyProperties(orders, orderVO);
                 orderVO.setOrderDetailList(orderDetails);
+                orderVO.setDeliveryFee(deliveryFee);
 
                 list.add(orderVO);
             }
@@ -252,6 +278,9 @@ public class OrderServiceImpl implements OrderService{
     public OrderVO details(Long id) {
         // 根据id查询订单
         Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
 
         // 查询该订单对应的菜品/套餐明细
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
@@ -260,6 +289,7 @@ public class OrderServiceImpl implements OrderService{
         OrderVO orderVO = new OrderVO();
         BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
+        orderVO.setDeliveryFee(deliveryFee);
 
         // Older orders may not have persisted the delivery address. Rebuild it
         // from the address book so the management detail view can still show it.
@@ -308,13 +338,15 @@ public class OrderServiceImpl implements OrderService{
         orders.setId(ordersDB.getId());
 
         // 订单处于待接单状态下取消，需要进行退款
-        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)
+                && Orders.PAID.equals(ordersDB.getPayStatus())) {
             //调用微信支付退款接口
-            weChatPayUtil.refund(
-                    ordersDB.getNumber(), //商户订单号
-                    ordersDB.getNumber(), //商户退款单号
-                    new BigDecimal(0.01),//退款金额，单位 元
-                    new BigDecimal(0.01));//原订单金额
+            try {
+                refundPaidOrder(ordersDB);
+            } catch (Exception exception) {
+                log.error("订单退款失败，订单号：{}", ordersDB.getNumber(), exception);
+                throw new OrderBusinessException("退款失败，请检查微信支付配置后重试");
+            }
 
             //支付状态修改为 退款
             orders.setPayStatus(Orders.REFUND);
@@ -463,18 +495,16 @@ public class OrderServiceImpl implements OrderService{
         Integer payStatus = ordersDB.getPayStatus();
         if (payStatus == Orders.PAID) {
             //用户已支付，需要退款
-            String refund = weChatPayUtil.refund(
-                    ordersDB.getNumber(),
-                    ordersDB.getNumber(),
-                    new BigDecimal(0.01),
-                    new BigDecimal(0.01));
-            log.info("申请退款：{}", refund);
+            refundPaidOrder(ordersDB);
         }
 
         // 拒单需要退款，根据订单id更新订单状态、拒单原因、取消时间
         Orders orders = new Orders();
         orders.setId(ordersDB.getId());
         orders.setStatus(Orders.CANCELLED);
+        if (Orders.PAID.equals(payStatus)) {
+            orders.setPayStatus(Orders.REFUND);
+        }
         orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
         orders.setCancelTime(LocalDateTime.now());
 
@@ -492,20 +522,18 @@ public class OrderServiceImpl implements OrderService{
 
         //支付状态
         Integer payStatus = ordersDB.getPayStatus();
-        if (payStatus == 1) {
+        if (Orders.PAID.equals(payStatus)) {
             //用户已支付，需要退款
-            String refund = weChatPayUtil.refund(
-                    ordersDB.getNumber(),
-                    ordersDB.getNumber(),
-                    new BigDecimal(0.01),
-                    new BigDecimal(0.01));
-            log.info("申请退款：{}", refund);
+            refundPaidOrder(ordersDB);
         }
 
         // 管理端取消订单需要退款，根据订单id更新订单状态、取消原因、取消时间
         Orders orders = new Orders();
         orders.setId(ordersCancelDTO.getId());
         orders.setStatus(Orders.CANCELLED);
+        if (Orders.PAID.equals(payStatus)) {
+            orders.setPayStatus(Orders.REFUND);
+        }
         orders.setCancelReason(ordersCancelDTO.getCancelReason());
         orders.setCancelTime(LocalDateTime.now());
         orderMapper.update(orders);
@@ -631,7 +659,8 @@ public class OrderServiceImpl implements OrderService{
 
         Map map = new HashMap();
         map.put("type", 2); //1表示来单提醒， 2表示客户催单
-        map.put("id", id);
+        map.put("orderId", id);
+        map.put("orderNumber", ordersDB.getNumber());
         map.put("content", "订单号: " + ordersDB.getNumber());
 
         //通过websocket向客户端浏览器推送消息

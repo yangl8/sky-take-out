@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -18,5 +19,8 @@ public class OrderVO extends Orders implements Serializable {
 
     //订单详情
     private List<OrderDetail> orderDetailList;
+
+    //配送费
+    private BigDecimal deliveryFee;
 
 }

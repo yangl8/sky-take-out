@@ -184,17 +184,19 @@ export default {
 			let _this = this
 			// 获取店铺状态
 			this.getShopInfo()
+			// 获取店铺名称、地址、电话和配送费
+			this.getMerchantInfo()
 			this.selectHeight = res.height
 			if (this.token() === "") {
 				uni.showModal({
-					title: "温馨提示",
-					content: "亲，授权微信登录后才能点餐！",
+					title: this.$t("home.loginTitle"),
+					content: this.$t("home.loginRequired"),
+					confirmText: this.$t("home.login"),
 					showCancel: false,
 					success(res) {
 						if (res.confirm) {
-							// 授权
 							uni.getUserProfile({
-								desc: "登录",
+								desc: _this.$t("home.login"),
 								success: async function (userInfo) {
 									_this.setBaseUserInfo(userInfo.userInfo)
 									try {
@@ -205,13 +207,10 @@ export default {
 											_this.init()
 										}
 									} catch (err) {
-										uni.showToast({
-											title: "登录失败",
-											icon: "none",
-										})
+										uni.showToast({ title: _this.$t("home.loginFailed"), icon: "none" })
 									}
 								},
-								fail: function (err) { },
+								fail: function () {},
 							})
 						}
 					},
@@ -225,8 +224,6 @@ export default {
 				this.typeIndex = 0
 			}
 
-			// 获取店铺联系方式
-			this.getMerchantInfo()
 			getCategoryList().then((res) => {
 				if (res && res.code === 1) {
 					this.typeListData = [...res.data]
@@ -358,7 +355,6 @@ export default {
 			await getShopStatus()
 				.then((res) => {
 					this.shopStatus = res.data
-					console.log(res.data);
 					this.setShopStatus(res.data)
 				})
 				.catch((err) => { })
@@ -367,9 +363,12 @@ export default {
 		async getMerchantInfo() {
 			await getMerchantInfo()
 				.then((res) => {
-					this.phoneData = res.data.phone
-					console.log(res);
-					this.setShopPhone(res.data)
+					if (res && res.code === 1) {
+						this.phoneData = res.data.phone
+						this.setShopPhone(res.data.phone)
+						this.setShopInfo(res.data)
+						this.setDeliveryFee(res.data.deliveryFee)
+					}
 				})
 				.catch((err) => { })
 		},

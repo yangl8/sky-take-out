@@ -809,10 +809,11 @@ $desc-font-color: #818693;
     }
     & > view {
       &:first-child {
-        padding-right: 40rpx;
-        width: 110rpx;
+        padding-right: 24rpx;
+        width: 170rpx;
         color: #666;
         flex-shrink: 0;
+        white-space: nowrap;
       }
     }
   }

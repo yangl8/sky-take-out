@@ -5,7 +5,7 @@
     <view class="top" @click="goAddress">
       <!-- 无地址 -->
       <view v-if="!address" class="address_name_disabled">
-        请选择收货地址
+        {{ $t("order.selectAddress") }}
       </view>
       <!-- end -->
       <!-- 有地址 -->
@@ -19,7 +19,7 @@
           <text class="name_2">{{ phoneNumber }}</text>
         </view>
         <view v-if="address" class="infoTip"
-          >为减少接触，降低风险，推荐使用无接触配送</view
+          >{{ $t("order.contactlessRecommended") }}</view
         >
       </view>
       <view class="address_image">
@@ -30,15 +30,15 @@
     <!-- 送达时间 -->
     <view class="bottom">
       <div class="bottomTime" @click="openTimePopuo('bottom')">
-        <text class="time_name_disabled">立即送出</text>
+        <text class="time_name_disabled">{{ $t("order.deliverNow") }}</text>
         <view class="address_image">
-          <text class="">{{ arrivalTime }}送达</text>
+          <text class="">{{ $t("order.deliverySelection", { day: arrivalDay, time: arrivalTime }) }}</text>
           <view class="to_right"></view>
         </view>
       </div>
 
       <view v-if="address" class="infoTip"
-        >因配送订单较多，送达时间可能波动</view
+        >{{ $t("order.deliveryNotice") }}</view
       >
     </view>
     <!-- end -->
@@ -87,7 +87,7 @@
             </scroll-view>
           </view>
         </view>
-        <view class="btns" @click="onsuer">取消</view>
+        <view class="btns" @click="onsuer">{{ $t("common.cancel") }}</view>
       </view>
     </uni-popup>
     <!-- end -->
@@ -128,6 +128,11 @@ export default {
     },
     // 送达时间
     arrivalTime: {
+      type: String,
+      default: "",
+    },
+    // 当前选择的是今天还是明天
+    arrivalDay: {
       type: String,
       default: "",
     },
@@ -187,12 +192,12 @@ export default {
   computed: {
     // 万先生
     cryptoName() {
-      if (this.$store.state.gender === 0) {
+      if (Number(this.$store.state.gender) === 0) {
         // 男
-        return this.nickName.charAt(0) + "先生";
+        return this.$t("common.sir", { name: this.nickName });
       } else {
         // 女
-        return this.nickName.charAt(0) + "女士";
+        return this.$t("common.madam", { name: this.nickName });
       }
     },
   },

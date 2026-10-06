@@ -41,7 +41,7 @@ public interface OrderService {
      * @param status
      * @return
      */
-    PageResult pageQuery4User(int page, int pageSize, Integer status);
+    PageResult pageQuery4User(int page, int pageSize, Integer status, Integer payStatus);
 
     /**
      * 查询订单详情

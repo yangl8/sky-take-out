@@ -6,7 +6,7 @@
       @clickLeft="goBack"
       left-icon="back"
       leftIcon="arrowleft"
-      title="提交订单"
+      :title="$t('order.submit')"
       statusBar="true"
       fixed="true"
       color="#ffffff"
@@ -23,6 +23,7 @@
           :nickName="nickName"
           :phoneNumber="phoneNumber"
           :arrivalTime="arrivalTime"
+          :arrivalDay="popleft[tabIndex]"
           :popleft="popleft"
           :weeks="weeks"
           :newDateData="newDateData"
@@ -43,6 +44,7 @@
             :orderDishNumber="orderDishNumber"
             :orderListDataes="orderListDataes"
             :orderDishPrice="orderDishPrice"
+            @toggleDisplay="toggleDisplay"
           ></dish-detail>
           <!-- end -->
           <view class="boxPad">
@@ -81,9 +83,9 @@
           <text class="ico">￥ </text> {{ orderDishPrice.toFixed(2) }}
         </view>
         <view class="order_but">
-          <view v-if="isHandlePy" class="order_but_rit">去支付</view>
+          <view v-if="isHandlePy" class="order_but_rit">{{ $t("order.pay") }}</view>
           <view v-else class="order_but_rit" @click="payOrderHandle()">
-            去支付
+            {{ $t("order.pay") }}
           </view>
         </view>
       </view>

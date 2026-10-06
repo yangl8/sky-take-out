@@ -16,16 +16,16 @@ export const splitMobile = (mobile) => {
 }
 
 // 判断地址
-export const getLableVal = (item) => {
+export const getLableVal = (item, locale = 'zh') => {
 	switch (item) {
 		case '1':
-			return '公司'
+			return translate(locale, 'address.company')
 		case '2':
-			return '家'
+			return translate(locale, 'address.home')
 		case '3':
-			return '学校'
+			return translate(locale, 'address.school')
 		default:
-			return '其他'
+			return translate(locale, 'address.other')
 	}
 }
 // status // 1待付款 2待接单 3 已接单 4 派送中 5 已完成 6 已取消 7 退款
@@ -50,30 +50,34 @@ export const getLableVal = (item) => {
 //   3: "派送中",
 // };
 // 状态
-export const statusWord = (status, time) => {
+export const statusWord = (status, time, locale = 'zh', payStatus) => {
+	if (payStatus === 2) {
+		return translate(locale, 'status.refunded')
+	}
 	if (time) {
 		if (status === 1 && time > 0) {
-			return '待付款'
+			return translate(locale, 'status.pendingPayment')
 		} else if (status === 6 || (time < 0 && status === 1)) {
-			return '已完成'
+			return translate(locale, 'status.cancelled')
 		}
 	}
 	switch (status) {
 		case 1:
-			return '待付款'
+			return translate(locale, 'status.pendingPayment')
 		case 2:
-			return '等待商家接单'
+			return translate(locale, 'status.awaitingMerchant')
 		case 3:
-			return '等待骑手接单'
+			return translate(locale, 'status.awaitingCourier')
 		case 4:
-			return '派送中'
+			return translate(locale, 'status.delivering')
 		case 5:
-			return '派送中'
+			return translate(locale, 'status.completed')
 		case 6:
-			return '已完成'
+			return translate(locale, 'status.cancelled')
 		case 7:
-			return '已取消'
+			return translate(locale, 'status.refunded')
 	}
+	return ''
 }
 // 倒计时
 export const runTimeBack = () => {
@@ -138,10 +142,18 @@ export const getOvertime = (time) => {
 // 	}
 // }
 // 获取周几
-export const getWeekDate = (date) => {
+export const getWeekDate = (date, locale = 'zh') => {
 	let now = new Date(date);
 	let day = now.getDay()
-	let weeks = ['周日', '周一', '周二', '周三', '周四', '周五', '周六',]
+	let weeks = [
+		translate(locale, 'common.sunday'),
+		translate(locale, 'common.monday'),
+		translate(locale, 'common.tuesday'),
+		translate(locale, 'common.wednesday'),
+		translate(locale, 'common.thursday'),
+		translate(locale, 'common.friday'),
+		translate(locale, 'common.saturday'),
+	]
 	let week = weeks[day]
 	return week
 
@@ -196,3 +208,4 @@ export const dateFormat = (b, time) => {
 	console.log(ret, 44)
 	return ret;
 }
+import { translate } from "@/locales";

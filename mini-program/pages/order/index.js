@@ -1,9 +1,9 @@
 import {
-	// 提交订单
-	submitOrderSubmit,
 	// 查询默认地址
 	getAddressBookDefault,
-	queryAddressBookList, getEstimatedDeliveryTime
+	queryAddressBookList,
+	getEstimatedDeliveryTime,
+	submitOrderSubmit
 } from '../api/api.js'
 import {
 	mapState,
@@ -79,6 +79,7 @@ export default {
 			selectDateValue: 0,
 			timeout: false,
 			isTomorrow: false,
+			isImmediateDelivery: true,
 			status: 0,
 			num: 0,
 			weeks: [],
@@ -110,6 +111,12 @@ export default {
 		}
 	},
 	created() {
+		this.popleft = [this.$t('order.today'), this.$t('order.tomorrow')]
+		this.baseData = [this.$t('order.noTableware'), '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+		this.tablewareData = this.$t('order.noTableware')
+		this.activeRadio = this.$t('order.noTableware')
+		this.radioGroup = [this.$t('order.provideByMeal'), this.$t('order.noTableware')]
+		this.popright[0] = this.$t('order.immediateDelivery')
 		let time = new Date()
 		this.toDate = new Date(time.toLocaleDateString()).getTime()
 		this.tomorrowStart = this.toDate + 3600 * 24 * 1000
@@ -118,7 +125,7 @@ export default {
 		const weekDay = [this.toDate, this.tomorrowStart]
 
 		weekDay.forEach((date) => {
-			this.weeks.push(getWeekDate(date))
+			this.weeks.push(getWeekDate(date, this.$store.state.locale))
 
 		})
 
@@ -151,7 +158,7 @@ export default {
 			this.gender = newAddress.sex
 
 			this.addressBookId = newAddress.id
-			this.addressLabel = getLableVal(newAddress.label)
+			this.addressLabel = getLableVal(newAddress.label, this.$store.state.locale)
 		} else {
 			// 默认地址查询
 			await this.getAddressBookDefault()
@@ -182,14 +189,21 @@ export default {
 		},
 		// 获取用户送餐期望时间
 		async getEstimatedDeliveryTime() {
-			const result = await getEstimatedDeliveryTime({ shopId: this.shopInfo().shopId, customerAddress: this.address });
-			this.arrivalTime = dayjs(result.data).format('HH:mm')
-			this.orderTime = result.data
+			try {
+				const result = await getEstimatedDeliveryTime({ shopId: this.shopInfo().shopId, customerAddress: this.address })
+				this.orderTime = result && result.code === 1 && result.data
+					? result.data
+					: dayjs().add(30, 'minute').format('YYYY-MM-DD HH:mm:ss')
+			} catch (error) {
+				// 接口暂时不可用时，仍然提供当天可选的送达时间
+				this.orderTime = dayjs().add(30, 'minute').format('YYYY-MM-DD HH:mm:ss')
+			}
+			this.arrivalTime = dayjs(this.orderTime).format('HH:mm')
 		},
 		// 根据系统派送时间 格式化时间  [16:00,16:30]
 		getDateDate() {
 			let currentDayjs = dayjs(this.orderTime);
-			const list = ['立即派送']
+			const list = [this.$t('order.immediateDelivery')]
 			if (!(currentDayjs.hour() >= 22 && currentDayjs.minute() > 30)) {
 				if (currentDayjs.minute() > 30) {
 					currentDayjs = currentDayjs.add(1, 'hour').set('minute', 0)
@@ -228,7 +242,7 @@ export default {
 					this.nickName = res.data.consignee
 					this.gender = res.data.sex
 					this.addressBookId = res.data.id
-					this.addressLabel = getLableVal(res.data.label)
+					this.addressLabel = getLableVal(res.data.label, this.$store.state.locale)
 					this.tagLabel = res.data.label
 				}
 			})
@@ -271,13 +285,18 @@ export default {
 		closeMask() {
 			this.openPayType = false
 		},
+		// 展开或收起订单中的全部商品
+		toggleDisplay() {
+			this.showDisplay = !this.showDisplay
+		},
 		// 支付下单
 		payOrderHandle() {
 			this.isHandlePy = true
 
 			if (!this.address) {
+				this.isHandlePy = false
 				uni.showToast({
-					title: '请选择收货地址',
+					title: this.$t('order.selectAddress'),
 					icon: 'none',
 				})
 				return false
@@ -286,10 +305,10 @@ export default {
 				payMethod: 1,
 				addressBookId: this.addressBookId,
 				remark: this.remark,
-				estimatedDeliveryTime: this.arrivalTime === '立即派送' ? presentFormat() : dateFormat(this.isTomorrow,
-					this.arrivalTime),
-				deliveryStatus: this.arrivalTime === '立即派送' ? 1 : 0,
-				remark: this.remark,
+				estimatedDeliveryTime: this.isImmediateDelivery
+					? dayjs(this.orderTime || presentFormat()).format('YYYY-MM-DD HH:mm:ss')
+					: dateFormat(this.isTomorrow, this.arrivalTime),
+				deliveryStatus: this.isImmediateDelivery ? 1 : 0,
 				tablewareStatus: this.status,
 				tablewareNumber: this.num,
 				packAmount: this.orderDishNumber,
@@ -299,20 +318,25 @@ export default {
 			}
 
 			submitOrderSubmit(params).then(res => {
+				this.isHandlePy = false
 				if (res.code === 1) {
-					this.isHandlePy = false
 					this.setOrderData(res.data)
 					this.setRemark('')
-
 					uni.navigateTo({
 						url: '/pages/pay/index?orderId=' + res.data.id
 					})
 				} else {
 					uni.showToast({
-						title: res.msg || '操作失败',
+						title: res.msg || this.$t('order.operationFailed'),
 						icon: 'none',
 					})
 				}
+			}).catch(error => {
+				this.isHandlePy = false
+				uni.showToast({
+					title: error.msg || this.$t('order.operationFailed'),
+					icon: 'none',
+				})
 			})
 		},
 		// 拨打电话
@@ -325,13 +349,13 @@ export default {
 		handleContact(type) {
 			this.showConfirm = false
 			this.openPopuos(type)
-			this.textTip = '请联系商家进行取消！'
+			this.textTip = this.$t('popup.contactMerchant')
 		},
 		// 联系商家进行退款弹层
 		handleRefund(type) {
 			this.showConfirm = false
 			this.openPopuos(type)
-			this.textTip = '请联系商家进行退款！'
+			this.textTip = this.$t('order.contactRefund')
 		},
 		// 进入备注页
 		goRemark() {
@@ -356,18 +380,17 @@ export default {
 			if (this.tableware !== '') {
 				this.num = Number(this.tableware)
 				this.status = 0
-				if (this.tableware === '无需餐具') {
+				if (this.tableware === this.$t('order.noTableware')) {
 					this.num = 0
 					this.status = 0
 				}
-				if (this.tableware === '依据餐量提供') {
+				if (this.tableware === this.$t('order.provideByMeal')) {
 					this.num = this.orderDishNumber
 					this.status = 1
 				}
 
-				if (this.tableware !== '依据餐量提供' || this.tableware !== '无需餐具') {
-					this.tablewareData = this.tableware + '份'
-
+				if (this.tableware !== this.$t('order.provideByMeal') && this.tableware !== this.$t('order.noTableware')) {
+					this.tablewareData = this.$t('order.tablewareCount', { count: this.tableware })
 				} else {
 					this.tablewareData = this.tableware
 				}
@@ -375,7 +398,7 @@ export default {
 				//是默认值，在点击的时候抛出去
 				let cont = this.baseData[this.$refs.dishinfo.$refs.piker.defaultValue[0]]
 				this.tablewareData = cont
-				if (this.activeRadio === '依据餐量提供') {
+				if (this.activeRadio === this.$t('order.provideByMeal')) {
 					this.num = this.orderDishNumber
 					this.status = 1
 				} else {
@@ -418,10 +441,12 @@ export default {
 		},
 		// 设置时间
 		setTime(val) {
-			if (val === '立即派送') {
+			if (val === this.$t('order.immediateDelivery')) {
 				this.arrivalTime = dayjs(this.orderTime).format('HH:mm')
+				this.isImmediateDelivery = true
 			} else {
 				this.arrivalTime = val
+				this.isImmediateDelivery = false
 			}
 
 			this.setArrivalTime(this.arrivalTime)

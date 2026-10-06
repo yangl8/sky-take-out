@@ -40,13 +40,15 @@
           class="recent"
           v-if="recentOrdersList && recentOrdersList.length > 0"
         >
-          <text class="order_line">最近订单</text>
+          <text class="order_line">{{ $t("my.recentOrders") }}</text>
         </view>
         <order-list
           :scrollH="scrollH"
           @lower="lower"
           @goDetail="goDetail"
           @oneOrderFun="oneOrderFun"
+          @handleReminder="handleReminder"
+          @handleCancel="handleCancel"
           @getOvertime="getOvertime"
           @statusWord="statusWord"
           @numes="numes"
@@ -60,7 +62,7 @@
 </template>
 
 <script>
-import { getOrderPage, repetitionOrder, delShoppingCart } from "../api/api.js";
+import { getOrderPage, repetitionOrder, delShoppingCart, reminderOrder, cancelOrder } from "../api/api.js";
 import { mapMutations } from "vuex";
 import { statusWord, getOvertime } from "@/utils/index.js";
 import { supportedLocales } from "@/locales";
@@ -122,6 +124,11 @@ export default {
       this.$store.state.baseUserInfo && this.$store.state.baseUserInfo.gender;
     this.phoneNumber =
       this.$store.state.shopPhone && this.$store.state.shopPhone;
+  },
+  onShow() {
+    this.pageInfo.page = 1;
+    this.recentOrdersList = [];
+    this.loading = false;
     this.getList();
   },
   created() {},
@@ -133,7 +140,7 @@ export default {
     });
   },
   methods: {
-    ...mapMutations(["setAddressBackUrl", "setLocale"]),
+    ...mapMutations(["setAddressBackUrl", "setLocale", "setSelectedOrder"]),
     changeLanguage(event) {
       const locale = supportedLocales[Number(event.detail.value)];
       if (locale) {
@@ -141,7 +148,7 @@ export default {
       }
     },
     statusWord(obj) {
-      return statusWord(obj.status, obj.time);
+      return statusWord(obj.status, obj.time, this.$store.state.locale);
     },
     getOvertime(time) {
       return getOvertime(time);
@@ -193,18 +200,65 @@ export default {
         }
       });
     },
+    // 催单
+    handleReminder(id) {
+      reminderOrder(id).then((res) => {
+        if (res.code === 1) {
+          uni.showToast({ title: this.$t("popup.reminderSent"), icon: "none" });
+        }
+      });
+    },
+    // 取消订单
+    handleCancel(order) {
+      if ([3, 4].includes(order.status)) {
+        this.showMerchantPhone();
+        return;
+      }
+      uni.showModal({
+        title: this.$t("popup.cancelOrderTitle"),
+        content: this.$t("popup.cancelOrderConfirm"),
+        confirmText: this.$t("common.confirm"),
+        cancelText: this.$t("common.cancel"),
+        success: ({ confirm }) => {
+          if (!confirm) return;
+          cancelOrder(order.id).then((res) => {
+            if (res.code === 1) {
+              uni.showToast({ title: this.$t("popup.orderCancelled"), icon: "none" });
+              this.pageInfo.page = 1;
+              this.recentOrdersList = [];
+              this.getList();
+            }
+          }).catch((error) => {
+            uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+          });
+        }
+      });
+    },
+    showMerchantPhone() {
+      const phone = this.$store.state.shopPhone || (this.$store.state.shopInfo || {}).phone;
+      uni.showModal({
+        title: this.$t("details.contactMerchant"),
+        content: this.$t("popup.contactMerchantCancel", { phone: phone || "-" }),
+        confirmText: this.$t("common.call"),
+        cancelText: this.$t("common.cancel"),
+        success: ({ confirm }) => {
+          if (confirm && phone) uni.makePhoneCall({ phoneNumber: String(phone) });
+        },
+      });
+    },
     quitClick() {},
     // 去详情页面
-    goDetail(id) {
+    goDetail(order) {
       this.setAddressBackUrl("/pages/my/my");
-      uni.redirectTo({
-        url: "/pages/details/index?orderId=" + id,
+      this.setSelectedOrder(order);
+      uni.navigateTo({
+        url: "/pages/details/index?orderId=" + order.id,
       });
     },
     dataAdd() {
       const pages = Math.ceil(this.pageInfo.total / 10); //计算总页数
       if (this.pageInfo.page === pages) {
-        this.loadingText = "没有更多了";
+        this.loadingText = this.$t("common.noMore");
         this.loading = true;
       } else {
         this.pageInfo.page++;
@@ -213,7 +267,7 @@ export default {
     },
 
     lower() {
-      this.loadingText = "数据加载中...";
+      this.loadingText = this.$t("common.loadingMore");
       this.loading = true;
       this.dataAdd();
     },
@@ -246,6 +300,19 @@ export default {
 
     .language-value {
       color: #666666;
+    }
+  }
+
+  .recent {
+    padding: 0 30rpx;
+    margin: 28rpx 0 18rpx;
+    box-sizing: border-box;
+
+    .order_line {
+      display: block;
+      font-size: 30rpx;
+      line-height: 42rpx;
+      font-weight: 500;
     }
   }
 }

@@ -56,6 +56,9 @@ sky:
     notifyUrl: ${sky.wechat.notifyUrl}
     refundNotifyUrl: ${sky.wechat.refundNotifyUrl}
   shop:
+    name: Sky Take-out
     address: 北京市朝阳区新街大道1号
+    phone: 15200000001
+    delivery-fee: 0
   amap:
     key: ${AMAP_KEY:}

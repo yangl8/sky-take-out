@@ -24,9 +24,15 @@
             </if>
             <if test="userId != null">
                 and user_id = #{userId}
+                and exists (
+                    select 1 from order_detail od where od.order_id = orders.id
+                )
             </if>
             <if test="status != null">
                 and status = #{status}
+            </if>
+            <if test="payStatus != null">
+                and pay_status = #{payStatus}
             </if>
             <if test="beginTime != null">
                 and order_time &gt;= #{beginTime}

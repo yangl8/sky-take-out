@@ -1,5 +1,7 @@
 package com.sky.controller.user;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +32,17 @@ public class OrderController {
     
     @Autowired 
     private OrderService orderService;
+
+    /**
+     * 获取预计送达时间
+     *
+     * @return 当前时间后30分钟
+     */
+    @GetMapping("/getEstimatedDeliveryTime")
+    @ApiOperation("获取预计送达时间")
+    public Result<LocalDateTime> getEstimatedDeliveryTime() {
+        return Result.success(LocalDateTime.now().plusMinutes(30));
+    }
 
     /**
      * 用户下单
@@ -69,8 +82,8 @@ public class OrderController {
      */
     @GetMapping("/historyOrders")
     @ApiOperation("历史订单查询")
-    public Result<PageResult> page(int page, int pageSize, Integer status) {
-        PageResult pageResult = orderService.pageQuery4User(page, pageSize, status);
+    public Result<PageResult> page(int page, int pageSize, Integer status, Integer payStatus) {
+        PageResult pageResult = orderService.pageQuery4User(page, pageSize, status, payStatus);
         return Result.success(pageResult);
     }
 

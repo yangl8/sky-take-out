@@ -107,6 +107,8 @@ export default class extends Vue {
   private storeId = this.getStoreId
   private restKey: number = 0
   private websocket = null
+  private reconnectTimer: number = 0
+  private websocketStopped = false
   private newOrder = ''
   private message = ''
   private audioIsPlaying = false
@@ -169,12 +171,17 @@ export default class extends Vue {
     this.getStatus()
   }
   created() {
+    this.websocketStopped = false
     this.webSocket()
   }
   onload() {
   }
   destroyed() {
-    this.websocket.close() //离开路由之后断开websocket连接
+    this.websocketStopped = true
+    window.clearTimeout(this.reconnectTimer)
+    if (this.websocket) {
+      this.websocket.close() //离开路由之后断开websocket连接
+    }
   }
 
   // 添加新订单提示弹窗
@@ -225,7 +232,9 @@ export default class extends Vue {
             }, 100)
           },
           // 这里也可以把返回信息加入到message中显示
-          message: String(that.$t(jsonMsg.type === 1 ? 'nav.newOrderMessage' : 'nav.reminderMessage', { orderId: jsonMsg.orderId })),
+          message: String(that.$t(jsonMsg.type === 1 ? 'nav.newOrderMessage' : 'nav.reminderMessage', {
+            orderNumber: jsonMsg.orderNumber || jsonMsg.orderId,
+          })),
         })
       }
       // 监听socket错误
@@ -236,10 +245,15 @@ export default class extends Vue {
           type: 'error',
           duration: 0,
         })
+        that.websocket.close()
       }
       // 监听socket关闭
       this.websocket.onclose = function () {
         console.log('WebSocket已关闭')
+        if (!that.websocketStopped) {
+          window.clearTimeout(that.reconnectTimer)
+          that.reconnectTimer = window.setTimeout(() => that.webSocket(), 3000)
+        }
       }
     }
   }

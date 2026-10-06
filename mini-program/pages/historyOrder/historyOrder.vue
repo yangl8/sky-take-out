@@ -1,7 +1,7 @@
 <!--历史订单-->
 <template>
   <view class="history_order">
-    <uni-nav-bar @clickLeft="goBack" left-icon="back" leftIcon="arrowleft" title="历史订单" statusBar="true" fixed="true"
+    <uni-nav-bar @clickLeft="goBack" left-icon="back" leftIcon="arrowleft" :title="$t('history.title')" statusBar="true" fixed="true"
       color="#ffffff" backgroundColor="#333333"></uni-nav-bar>
     <!-- 根据scrollinto和:id="'tab'+index"切换下方轮播 -->
     <scroll-view scroll-x class="scroll-row" :scroll-into-view="scrollinto" :scroll-with-animation="true" enable-flex>
@@ -27,11 +27,11 @@
                 <text class="time">{{ item.orderTime }}</text>
                 <!-- 支付状态 -->
                 <text class="type status" :class="{ status: item.status == 2 }">{{
-                  statusWord(item.status)
+                  statusWord(item.status, item.payStatus)
                 }}</text>
               </view>
               <!-- 点菜的内容 -->
-              <view class="orderBox" @click="goDetail(item.id)">
+              <view class="orderBox" v-if="item.orderDetailList && numes(item.orderDetailList).count > 0" @click="goDetail(item)">
                 <view class="food_num">
                   <scroll-view scroll-x="true" class="pic" style="width: 100%; overflow: hidden; white-space: nowrap">
                     <view class="food_num_item" v-for="(num, y) in item.orderDetailList" :key="y">
@@ -45,24 +45,33 @@
                 <!-- 商品数量及金额 -->
                 <view class="numAndAum">
                   <view><text>￥{{ item.amount.toFixed(2) }}</text></view>
-                  <view><text>共{{ numes(item.orderDetailList).count }}件</text></view>
+                  <view><text>{{ $t("common.items", { count: numes(item.orderDetailList).count }) }}</text></view>
                 </view>
               </view>
-              <view class="againBtn">
-                <button class="new_btn" type="default" @click="oneMoreOrder(item.id)">
-                  再来一单
+              <view class="againBtn" v-if="item.orderDetailList && numes(item.orderDetailList).count > 0">
+                <button class="new_btn" type="default" @click="oneMoreOrder(item.id)"
+                  v-if="[5, 6, 7].includes(item.status)">
+                  {{ $t("history.reorder") }}
                 </button>
-                <button class="new_btn btn" type="default" @click="goDetail(item.id)"
+                <button class="new_btn btn" type="default" @click="goDetail(item)"
                   v-if="item.status === 1 && getOvertime(item.orderTime) > 0">
-                  去支付
+                  {{ $t("history.pay") }}
                 </button>
                 <button class="new_btn btn" type="default" @click="handleReminder('center', item.id)"
                   v-if="item.status === 2">
-                  催单
+                  {{ $t("history.remind") }}
+                </button>
+                <button class="new_btn" type="default" @click="handleCancel(item)"
+                  v-if="[1, 2, 3, 4].includes(item.status)">
+                  {{ $t("details.cancelOrder") }}
                 </button>
               </view>
             </view>
           </view>
+          <empty
+            v-else-if="isEmpty"
+            :textLabel="$t('history.empty')"
+          ></empty>
         </scroll-view>
       </swiper-item>
     </swiper>
@@ -70,7 +79,7 @@
       <view class="popup-content">
         <view class="text">{{ textTip }}</view>
         <view class="btn" v-if="showConfirm">
-          <view @click="closePopup">确认</view>
+          <view @click="closePopup">{{ $t("common.confirm") }}</view>
         </view>
       </view>
     </uni-popup>
@@ -82,8 +91,8 @@ import {
   getOrderPage,
   repetitionOrder,
   reminderOrder,
-  delShoppingCart,
-  queryOrdersCheckStatus
+  cancelOrder,
+  delShoppingCart
 } from "../api/api.js";
 import { mapMutations } from "vuex";
 import Empty from "@/components/empty/empty";
@@ -108,7 +117,6 @@ export default {
       scrollH: 0,
       tabIndex: 0,
       // tabBars: ["全部订单", "待付款", "退款", "已完成", "派送中"],
-      tabBars: ["全部订单", "待付款", "退款"],
       // 状态对应的接口和参数
       urlMap: {
         0: {
@@ -120,7 +128,7 @@ export default {
           key: "status",
         },
         2: {
-          fn: queryOrdersCheckStatus,
+          fn: getOrderPage,
           key: "payStatus",
         },
       },
@@ -128,6 +136,15 @@ export default {
       showConfirm: false,
       isEmpty: false,
     };
+  },
+  computed: {
+    tabBars() {
+      return [
+        this.$t("history.all"),
+        this.$t("history.pendingPayment"),
+        this.$t("history.refund"),
+      ];
+    },
   },
   onLoad() {
     this.getList();
@@ -160,7 +177,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(["setAddressBackUrl"]),
+    ...mapMutations(["setAddressBackUrl", "setSelectedOrder"]),
     numes(list) {
       let count = 0;
       let total = 0;
@@ -171,8 +188,8 @@ export default {
         });
       return { count: count, total: total };
     },
-    statusWord(status) {
-      return statusWord(status);
+    statusWord(status, payStatus) {
+      return statusWord(status, null, this.$store.state.locale, payStatus);
     },
     getOvertime(time) {
       return getOvertime(time);
@@ -186,19 +203,21 @@ export default {
         page: this.pageInfo.page,
       };
       params[key] = this[key]
-      uni.showLoading({ title: "加载中", mask: true });
-      fn(params).then((res) => {
-        if (res.code === 1) {
-          setTimeout(function () {
-            uni.hideLoading();
-          }, 100);
+      uni.showLoading({ title: this.$t("common.loading"), mask: true });
+      fn(params)
+        .then((res) => {
+          if (res.code === 1) {
           this.recentOrdersList = this.recentOrdersList.concat(
             res.data.records
           );
           this.pageInfo.total = res.data.total;
           this.isEmpty = true;
-        }
-      });
+          }
+        })
+        .catch(() => {})
+        .then(() => {
+          uni.hideLoading();
+        });
     },
     // 再来一单
     async oneMoreOrder(id) {
@@ -239,6 +258,7 @@ export default {
       }
       this.pageInfo.page = 1;
       this.recentOrdersList = [];
+      this.isEmpty = false;
       this.getList();
       // 滑动
       this.scrollinto = "tab" + index;
@@ -249,7 +269,7 @@ export default {
     dataAdd() {
       const pages = Math.ceil(this.pageInfo.total / 10); //计算总页数
       if (this.pageInfo.page === pages) {
-        this.loadingText = "没有更多了";
+        this.loadingText = this.$t("common.noMore");
         this.loading = true;
       } else {
         this.pageInfo.page++;
@@ -258,24 +278,63 @@ export default {
     },
 
     lower() {
-      this.loadingText = "数据加载中...";
+      this.loadingText = this.$t("common.loadingMore");
       this.loading = true;
       this.dataAdd();
     },
     // 去详情页面
-    goDetail(id) {
+    goDetail(order) {
       this.setAddressBackUrl("/pages/historyOrder/historyOrder");
-      uni.navigateTo({ url: "/pages/details/index?orderId=" + id });
+      this.setSelectedOrder(order);
+      uni.navigateTo({ url: "/pages/details/index?orderId=" + order.id });
     },
     // 催单
     handleReminder(type, id) {
       reminderOrder(id).then((res) => {
         if (res.code === 1) {
           this.showConfirm = true;
-          this.textTip = "您的催单信息已发出！";
+          this.textTip = this.$t("popup.reminderSent");
           this.$refs.commonPopup.open(type);
           this.getList(this.status);
         }
+      });
+    },
+    // 取消订单
+    handleCancel(order) {
+      if ([3, 4].includes(order.status)) {
+        this.showMerchantPhone();
+        return;
+      }
+      uni.showModal({
+        title: this.$t("popup.cancelOrderTitle"),
+        content: this.$t("popup.cancelOrderConfirm"),
+        confirmText: this.$t("common.confirm"),
+        cancelText: this.$t("common.cancel"),
+        success: ({ confirm }) => {
+          if (!confirm) return;
+          cancelOrder(order.id).then((res) => {
+            if (res.code === 1) {
+              uni.showToast({ title: this.$t("popup.orderCancelled"), icon: "none" });
+              this.pageInfo.page = 1;
+              this.recentOrdersList = [];
+              this.getList();
+            }
+          }).catch((error) => {
+            uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+          });
+        }
+      });
+    },
+    showMerchantPhone() {
+      const phone = this.$store.state.shopPhone || (this.$store.state.shopInfo || {}).phone;
+      uni.showModal({
+        title: this.$t("details.contactMerchant"),
+        content: this.$t("popup.contactMerchantCancel", { phone: phone || "-" }),
+        confirmText: this.$t("common.call"),
+        cancelText: this.$t("common.cancel"),
+        success: ({ confirm }) => {
+          if (confirm && phone) uni.makePhoneCall({ phoneNumber: String(phone) });
+        },
       });
     },
     // 关闭弹层

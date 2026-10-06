@@ -4,13 +4,13 @@
     <!-- 地址管理 -->
     <view class="address" @click="goAddress">
       <image class="location" src="../../../static/address.png"></image>
-      <text class="address_word">地址管理</text>
+      <text class="address_word">{{ $t("my.addressManagement") }}</text>
       <image class="to_right" src="../../../static/toRight.png" mode=""></image>
     </view>
     <!-- 历史订单 -->
     <view class="order" @click="goOrder">
       <image class="location" src="../../../static/order.png"></image>
-      <text class="order_word">历史订单</text>
+      <text class="order_word">{{ $t("my.orderHistory") }}</text>
       <image class="to_right" src="../../../static/toRight.png" mode=""></image>
     </view>
   </view>
