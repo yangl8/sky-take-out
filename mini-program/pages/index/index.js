@@ -191,7 +191,7 @@ export default {
 				uni.showModal({
 					title: this.$t("home.loginTitle"),
 					content: this.$t("home.loginRequired"),
-					confirmText: this.$t("home.login"),
+					confirmText: this.$t("common.modalLogin"),
 					showCancel: false,
 					success(res) {
 						if (res.confirm) {

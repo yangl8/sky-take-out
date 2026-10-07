@@ -157,8 +157,8 @@ export default {
 				uni.showModal({
 					title: this.$t('popup.cancelOrderTitle'),
 					content: this.$t('popup.cancelOrderConfirm'),
-					confirmText: this.$t('common.confirm'),
-					cancelText: this.$t('common.cancel'),
+					confirmText: this.$t('common.modalConfirm'),
+					cancelText: this.$t('common.modalCancel'),
 					success: ({ confirm }) => {
 						if (confirm) this.cancel(val.type, val.obj)
 					}

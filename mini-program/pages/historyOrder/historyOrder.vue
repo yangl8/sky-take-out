@@ -308,8 +308,8 @@ export default {
       uni.showModal({
         title: this.$t("popup.cancelOrderTitle"),
         content: this.$t("popup.cancelOrderConfirm"),
-        confirmText: this.$t("common.confirm"),
-        cancelText: this.$t("common.cancel"),
+        confirmText: this.$t("common.modalConfirm"),
+        cancelText: this.$t("common.modalCancel"),
         success: ({ confirm }) => {
           if (!confirm) return;
           cancelOrder(order.id).then((res) => {
@@ -330,8 +330,8 @@ export default {
       uni.showModal({
         title: this.$t("details.contactMerchant"),
         content: this.$t("popup.contactMerchantCancel", { phone: phone || "-" }),
-        confirmText: this.$t("common.call"),
-        cancelText: this.$t("common.cancel"),
+        confirmText: this.$t("common.modalCall"),
+        cancelText: this.$t("common.modalCancel"),
         success: ({ confirm }) => {
           if (confirm && phone) uni.makePhoneCall({ phoneNumber: String(phone) });
         },

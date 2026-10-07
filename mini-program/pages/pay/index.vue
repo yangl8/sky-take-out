@@ -98,8 +98,8 @@ export default {
       uni.showModal({
         title: this.$t("payment.confirmTitle"),
         content: this.$t("payment.confirmMessage"),
-        confirmText: this.$t("common.confirm"),
-        cancelText: this.$t("common.cancel"),
+        confirmText: this.$t("common.modalConfirm"),
+        cancelText: this.$t("common.modalCancel"),
         success: ({ confirm }) => {
           if (confirm) {
             this.submitPayment();
