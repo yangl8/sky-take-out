@@ -321,23 +321,30 @@ export default {
 				this.isHandlePy = false
 				if (res.code === 1) {
 					this.setOrderData(res.data)
-					this.setRemark('')
 					uni.navigateTo({
 						url: '/pages/pay/index?orderId=' + res.data.id
 					})
 				} else {
 					uni.showToast({
-						title: res.msg || this.$t('order.operationFailed'),
+						title: this.orderErrorMessage(res.msg),
 						icon: 'none',
 					})
 				}
 			}).catch(error => {
 				this.isHandlePy = false
 				uni.showToast({
-					title: error.msg || this.$t('order.operationFailed'),
+					title: this.orderErrorMessage(error.msg),
 					icon: 'none',
 				})
 			})
+		},
+		orderErrorMessage(message) {
+			if (typeof message !== 'string') return this.$t('order.operationFailed')
+			if (message.includes('超出配送范围')) return this.$t('order.outOfRange')
+			if (message.includes('购物车') && (message.includes('空') || message.includes('不能下单'))) {
+				return this.$t('order.emptyCart')
+			}
+			return message
 		},
 		// 拨打电话
 		call() {

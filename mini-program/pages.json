@@ -29,6 +29,7 @@
 	{
 	  "path": "pages/pay/index",
 	  "style": {
+	    "navigationStyle": "custom",
 	    "navigationBarTitleText": "支付订单",
 	    "enablePullDownRefresh": false,
 	    "navigationBarBackgroundColor": "#333333"

@@ -30,6 +30,9 @@
                   statusWord(item.status, item.payStatus)
                 }}</text>
               </view>
+              <view class="payment_countdown" v-if="Number(item.status) === 1 && paymentRemaining(item.orderTime) > 0">
+                {{ $t("payment.remaining") }} {{ formatPaymentRemaining(item.orderTime) }}
+              </view>
               <!-- 点菜的内容 -->
               <view class="orderBox" v-if="item.orderDetailList && numes(item.orderDetailList).count > 0" @click="goDetail(item)">
                 <view class="food_num">
@@ -38,7 +41,7 @@
                       <view class="img">
                         <image :src="num.image"></image>
                       </view>
-                      <view class="food">{{ num.name }}</view>
+                      <view class="food">{{ $displayText(num.name, 'name') }}</view>
                     </view>
                   </scroll-view>
                 </view>
@@ -53,7 +56,7 @@
                   v-if="[5, 6, 7].includes(item.status)">
                   {{ $t("history.reorder") }}
                 </button>
-                <button class="new_btn btn" type="default" @click="goDetail(item)"
+                <button class="new_btn btn" type="default" @click="continuePayment(item)"
                   v-if="item.status === 1 && getOvertime(item.orderTime) > 0">
                   {{ $t("history.pay") }}
                 </button>
@@ -116,6 +119,8 @@ export default {
       scrollinto: "tab0",
       scrollH: 0,
       tabIndex: 0,
+      clockNow: Date.now(),
+      countdownTimer: null,
       // tabBars: ["全部订单", "待付款", "退款", "已完成", "派送中"],
       // 状态对应的接口和参数
       urlMap: {
@@ -146,11 +151,25 @@ export default {
       ];
     },
   },
-  onLoad() {
+  onLoad(options) {
+    if (options && options.tab === "1") {
+      this.tabIndex = 1;
+      this.scrollinto = "tab1";
+      this.status = 1;
+      this.payStatus = 0;
+    }
     this.getList();
+    this.startPaymentCountdown();
+  },
+  onShow() {
+    this.startPaymentCountdown();
+  },
+  onHide() {
+    clearInterval(this.countdownTimer);
   },
   onUnload() {
     this.showTitle = false;
+    clearInterval(this.countdownTimer);
   },
   onReady() {
     uni.getSystemInfo({
@@ -193,6 +212,23 @@ export default {
     },
     getOvertime(time) {
       return getOvertime(time);
+    },
+    startPaymentCountdown() {
+      clearInterval(this.countdownTimer);
+      this.clockNow = Date.now();
+      this.countdownTimer = setInterval(() => {
+        this.clockNow = Date.now();
+      }, 1000);
+    },
+    paymentRemaining(time) {
+      const createdAt = Date.parse(String(time).replace(/-/g, "/"));
+      return Number.isFinite(createdAt) ? Math.max(0, 15 * 60 * 1000 - (this.clockNow - createdAt)) : 0;
+    },
+    formatPaymentRemaining(time) {
+      const seconds = Math.ceil(this.paymentRemaining(time) / 1000);
+      const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const remainingSeconds = String(seconds % 60).padStart(2, "0");
+      return `${minutes}:${remainingSeconds}`;
     },
     // 获取历史订单列表
     getList() {
@@ -288,6 +324,11 @@ export default {
       this.setSelectedOrder(order);
       uni.navigateTo({ url: "/pages/details/index?orderId=" + order.id });
     },
+    // 继续支付时进入支付页，不经过订单详情
+    continuePayment(order) {
+      this.setSelectedOrder(order);
+      uni.navigateTo({ url: "/pages/pay/index?orderId=" + order.id });
+    },
     // 催单
     handleReminder(type, id) {
       reminderOrder(id).then((res) => {
@@ -358,6 +399,13 @@ export default {
   .recent_orders {
     padding-top: 8rpx;
   }
+}
+
+.payment_countdown {
+  margin: 4rpx 0 12rpx;
+  color: #f28c28;
+  font-size: 24rpx;
+  text-align: right;
 }
 
 .scroll-row {

@@ -1,6 +1,16 @@
 <!--购买页-->
 <template>
   <view class="customer-box">
+    <uni-nav-bar
+      @clickLeft="handleBack"
+      left-icon="back"
+      leftIcon="arrowleft"
+      :title="$t('payment.title')"
+      statusBar="true"
+      fixed="true"
+      color="#ffffff"
+      backgroundColor="#333333"
+    ></uni-nav-bar>
     <view class="wrap">
       <view class="contion">
         <view class="orderPay">
@@ -57,7 +67,7 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { paymentOrder, mockPaymentSuccess, cancelOrder, getOrderDetail } from "@/pages/api/api.js";
+import { paymentOrder, mockPaymentSuccess, cancelOrder, getOrderDetail, repetitionOrder } from "@/pages/api/api.js";
 import { isLocalDevelopment } from "@/utils/env.js";
 export default {
   data() {
@@ -69,6 +79,8 @@ export default {
       activeRadio: 0,
       payMethodList: [this.$t("payment.wechat")],
       times: null,
+      restoringCart: false,
+      allowPageBack: false,
     };
   },
   created() {
@@ -83,9 +95,45 @@ export default {
   onShow() {
     uni.setNavigationBarTitle({ title: this.$t("payment.title") });
   },
+  onUnload() {
+    clearTimeout(this.times);
+  },
+  onBackPress() {
+    if (this.allowPageBack) {
+      this.allowPageBack = false;
+      return false;
+    }
+    if (!this.restoringCart) this.restoreCartAndReturnToCheckout();
+    return true;
+  },
   methods: {
     ...mapState(["orderData", "shopInfo"]),
-    ...mapMutations(["setSelectedOrder"]),
+    ...mapMutations(["setSelectedOrder", "setRemark"]),
+    handleBack() {
+      if (!this.restoringCart) this.restoreCartAndReturnToCheckout();
+    },
+    async restoreCartAndReturnToCheckout() {
+      this.restoringCart = true;
+      try {
+        // 下单接口已经创建了待付款订单；直接返回结算时先取消它，避免误留在“待付款”。
+        const cancelResult = await cancelOrder(this.orderId);
+        if (!cancelResult || cancelResult.code !== 1) {
+          throw new Error(cancelResult && cancelResult.msg || this.$t("order.operationFailed"));
+        }
+        const result = await repetitionOrder(this.orderId);
+        if (!result || result.code !== 1) throw new Error(this.$t("order.operationFailed"));
+        this.allowPageBack = true;
+        uni.navigateBack({ delta: 1 });
+      } catch (error) {
+        this.restoringCart = false;
+        uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+      }
+    },
+    goToPendingPayment() {
+      clearTimeout(this.times);
+      this.setRemark("");
+      uni.reLaunch({ url: "/pages/historyOrder/historyOrder?tab=1&orderId=" + this.orderId });
+    },
     // 支付详情
     handleSave() {
       if (this.timeout) {
@@ -103,6 +151,8 @@ export default {
         success: ({ confirm }) => {
           if (confirm) {
             this.submitPayment();
+          } else {
+            this.goToPendingPayment();
           }
         },
       });
@@ -120,7 +170,7 @@ export default {
             } catch (detailError) {
               // 支付已经成功，详情页会再次请求订单数据
             }
-            uni.showToast({ title: this.$t("payment.successful"), icon: "success" });
+            this.setRemark("");
             setTimeout(() => {
               uni.redirectTo({
                 url: "/pages/success/index?orderId=" + this.orderId,
@@ -154,7 +204,7 @@ export default {
                 });
               }, 1500);
             } else {
-              await uni.showToast({ title: this.$t("payment.successful"), icon: "success" });
+              this.setRemark("");
               setTimeout(() => {
                 // 下单成功!!
                 uni.redirectTo({
