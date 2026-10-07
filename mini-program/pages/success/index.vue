@@ -6,7 +6,7 @@
         src="../../static/success.png"
         mode=""
       ></image>
-      <view class="success_title">{{ $t("success.title") }}</view>
+      <view class="success_title">{{ $t("payment.successful") }}</view>
       <view class="word-box">
         <text class="word_bottom"
           ><text class="word_date">{{ $t("success.arrival", { time: arrivalTime }) }}</text></text
@@ -41,7 +41,7 @@ export default {
     this.orderId = options.orderId;
   },
   onShow() {
-    uni.setNavigationBarTitle({ title: this.$t("success.title") });
+    uni.setNavigationBarTitle({ title: this.$t("payment.successful") });
   },
   methods: {
     ...mapState(["shopInfo", "arrivals"]),
@@ -54,7 +54,7 @@ export default {
     // 查看订单
     goOrder() {
       uni.redirectTo({
-        url: "/pages/details/index?orderId=" + this.orderId,
+        url: "/pages/details/index?orderId=" + this.orderId + "&fromSuccess=1&sex=" + this.$store.state.gender,
       });
     },
     // 获取一小时以后的时间
@@ -112,23 +112,28 @@ export default {
     }
 
     .btns {
-      width: 750rpx;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 24rpx;
       display: flex;
       justify-content: center;
+      gap: 24rpx;
       .go_dish {
-        // flex: 1;
+        flex: 1 1 0;
         position: relative;
         font-size: 30rpx;
         // margin: 0 auto;
-        width: 200rpx;
+        min-width: 0;
+        width: auto;
+        padding: 0 16rpx;
+        box-sizing: border-box;
+        white-space: nowrap;
+        font-size: 28rpx;
         height: 72rpx;
         line-height: 72rpx;
         margin-top: 20rpx;
         background: #ffc200;
         border-radius: 8rpx;
-        & + .go_dish {
-          margin-left: 40rpx;
-        }
       }
       .defaultBtn {
         border: 1px solid #e5e4e4;

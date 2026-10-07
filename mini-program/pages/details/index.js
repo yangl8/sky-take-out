@@ -26,6 +26,8 @@ export default {
 			timeout: false,
 			isOvertime: false,
 			orderId: null,
+			returnHomeAfterDetail: false,
+			fallbackSex: null,
 			activeRadio: 0,
 			time: null,
 			isPayment: false,
@@ -60,6 +62,8 @@ export default {
 	components: { Status, OrderDetail, DeliveryInfo, OrderInfo },
 	onLoad(options) {
 		this.orderId = options.orderId
+		this.returnHomeAfterDetail = options.fromSuccess === '1'
+		this.fallbackSex = options.sex === undefined ? null : Number(options.sex)
 		const selectedOrder = this.selectedOrder()
 		if (selectedOrder && String(selectedOrder.id) === String(options.orderId)) {
 			const merchant = this.shopInfo() || {}
@@ -113,6 +117,7 @@ export default {
 			const merchant = this.shopInfo() || {}
 			this.orderDetailsData = {
 				...order,
+				sex: order.sex === undefined || order.sex === null ? this.fallbackSex : order.sex,
 				shopName: order.shopName || merchant.shopName,
 				shopTelephone: order.shopTelephone || merchant.phone || this.shopPhone(),
 				deliveryFee: order.deliveryFee ?? merchant.deliveryFee ?? 0,
@@ -248,6 +253,10 @@ export default {
 		},
 		// 返回上一级
 		goBack() {
+			if (this.returnHomeAfterDetail) {
+				uni.reLaunch({ url: '/pages/index/index' })
+				return
+			}
 			uni.navigateBack({ delta: 1 })
 		},
 		openPopuos(type) {
