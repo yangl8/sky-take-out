@@ -12,7 +12,7 @@
       <view v-else class="address_name">
         <view class="address">
           <text class="tag" :class="'tag' + tagLabel">{{ addressLabel }}</text>
-          <text class="word">{{ address }}</text>
+          <text class="word">{{ $displayText(address, 'address') }}</text>
         </view>
         <view class="name">
           <text class="name_1">{{ cryptoName }}</text>

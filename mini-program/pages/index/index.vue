@@ -33,7 +33,7 @@
               <view class="word">{{ $t("home.description") }}</view>
               <view class="address">
                 <icon></icon>
-                {{ shopInfo().shopAddress || $t("home.loadingAddress") }}
+                {{ shopInfo().shopAddress ? $displayText(shopInfo().shopAddress, 'address') : $t("home.loadingAddress") }}
               </view>
             </view>
             <view>
@@ -52,7 +52,7 @@
             :scroll-into-view="itemId">
             <view class="type_item" id="target" :class="[typeIndex == index ? 'active' : '']"
               v-for="(item, index) in typeListData" :key="index" @tap.stop="swichMenu(item, index)">
-              <view class="item" :class="item.name.length > 5 ? 'allLine' : ''">{{ item.name }}</view>
+              <view class="item" :class="item.name.length > 5 ? 'allLine' : ''">{{ $displayText(item.name, 'category') }}</view>
             </view>
             <view class="seize_seat"></view>
           </scroll-view>
@@ -66,10 +66,10 @@
             </view>
             <view class="dish_info">
               <view class="dish_name" @click="openDetailHandle(item)">{{
-                item.name
+                $displayText(item.name, 'name')
               }}</view>
               <view class="dish_label" @click="openDetailHandle(item)">{{
-                item.description || item.name
+                $displayText(item.description || item.name, item.description ? 'description' : 'name')
               }}</view>
               <view class="dish_label" @click="openDetailHandle(item)">{{ $t("home.monthlySales", { count: item.monthlySales || 0 }) }}</view>
               <view class="dish_price">

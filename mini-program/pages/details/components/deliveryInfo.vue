@@ -17,7 +17,7 @@
             <text>{{ cryptoName }}</text>
             {{ orderDetailsData.phone }}
           </view>
-          <view>{{ orderDetailsData.address }}</view>
+          <view>{{ $displayText(orderDetailsData.address, 'address') }}</view>
         </view>
       </view>
     </view>
@@ -37,6 +37,9 @@ export default {
     // 处理姓名 如x先生
     cryptoName() {
       if (!this.orderDetailsData.consignee) return "";
+      if (this.orderDetailsData.sex === undefined || this.orderDetailsData.sex === null || this.orderDetailsData.sex === "") {
+        return this.orderDetailsData.consignee;
+      }
       if (Number(this.orderDetailsData.sex) === 0) {
         // 男
         return this.$t("common.sir", { name: this.orderDetailsData.consignee });

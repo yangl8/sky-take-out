@@ -252,6 +252,9 @@ $desc-font-color: #818693;
             font-size: 26rpx;
             // font-weight: bold;
             color: #20232a;
+            width: calc(100% - 150rpx);
+            line-height: 36rpx;
+            word-break: break-word;
           }
 
           .dish_price {

@@ -230,18 +230,20 @@ $desc-font-color: #818693;
       display: flex;
       overflow: hidden;
       background-color: #f3f4f7;
-      width: 168rpx;
+      flex: 0 0 190rpx;
+      width: 190rpx;
       padding-top: 160rpx;
       box-sizing: border-box;
       padding-bottom: 60rpx;
       position: relative;
       font-size: 26rpx;
       .type_item {
-        // height: 110rpx;
-        line-height: 100rpx;
+        min-height: 100rpx;
+        height: 100rpx;
+        width: 100%;
+        line-height: 36rpx;
         text-align: left;
-        padding-left: 20rpx;
-        padding-right: 26rpx;
+        padding: 8rpx 12rpx;
         font-family: PingFangSC, PingFangSC-Regular;
         font-weight: 400;
         color: #666666;
@@ -251,11 +253,17 @@ $desc-font-color: #818693;
         justify-content: center;
         text-align: center;
         .item {
-          line-height: 100rpx;
+          width: 100%;
+          line-height: 36rpx;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow: hidden;
+          word-break: break-word;
         }
         .allLine {
-          padding: 16rpx 0;
-          line-height: 34rpx;
+          padding: 0;
+          line-height: 36rpx;
         }
       }
       .active {

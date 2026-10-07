@@ -67,7 +67,7 @@
                 v-if="showInput"
                 class="uni-input"
                 :class="address !== '' ? '' : 'uni-place'"
-                >{{ address !== "" ? address : $t("address.region") }}</text
+                >{{ address !== "" ? $displayText(address, 'address') : $t("address.region") }}</text
               >
               <text class="addressIcon">
                 <text class="icon" :class="showClass ? 'iconOn' : ''"></text>
@@ -422,7 +422,9 @@ export default {
         align-items: baseline;
       }
       .title {
-        width: 140rpx;
+        width: 180rpx;
+        flex: 0 0 180rpx;
+        white-space: nowrap;
         opacity: 1;
         font-size: 28rpx;
         font-family: PingFangSC, PingFangSC-Medium;
@@ -456,6 +458,7 @@ export default {
       }
       .uni-input {
         flex: 1;
+        min-width: 0;
       }
       ::v-deep .uni-place {
         font-size: 26rpx;
@@ -491,7 +494,11 @@ export default {
 
       // 标签
       .tag_text {
-        width: 68rpx;
+        width: auto;
+        min-width: 68rpx;
+        padding: 0 12rpx;
+        flex: 0 0 auto;
+        white-space: nowrap;
         height: 44rpx;
         line-height: 40rpx;
         border: 1px solid #e5e4e4;
@@ -502,7 +509,7 @@ export default {
         color: #333333;
         font-size: 24rpx;
         &:nth-child(3) {
-          margin: 0 20rpx;
+          margin: 0 8rpx;
         }
         &:nth-child(3) {
           &.active {

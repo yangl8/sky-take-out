@@ -9,9 +9,9 @@
             <image mode="aspectFill" :src="obj.image" class="dish_img_url"></image>
           </view>
           <view class="dish_info">
-            <view class="dish_name">{{ obj.name }}</view>
+            <view class="dish_name">{{ $displayText(obj.name, 'name') }}</view>
             <view class="dish_dishFlavor">{{
-              obj.dishFlavor ? obj.dishFlavor : ""
+              obj.dishFlavor ? $displayText(obj.dishFlavor, 'flavor') : ""
             }}</view>
             <view class="dish_price">
               ×

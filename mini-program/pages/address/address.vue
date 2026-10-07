@@ -36,8 +36,7 @@
                   getLableVal(item.label)
                 }}</text>
                 <text class="address_word"
-                  >{{ item.provinceName }}{{ item.cityName
-                  }}{{ item.districtName }}{{ item.detail }}</text
+                  >{{ $displayText(item.provinceName + item.cityName + item.districtName + item.detail, 'address') }}</text
                 >
               </view>
               <!-- 性别及手机号 -->

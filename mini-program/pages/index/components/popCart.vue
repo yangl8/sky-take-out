@@ -31,9 +31,9 @@
             ></image
           ></view>
           <view class="dish_info">
-            <view class="dish_name">{{ obj.name }}</view>
+            <view class="dish_name">{{ $displayText(obj.name, 'name') }}</view>
             <view class="dish_dishFlavor" v-if="obj.dishFlavor">{{
-              obj.dishFlavor
+              $displayText(obj.dishFlavor, 'flavor')
             }}</view>
             <view class="dish_price">
               <text class="ico">￥</text>
@@ -178,14 +178,23 @@ export default {
       .dish_info {
         position: relative;
         flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
         padding-bottom: 120rpx;
         border-bottom: solid 1px #ebeef5;
         .dish_name {
           font-size: 32rpx;
-          line-height: 40rpx;
+          line-height: 38rpx;
           color: #333333;
           font-family: PingFangSC, PingFangSC-Semibold;
           font-weight: 600;
+          word-break: break-word;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow: hidden;
+          margin-bottom: 8rpx;
         }
 
         .dish_price {
@@ -224,9 +233,11 @@ export default {
     }
   }
   .dish_dishFlavor {
-    position: absolute;
-    left: 0;
-    top: 40rpx;
+    position: static;
+    line-height: 32rpx;
+    color: #818693;
+    font-size: 24rpx;
+    word-break: break-word;
   }
 }
 </style>

@@ -7,8 +7,8 @@
       class="div_big_image"
       :src="dishDetailes.image"
     ></image>
-    <view class="title">{{ dishDetailes.name }}</view>
-    <view class="desc">{{ dishDetailes.description }}</view>
+    <view class="title">{{ $displayText(dishDetailes.name, 'name') }}</view>
+    <view class="desc">{{ $displayText(dishDetailes.description, 'description') }}</view>
     <view class="but_item">
       <view class="price">
         <text class="ico">￥</text>
@@ -68,10 +68,10 @@
       >
         <image class="div_big_image" :src="item.image" mode=""></image>
         <view class="title">
-          {{ item.name }}
+          {{ $displayText(item.name, 'name') }}
           <text style="">X{{ item.copies }}</text>
         </view>
-        <view class="desc">{{ item.description }}</view>
+        <view class="desc">{{ $displayText(item.description, 'description') }}</view>
       </view>
     </scroll-view>
     <view class="but_item">
@@ -169,10 +169,17 @@ export default {
     border-radius: 10rpx;
   }
   .title {
-    font-size: 40rpx;
-    line-height: 80rpx;
+    font-size: 34rpx;
+    line-height: 44rpx;
     text-align: center;
     font-weight: bold;
+    margin: 12rpx 0 8rpx;
+    word-break: break-word;
+  }
+  .desc {
+    font-size: 26rpx;
+    line-height: 36rpx;
+    word-break: break-word;
   }
   .dish_items {
     height: 60vh;

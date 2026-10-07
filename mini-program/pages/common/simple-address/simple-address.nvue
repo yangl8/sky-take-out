@@ -9,10 +9,10 @@
 		<view class="simple-address-content simple-address--fixed" :class="[type,ani+'-content', animation ? 'content-ani' : '']">
 			<view class="simple-address__header">
 				<view class="simple-address__header-btn-box" @click="pickerCancel">
-					<text class="simple-address__header-text">取消</text>
+						<text class="simple-address__header-text">{{ $t('common.cancel') }}</text>
 				</view>
 				<view class="simple-address__header-btn-box" @click="pickerConfirm">
-					<text class="simple-address__header-text" :style="{color:themeColor}">确定</text>
+						<text class="simple-address__header-text" :style="{color:themeColor}">{{ $t('common.confirm') }}</text>
 				</view>
 			</view>
 			<view class="simple-address__box">
@@ -20,27 +20,27 @@
 
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{item.label}}</view>
+						<view class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{item.label}}</text>
+						<text class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
 						<!-- #endif -->
 					</picker-view-column>
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{item.label}}</view>
+						<view class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{item.label}}</text>
+						<text class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
 						<!-- #endif -->
 
 					</picker-view-column>
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{item.label}}</view>
+						<view class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{item.label}}</text>
+						<text class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
 						<!-- #endif -->
 
 					</picker-view-column>

@@ -24,13 +24,7 @@
       <view class="container">
         <view class="language-setting">
           <text>{{ $t("common.language") }}</text>
-          <picker
-            :value="languageIndex"
-            :range="languageNames"
-            @change="changeLanguage"
-          >
-            <view class="language-value">{{ languageNames[languageIndex] }}</view>
-          </picker>
+          <view class="language-value" @click="openLanguagePicker">{{ languageNames[languageIndex] }}</view>
         </view>
         <!-- 地址和历史订单 -->
         <order-info @goAddress="goAddress" @goOrder="goOrder"></order-info>
@@ -57,6 +51,19 @@
           :recentOrdersList="recentOrdersList"
         ></order-list>
       </view>
+    <view v-if="showLanguagePicker" class="language-picker-mask" @click.self="closeLanguagePicker">
+      <view class="language-picker-panel">
+        <view class="language-picker-header">
+          <text @click="closeLanguagePicker">{{ $t("common.cancel") }}</text>
+          <text @click="confirmLanguage">{{ $t("common.confirm") }}</text>
+        </view>
+        <picker-view class="language-picker-view" :value="[selectedLanguageIndex]" @change="onLanguagePickerChange">
+          <picker-view-column>
+            <view v-for="(name, index) in languageNames" :key="index" class="language-picker-item">{{ name }}</view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+    </view>
     </view>
   </view>
 </template>
@@ -91,6 +98,8 @@ export default {
       },
       loadingText: "",
       loading: false,
+      showLanguagePicker: false,
+      selectedLanguageIndex: 0,
     };
   },
   components: {
@@ -115,6 +124,7 @@ export default {
     },
   },
   onLoad() {
+    this.selectedLanguageIndex = this.languageIndex;
     this.psersonUrl =
       this.$store.state.baseUserInfo &&
       this.$store.state.baseUserInfo.avatarUrl;
@@ -141,11 +151,22 @@ export default {
   },
   methods: {
     ...mapMutations(["setAddressBackUrl", "setLocale", "setSelectedOrder"]),
-    changeLanguage(event) {
-      const locale = supportedLocales[Number(event.detail.value)];
+    openLanguagePicker() {
+      this.selectedLanguageIndex = this.languageIndex;
+      this.showLanguagePicker = true;
+    },
+    closeLanguagePicker() {
+      this.showLanguagePicker = false;
+    },
+    onLanguagePickerChange(event) {
+      this.selectedLanguageIndex = Number(event.detail.value[0]);
+    },
+    confirmLanguage() {
+      const locale = supportedLocales[this.selectedLanguageIndex];
       if (locale) {
         this.setLocale(locale.code);
       }
+      this.closeLanguagePicker();
     },
     statusWord(obj) {
       return statusWord(obj.status, obj.time, this.$store.state.locale);
@@ -301,6 +322,44 @@ export default {
     .language-value {
       color: #666666;
     }
+  }
+
+  .language-picker-mask {
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .language-picker-panel {
+    width: 100%;
+    background: #fff;
+    border-radius: 16rpx 16rpx 0 0;
+  }
+
+  .language-picker-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 28rpx 40rpx;
+    border-bottom: 1rpx solid #eee;
+    color: #ff9900;
+    font-size: 32rpx;
+  }
+
+  .language-picker-view {
+    height: 420rpx;
+  }
+
+  .language-picker-item {
+    height: 84rpx;
+    line-height: 84rpx;
+    text-align: center;
+    font-size: 28rpx;
   }
 
   .recent {

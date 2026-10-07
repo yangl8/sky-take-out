@@ -2,10 +2,10 @@
 	<view class="box">
 		<image class="food_image" :src="item.food_image"></image>
 		<view class="content">
-			<view class="title">{{item.food_name}}</view>
-			<view class="foodNum">月售{{item.num}}</view>
+			<view class="title">{{ $displayText(item.food_name, 'name') }}</view>
+			<view class="foodNum">{{ $t('home.monthlySales', { count: item.num }) }}</view>
 			<view class="money">￥{{item.food_price}}</view>
-			<view class="search">挑选规格</view>
+			<view class="search">{{ $t('home.selectOptions') }}</view>
 		</view>
 	</view>
 </template>

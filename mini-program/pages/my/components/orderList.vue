@@ -22,7 +22,7 @@
                   <image :src="num.image"></image>
                   <!-- <image src="../../static/img2.jpg"></image> -->
                 </view>
-                <view class="food">{{ num.name }}</view>
+                <view class="food">{{ $displayText(num.name, 'name') }}</view>
               </view>
             </scroll-view>
           </view>

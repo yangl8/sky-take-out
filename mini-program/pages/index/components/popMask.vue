@@ -1,10 +1,10 @@
 <!--选择多规格弹层-->
 <template>
   <view class="more_norm_pop">
-    <view class="title">{{ moreNormDishdata.name }}</view>
+    <view class="title">{{ $displayText(moreNormDishdata.name, 'name') }}</view>
     <scroll-view class="items_cont" scroll-y="true" scroll-top="0rpx">
       <view class="item_row" v-for="(obj, index) in moreNormdata" :key="index">
-        <view class="flavor_name">{{ obj.name }}</view>
+        <view class="flavor_name">{{ $displayText(obj.name, 'flavor') }}</view>
         <view class="flavor_item">
           <view
             :class="{
@@ -15,7 +15,7 @@
             :key="ind"
             @click="checkMoreNormPop(obj.value, item)"
           >
-            {{ item }}
+            {{ $displayText(item, 'flavor') }}
           </view>
         </view>
       </view>
@@ -88,10 +88,12 @@ export default {
     border-radius: 10rpx;
   }
   .title {
-    font-size: 40rpx;
-    line-height: 80rpx;
+    font-size: 34rpx;
+    line-height: 46rpx;
     text-align: center;
     font-weight: bold;
+    padding: 0 8rpx 12rpx;
+    word-break: break-word;
   }
   .items_cont {
     display: flex;
@@ -100,16 +102,17 @@ export default {
     max-height: 50vh;
     .item_row {
       .flavor_name {
-        height: 40rpx;
+        min-height: 40rpx;
+        height: auto;
         opacity: 1;
         font-size: 28rpx;
         font-family: PingFangSC, PingFangSC-Regular;
         font-weight: 400;
         text-align: left;
         color: #666666;
-        line-height: 40rpx;
+        line-height: 34rpx;
         padding-left: 10rpx;
-        padding-top: 20rpx;
+        padding-top: 14rpx;
       }
       .flavor_item {
         display: flex;
@@ -117,10 +120,12 @@ export default {
         .item {
           border: 1px solid #ffb302;
           border-radius: 12rpx;
-          margin: 20rpx 10rpx;
-          padding: 0 26rpx;
-          height: 60rpx;
-          line-height: 60rpx;
+          margin: 12rpx 10rpx;
+          padding: 0 18rpx;
+          min-height: 56rpx;
+          height: auto;
+          line-height: 56rpx;
+          white-space: nowrap;
           font-family: PingFangSC, PingFangSC-Regular;
           font-weight: 400;
           color: #333333;
