@@ -55,17 +55,19 @@
       </div>
       <el-table v-if="tableData.length"
                 :data="tableData"
+                :fit="false"
                 stripe
-                class="tableBox"
+                class="tableBox management-table dish-management-table"
                 @selection-change="handleSelectionChange">
         <el-table-column type="selection"
-                         width="25" />
+                         width="42" />
         <el-table-column prop="name"
-                         :label="String($t('catalog.dishName'))">
+                         :label="String($t('catalog.dishName'))" min-width="220"
+                         class-name="dish-name-column">
           <template slot-scope="scope">{{ menuName(scope.row.name) }}</template>
         </el-table-column>
         <el-table-column prop="image"
-                         :label="String($t('catalog.image'))">
+                         :label="String($t('catalog.image'))" width="110">
           <template slot-scope="{ row }">
             <el-image style="width: 80px; height: 40px; border: none; cursor: pointer"
                       :src="row.image">
@@ -78,15 +80,16 @@
           </template>
         </el-table-column>
         <el-table-column prop="categoryName"
-                         :label="String($t('catalog.dishCategory'))">
+                         :label="String($t('catalog.dishCategory'))" width="220"
+                         class-name="dish-category-column">
           <template slot-scope="scope">{{ categoryLabel(scope.row.categoryName) }}</template>
         </el-table-column>
-        <el-table-column :label="String($t('catalog.price'))">
+        <el-table-column :label="String($t('catalog.price'))" width="120" align="center" header-align="center" class-name="dish-price-column">
           <template slot-scope="scope">
             <span style="margin-right: 10px">￥{{ (scope.row.price ).toFixed(2)*100/100 }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="String($t('catalog.saleStatus'))">
+        <el-table-column :label="String($t('catalog.saleStatus'))" min-width="125" align="center" header-align="center">
           <template slot-scope="scope">
             <div class="tableColumn-status"
                  :class="{ 'stop-use': String(scope.row.status) === '0' }">
@@ -95,11 +98,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="updateTime"
-                         :label="String($t('catalog.updated'))" />
+                         :label="String($t('catalog.updated'))" min-width="195" />
         <el-table-column :label="String($t('catalog.actions'))"
-                         width="250"
+                         width="145"
                          align="center">
           <template slot-scope="scope">
+            <div class="management-actions">
             <el-button type="text"
                        size="small"
                        class="blueBug"
@@ -118,6 +122,7 @@
                        @click="statusHandle(scope.row)">
               {{ scope.row.status == '0' ? $t('catalog.onSale') : $t('catalog.offSale') }}
             </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

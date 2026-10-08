@@ -35,3 +35,17 @@ export default class extends Vue {
   @Prop() private dishesData!: any
 }
 </script>
+
+<style lang="scss" scoped>
+.orderviewBox li {
+  position: relative;
+  min-height: 182px;
+}
+
+.orderviewBox .num {
+  position: absolute;
+  right: 20px;
+  bottom: 12px;
+  float: none;
+}
+</style>

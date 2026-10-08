@@ -319,6 +319,16 @@ export default class extends Vue {
     }
     .idNumber {
       margin-bottom: 39px;
+      white-space: nowrap;
+
+      ::v-deep .el-form-item__label {
+        white-space: nowrap;
+        width: 250px !important;
+      }
+
+      ::v-deep .el-form-item__content {
+        margin-left: 250px !important;
+      }
     }
 
     .el-form-item {

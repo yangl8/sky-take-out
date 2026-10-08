@@ -56,16 +56,16 @@
       <el-table v-if="tableData.length"
                 :data="tableData"
                 stripe
-                class="tableBox"
+                class="tableBox management-table"
                 @selection-change="handleSelectionChange">
         <el-table-column type="selection"
                          width="25" />
         <el-table-column prop="name"
-                         :label="String($t('catalog.setmealName'))">
+                         :label="String($t('catalog.setmealName'))" min-width="220">
           <template slot-scope="scope">{{ menuName(scope.row.name) }}</template>
         </el-table-column>
         <el-table-column prop="image"
-                         :label="String($t('catalog.image'))">
+                         :label="String($t('catalog.image'))" width="110">
           <template slot-scope="{ row }">
             <el-image style="width: 80px; height: 40px; border: none; cursor: pointer"
                       :src="row.image">
@@ -78,16 +78,16 @@
           </template>
         </el-table-column>
         <el-table-column prop="categoryName"
-                         :label="String($t('catalog.setmealCategory'))">
+                         :label="String($t('catalog.setmealCategory'))" min-width="180">
           <template slot-scope="scope">{{ categoryLabel(scope.row.categoryName) }}</template>
         </el-table-column>
         <el-table-column prop="price"
-                         :label="String($t('catalog.setmealPrice'))">
+                         :label="String($t('catalog.setmealAmount'))" min-width="110" align="center" header-align="center">
           <template slot-scope="scope">
             <span>￥{{ ((scope.row.price ).toFixed(2) * 100) / 100 }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="String($t('catalog.saleStatus'))">
+        <el-table-column :label="String($t('catalog.saleStatus'))" min-width="125">
           <template slot-scope="scope">
             <div class="tableColumn-status"
                  :class="{ 'stop-use': String(scope.row.status) === '0' }">
@@ -96,15 +96,16 @@
           </template>
         </el-table-column>
         <el-table-column prop="updateTime"
-                         :label="String($t('catalog.updated'))">
+                         :label="String($t('catalog.updated'))" min-width="195">
           <!-- <template slot-scope="scope">
             {{ moment(scope.row.lastUpdateTime).format('YYYY-MM-DD h:m:s') }}
           </template> -->
         </el-table-column>
         <el-table-column :label="String($t('catalog.actions'))"
-                         width="250"
+                         width="145"
                          align="center">
           <template slot-scope="scope">
+            <div class="management-actions">
             <el-button type="text"
                        size="small"
                        class="blueBug"
@@ -123,6 +124,7 @@
                        @click="statusHandle(scope.row)">
               {{ scope.row.status == '0' ? $t('catalog.onSale') : $t('catalog.offSale') }}
             </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -239,12 +241,15 @@ export default class extends Vue {
 
   // 删除
   private deleteHandle(type: string, id: any) {
-    if (type === '批量' && id === null) {
+    if (type === '批量' && id == null) {
       if (this.checkList.length === 0) {
         return this.$message.error(String(this.$t('catalog.selectDelete')))
       }
     }
-    this.$confirm(String(this.$t('catalog.setmealDelete')), String(this.$t('catalog.deleteTitle')), {
+    const confirmMessage = type === '批量'
+      ? String(this.$t('catalog.setmealDeleteSelected'))
+      : String(this.$t('catalog.setmealDelete'))
+    this.$confirm(confirmMessage, String(this.$t('catalog.deleteTitle')), {
       confirmButtonText: String(this.$t('catalog.delete')),
       cancelButtonText: String(this.$t('catalog.cancel')),
       type: 'warning'

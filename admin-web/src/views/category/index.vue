@@ -40,21 +40,21 @@
       <el-table v-if="tableData.length"
                 :data="tableData"
                 stripe
-                class="tableBox">
+                class="tableBox management-table">
         <el-table-column prop="name"
-                         :label="String($t('catalog.categoryName'))">
+                         :label="String($t('catalog.categoryName'))" min-width="250">
           <template slot-scope="scope">{{ categoryLabel(scope.row.name) }}</template>
         </el-table-column>
         <el-table-column prop="type"
-                         :label="String($t('catalog.categoryType'))">
+                         :label="String($t('catalog.categoryType'))" min-width="170" align="center" header-align="center">
           <template slot-scope="scope">
             <span>{{ scope.row.type == '1' ? $t('catalog.dishCategory') : $t('catalog.setmealCategory') }}</span>
           </template>
         </el-table-column>
 
         <el-table-column prop="sort"
-                         :label="String($t('catalog.sort'))" />
-        <el-table-column :label="String($t('catalog.status'))">
+                         :label="String($t('catalog.sort'))" width="160" align="center" header-align="center" />
+        <el-table-column :label="String($t('catalog.status'))" width="120" align="center" header-align="center" class-name="category-status-column">
           <template slot-scope="scope">
             <div class="tableColumn-status"
                  :class="{ 'stop-use': String(scope.row.status) === '0' }">
@@ -63,11 +63,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="updateTime"
-                         :label="String($t('catalog.operationTime'))" />
+                         :label="String($t('catalog.operationTime'))" min-width="200" align="center" header-align="center" />
         <el-table-column :label="String($t('catalog.actions'))"
-                         min-width="260"
+                         width="145"
                          align="center">
           <template slot-scope="scope">
+            <div class="management-actions">
             <el-button type="text"
                        size="small"
                        class="blueBug"
@@ -86,6 +87,7 @@
                        @click="statusHandle(scope.row)">
               {{ scope.row.status == '1' ? $t('catalog.disabled') : $t('catalog.enabled') }}
             </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -477,4 +479,5 @@ export default class extends Vue {
 .tableBar .normal-btn { margin-left: 0 !important; }
 .tableBar .table-actions { flex: 1 0 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; order: 2; }
 .tableBar .tableLab { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.category-status-column .tableColumn-status { justify-content: center; }
 </style>

@@ -25,16 +25,16 @@
         :data="tableData"
         stripe
         v-if="tableData.length"
-        class="tableBox"
+        class="tableBox management-table"
       >
-        <el-table-column prop="name" :label="String($t('catalog.employeeName'))">
+        <el-table-column prop="name" :label="String($t('catalog.employeeName'))" min-width="170" align="center" header-align="center">
           <template slot-scope="scope">
             {{ scope.row.name === '管理员' ? $t('nav.administrator') : scope.row.name }}
           </template>
         </el-table-column>
-        <el-table-column prop="username" :label="String($t('catalog.username'))" />
-        <el-table-column prop="phone" :label="String($t('catalog.phone'))" />
-        <el-table-column :label="String($t('catalog.accountStatus'))">
+        <el-table-column prop="username" :label="String($t('catalog.username'))" min-width="170" align="center" header-align="center" />
+        <el-table-column prop="phone" :label="String($t('catalog.phone'))" min-width="180" align="center" header-align="center" />
+        <el-table-column :label="String($t('catalog.accountStatus'))" min-width="130" align="center" header-align="center">
           <template slot-scope="scope">
             <div
               class="tableColumn-status"
@@ -44,9 +44,10 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="updateTime" :label="String($t('catalog.updated'))" />
-        <el-table-column :label="String($t('catalog.actions'))" min-width="220" align="center">
+        <el-table-column prop="updateTime" :label="String($t('catalog.updated'))" min-width="200" align="center" header-align="center" />
+        <el-table-column :label="String($t('catalog.actions'))" width="145" align="center">
           <template slot-scope="scope">
+            <div class="management-actions">
             <el-button
               type="text"
               size="small"
@@ -69,6 +70,7 @@
             >
               {{ scope.row.status == '1' ? $t('catalog.disabled') : $t('catalog.enabled') }}
             </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
