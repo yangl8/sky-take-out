@@ -21,105 +21,72 @@
         </ul>
       </h2>
       <div class="">
-        <div v-if="orderData.length > 0">
+        <div v-loading="listLoading">
           <el-table
             :data="orderData"
+            :fit="false"
             stripe
-            class="tableBox"
+            class="tableBox workbench-order-table"
             style="width: 100%"
             @row-click="handleTable"
           >
-            <el-table-column prop="number" :label="String($t('orders.orderNumber'))"> </el-table-column>
-            <el-table-column :label="String($t('orders.orderItems'))">
-              <template slot-scope="scope">
-                <div class="ellipsisHidden">
-                  <el-popover
-                    placement="top-start"
-                    title=""
-                    width="200"
-                    trigger="hover"
-                    :content="orderMenuSummary(scope.row.orderDishes)"
-                  >
-                    <span slot="reference">{{ orderMenuSummary(scope.row.orderDishes) }}</span>
-                  </el-popover>
+            <el-table-column prop="number" :label="String($t('orders.orderNumber'))" min-width="190" align="center" header-align="center">
+            </el-table-column>
+            <el-table-column :label="String($t('orders.customerName'))" prop="consignee" min-width="140" align="center" header-align="center">
+              <template slot-scope="{ row }">
+                <span>{{ row.consignee || row.userName || '—' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="String($t('orders.orderItems'))" width="360" class-name="workbench-order-items-column">
+              <template slot-scope="{ row }">
+                <div class="workbench-dishes">
+                  <div v-for="(dish, index) in orderDishLines(row.orderDishes)" :key="index" class="workbench-dish-line">
+                    {{ dish }}
+                  </div>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column
-              :label="String($t('orders.address'))"
-              :class-name="dialogOrderStatus === 2 ? 'address' : ''"
-            >
-              <template slot-scope="scope">
-                <div class="ellipsisHidden">
-                  <el-popover
-                    placement="top-start"
-                    title=""
-                    width="200"
-                    trigger="hover"
-                    :content="scope.row.address"
-                  >
-                    <span slot="reference">{{ scope.row.address }}</span>
-                  </el-popover>
-                </div>
-              </template>
-            </el-table-column>
-
             <el-table-column
               prop="estimatedDeliveryTime"
               :label="String($t('orders.estimatedDeliveryTime'))"
               sortable
               class-name="orderTime"
-              min-width="130"
-            >
-            </el-table-column>
-            <el-table-column prop="amount" :label="String($t('orders.amountReceived'))"> </el-table-column>
-            <el-table-column :label="String($t('orders.remark'))">
-              <template slot-scope="scope">
-                <div class="ellipsisHidden">
-                  <el-popover
-                    placement="top-start"
-                    title=""
-                    width="200"
-                    trigger="hover"
-                    :content="scope.row.remark"
-                  >
-                    <span slot="reference">{{ scope.row.remark }}</span>
-                  </el-popover>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="tablewareNumber"
-              :label="String($t('orders.tablewareNumber'))"
-              min-width="80"
+              label-class-name="workbench-time-header"
               align="center"
-              v-if="status === 3"
+              header-align="center"
+              width="210"
             >
+            </el-table-column>
+            <el-table-column prop="amount" :label="String($t('orders.amountReceived'))" width="180" align="center" header-align="center" class-name="workbench-amount-column" label-class-name="workbench-amount-header">
+              <template slot-scope="{ row }">￥{{ formatMoney(row.amount) }}</template>
             </el-table-column>
             <el-table-column
               :label="String($t('catalog.actions'))"
               align="center"
-              :class-name="dialogOrderStatus === 0 ? 'operate' : 'otherOperate'"
-              :min-width="
-                [2, 3].includes(dialogOrderStatus)
-                  ? 130
-                  : [0].includes(dialogOrderStatus)
-                  ? 140
-                  : 'auto'
-              "
+              class-name="workbench-actions-column"
+              width="105"
             >
               <template slot-scope="{ row }">
-                <!-- <el-divider direction="vertical" /> -->
-                <div class="before">
+                <div class="workbench-actions">
                   <el-button
                     v-if="row.status === 2"
                     type="text"
                     class="blueBug"
                     @click="
-                      orderAccept(row, $event), (isTableOperateBtn = true)
+                      isTableOperateBtn = true; orderAccept(row, $event)
+                    "
+                    >
+                    {{ $t('orders.accept') }}
+                  </el-button>
+                  <el-button
+                    v-if="row.status === 2"
+                    type="text"
+                    class="delBut"
+                    @click="
+                      isTableOperateBtn = true; orderReject(row, $event)
                     "
                   >
-                    {{ $t('orders.accept') }}
+                    {{ $t('orders.reject') }}
                   </el-button>
                   <el-button
                     v-if="row.status === 3"
@@ -129,18 +96,6 @@
                   >
                     {{ $t('orders.deliver') }}
                   </el-button>
-                </div>
-                <div class="middle">
-                  <el-button
-                    v-if="row.status === 2"
-                    type="text"
-                    class="delBut"
-                    @click="
-                      orderReject(row, $event), (isTableOperateBtn = true)
-                    "
-                  >
-                    {{ $t('orders.reject') }}
-                  </el-button>
                   <el-button
                     v-if="[1, 3, 4, 5].includes(row.status)"
                     type="text"
@@ -149,8 +104,6 @@
                   >
                     {{ $t('common.cancel') }}
                   </el-button>
-                </div>
-                <div class="after">
                   <el-button
                     type="text"
                     class="blueBug non"
@@ -163,7 +116,7 @@
             </el-table-column>
           </el-table>
         </div>
-        <Empty v-else :is-search="isSearch" />
+        <Empty v-if="!listLoading && !orderData.length" :is-search="isSearch" />
         <el-pagination
           v-if="counts > 10"
           class="pageList"
@@ -180,31 +133,29 @@
     <el-dialog
       :title="String($t('orders.orderInformation'))"
       :visible.sync="dialogVisible"
-      width="53%"
+      width="72%"
       :before-close="handleClose"
       class="order-dialog"
     >
-      <el-scrollbar style="height: 100%">
+      <el-scrollbar v-loading="detailLoading" style="height: 100%">
         <div class="order-top">
-          <div>
-            <div style="display: inline-block">
+          <div class="order-top-main">
+            <div class="order-identifier">
               <label style="font-size: 16px">{{ $t('orders.orderNumber') }}：</label>
               <div class="order-num">
-                {{ diaForm.number }}
+                {{ diaForm.number || '—' }}
               </div>
             </div>
             <div
-              style="display: inline-block"
               class="order-status"
               :class="{ status3: [3, 4].includes(dialogOrderStatus) }"
             >
               {{
-                orderList.filter((item) => item.value === dialogOrderStatus)[0]
-                  .label
+                statusLabel(dialogOrderStatus)
               }}
             </div>
+            <p class="order-date"><label>{{ $t('orders.orderTime') }}：</label>{{ diaForm.orderTime || '—' }}</p>
           </div>
-          <p><label>{{ $t('orders.orderTime') }}：</label>{{ diaForm.orderTime }}</p>
         </div>
 
         <div class="order-middle">
@@ -216,7 +167,7 @@
               </div>
               <div class="user-phone">
                 <label>{{ $t('orders.phone') }}：</label>
-                <span>{{ diaForm.phone }}</span>
+                <span>{{ diaForm.phone || '—' }}</span>
               </div>
               <div
                 v-if="[2, 3, 4, 5].includes(dialogOrderStatus)"
@@ -233,7 +184,7 @@
               </div>
               <div class="user-address">
                 <label>{{ $t('orders.address') }}：</label>
-                <span>{{ diaForm.address }}</span>
+                <span :title="diaForm.address || '—'">{{ diaForm.address || '—' }}</span>
               </div>
             </div>
             <div
@@ -253,24 +204,14 @@
             <div class="dish-label">{{ $t('orders.dishes') }}</div>
             <div class="dish-list">
               <div
-                v-for="(item, index) in diaForm.orderDetailList"
+                v-for="(item, index) in normalizedOrderDetails"
                 :key="index"
                 class="dish-item"
               >
                 <span class="dish-name">{{ menuName(item.name) }}</span>
                 <span class="dish-num">x{{ item.number }}</span>
-                <span class="dish-price"
-                  >￥{{ item.amount ? item.amount.toFixed(2) : '' }}</span
-                >
+                <span class="dish-price">￥{{ item.amount == null ? '—' : formatMoney(item.amount) }}</span>
               </div>
-            </div>
-            <div class="dish-all-amount">
-              <label>{{ $t('orders.dishSubtotal') }}</label>
-              <span
-                >￥{{
-                  (diaForm.amount - 6 - diaForm.packAmount).toFixed(2)
-                }}</span
-              >
             </div>
           </div>
         </div>
@@ -283,23 +224,19 @@
                 <span class="amount-name">{{ $t('orders.dishSubtotal') }}：</span>
                 <span class="amount-price"
                   >￥{{
-                    ((diaForm.amount - 6 - diaForm.packAmount).toFixed(2) *
-                      100) /
-                    100
+                    formatMoney(dishSubtotal)
                   }}</span
                 >
               </div>
               <div class="send-amount">
                 <span class="amount-name">{{ $t('orders.deliveryFee') }}：</span>
-                <span class="amount-price">￥{{ 6 }}</span>
+                <span class="amount-price">￥{{ formatMoney(diaForm.deliveryFee) }}</span>
               </div>
               <div class="package-amount">
                 <span class="amount-name">{{ $t('orders.packingFee') }}：</span>
                 <span class="amount-price"
                   >￥{{
-                    diaForm.packAmount
-                      ? (diaForm.packAmount.toFixed(2) * 100) / 100
-                      : ''
+                    formatMoney(diaForm.packAmount)
                   }}</span
                 >
               </div>
@@ -307,16 +244,14 @@
                 <span class="amount-name">{{ $t('orders.total') }}：</span>
                 <span class="amount-price"
                   >￥{{
-                    diaForm.amount
-                      ? (diaForm.amount.toFixed(2) * 100) / 100
-                      : ''
+                    formatMoney(diaForm.amount)
                   }}</span
                 >
               </div>
               <div class="pay-type">
                 <span class="pay-name">{{ $t('orders.paymentMethod') }}：</span>
                 <span class="pay-value">{{
-                  diaForm.payMethod === 1 ? $t('orders.wechatPay') : $t('orders.alipayPay')
+                  paymentMethodLabel(diaForm.payMethod)
                 }}</span>
               </div>
               <div class="pay-time">
@@ -327,7 +262,8 @@
           </div>
         </div>
       </el-scrollbar>
-      <span v-if="dialogOrderStatus !== 6" slot="footer" class="dialog-footer">
+      <span slot="footer" class="dialog-footer">
+        <el-button v-if="dialogOrderStatus === 6" @click="dialogVisible = false">{{ $t('catalog.back') }}</el-button>
         <el-checkbox
           v-if="dialogOrderStatus === 2 && status === 2"
           v-model="isAutoNext"
@@ -335,13 +271,13 @@
         >
         <el-button
           v-if="dialogOrderStatus === 2"
-          @click="orderReject(row, $event), (isTableOperateBtn = false)"
+          @click="isTableOperateBtn = false; orderReject(row, $event)"
           >{{ $t('orders.reject') }}</el-button
         >
         <el-button
           v-if="dialogOrderStatus === 2"
           type="primary"
-          @click="orderAccept(row, $event), (isTableOperateBtn = false)"
+          @click="isTableOperateBtn = false; orderAccept(row, $event)"
           >{{ $t('orders.accept') }}</el-button
         >
 
@@ -373,7 +309,7 @@
     <!-- end -->
     <!-- 拒单，取消弹窗 -->
     <el-dialog
-      :title="String($t(cancelDialogTitle === '取消' ? 'orders.cancelReason' : 'orders.rejectionReason'))"
+      :title="String($t(cancelDialogTitle === '取消' ? 'orders.confirmCancel' : 'orders.confirmReject'))"
       :visible.sync="cancelDialogVisible"
       width="42%"
       :before-close="() => ((cancelDialogVisible = false), (cancelReason = ''))"
@@ -452,7 +388,11 @@ export default class extends Vue {
   private cancelDialogTitle = '' //取消，拒绝弹窗标题
   private cancelReason = ''
   private remark = '' //自定义原因
-  private diaForm = []
+  private diaForm: any = {}
+  private detailLoading = false
+  private listLoading = false
+  private autoNextAfterAction = false
+  private autoNextExcludeOrderId = ''
   private row = {}
   private isAutoNext = true
   private isSearch: boolean = false
@@ -549,6 +489,61 @@ export default class extends Vue {
       },
     ]
   }
+  get dishSubtotal() {
+    const amount = Number(this.diaForm.amount)
+    const deliveryFee = Number(this.diaForm.deliveryFee) || 0
+    const packingFee = Number(this.diaForm.packAmount) || 0
+    return Number.isFinite(amount) ? Math.max(0, amount - deliveryFee - packingFee) : 0
+  }
+  formatMoney(value: any) {
+    const amount = Number(value)
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00'
+  }
+  orderItemAmount(item: any) {
+    const values = [item.amount, item.price, item.unitPrice, item.totalAmount, item.lineAmount]
+    const validPrices = values.filter((value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)))
+    const positivePrice = validPrices.find((value) => Number(value) > 0)
+    return positivePrice != null ? Number(positivePrice) : validPrices.length ? Number(validPrices[0]) : null
+  }
+  paymentMethodLabel(value: any) {
+    if (Number(value) === 1) return this.$t('orders.wechatPay')
+    if (Number(value) === 2) return this.$t('orders.alipayPay')
+    return '—'
+  }
+  confirmOperation(messageKey: string) {
+    return this.$confirm(
+      String(this.$t(messageKey)),
+      String(this.$t('orders.confirmationTitle')),
+      {
+        confirmButtonText: String(this.$t('common.confirm')),
+        cancelButtonText: String(this.$t('common.cancel')),
+        type: 'warning'
+      }
+    )
+  }
+  statusLabel(status: number) {
+    const item = this.orderList.find((entry) => entry.value === status)
+    return item ? item.label : '—'
+  }
+  orderDishLines(value: string) {
+    if (!value) return []
+    return this.orderMenuSummary(value).split(';').map((item) => item.trim()).filter(Boolean)
+  }
+  get normalizedOrderDetails() {
+    const details = this.diaForm && (this.diaForm.orderDetailList || this.diaForm.orderDetails || this.diaForm.orderItems)
+    if (Array.isArray(details) && details.length) {
+      return details.map((item: any) => ({
+        ...item,
+        name: item.name || item.dishName || item.setmealName || item.itemName || '—',
+        number: item.number != null ? item.number : (item.quantity != null ? item.quantity : 1),
+        amount: this.orderItemAmount(item) == null ? null : this.orderItemAmount(item) * Number(item.number != null ? item.number : (item.quantity != null ? item.quantity : 1))
+      }))
+    }
+    return this.orderDishLines(this.diaForm && this.diaForm.orderDishes).map((item) => {
+      const match = item.match(/\*(\d+)$/)
+      return { name: match ? item.slice(0, match.index) : item, number: match ? Number(match[1]) : 1 }
+    })
+  }
   created() {
     this.getOrderListData(this.status)
   }
@@ -559,32 +554,45 @@ export default class extends Vue {
       pageSize: this.pageSize,
       status: status,
     }
-    const data = await getOrderDetailPage(params)
-    this.orderData = data.data.data.records
-    this.counts = data.data.data.total
-    this.$emit('getOrderListBy3Status')
-    if (
-      this.dialogOrderStatus === 2 &&
-      this.status === 2 &&
-      this.isAutoNext &&
-      !this.isTableOperateBtn &&
-      data.data.records.length > 1
-    ) {
-      const row = data.data.records[0]
-      this.goDetail(row.id, row.status, row, row)
-    } else {
-      return null
+    this.listLoading = true
+    try {
+      const response = await getOrderDetailPage(params)
+      const result = response && response.data && response.data.data
+      const records = result && Array.isArray(result.records) ? result.records : []
+      this.orderData = records
+      this.counts = Number((result && result.total) || 0)
+      this.$emit('getOrderListBy3Status')
+      if (this.dialogOrderStatus === 2 && this.status === 2 && this.isAutoNext && this.autoNextAfterAction && !this.isTableOperateBtn) {
+        const nextOrder = records.find((item: any) => item.id !== this.autoNextExcludeOrderId)
+        this.autoNextAfterAction = false
+        this.autoNextExcludeOrderId = ''
+        if (nextOrder) this.goDetail(nextOrder.id, nextOrder.status, nextOrder)
+      } else {
+        this.autoNextAfterAction = false
+      }
+    } catch (error) {
+      this.orderData = []
+      this.counts = 0
+      const detail = error && error.response && error.response.data
+      const reason = (detail && (detail.msg || detail.message)) || (error && error.message) || ''
+      this.$message.error(String(this.$t('orders.requestError')) + reason)
+    } finally {
+      this.listLoading = false
     }
   }
 
   //接单
   orderAccept(row: any, event) {
     event.stopPropagation()
+    const fromDetail = !this.isTableOperateBtn
     this.orderId = row.id
     this.dialogOrderStatus = row.status
-    orderAccept({ id: this.orderId })
+    this.confirmOperation('orders.confirmAccept')
+      .then(() => orderAccept({ id: this.orderId }))
       .then((res) => {
         if (res.data.code === 1) {
+          this.autoNextAfterAction = fromDetail && this.isAutoNext
+          this.autoNextExcludeOrderId = this.orderId
           this.$message.success(String(this.$t('orders.operationSuccessful')))
           this.orderId = ''
           // this.dialogOrderStatus = 0
@@ -595,6 +603,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
+        if (err === 'cancel' || err === 'close') return
         this.$message.error(String(this.$t('orders.requestError')) + err.message)
       })
   }
@@ -626,7 +635,9 @@ export default class extends Vue {
       return this.$message.error(String(this.$t('orders.enterCustomReason')))
     }
 
-    ;(this.cancelDialogTitle === '取消' ? orderCancel : orderReject)({
+    const fromDetail = !this.isTableOperateBtn
+    const cancelRequest = this.cancelDialogTitle === '取消' ? orderCancel : orderReject
+    cancelRequest({
       id: this.orderId,
       // eslint-disable-next-line standard/computed-property-even-spacing
       [this.cancelDialogTitle === '取消' ? 'cancelReason' : 'rejectionReason']:
@@ -634,6 +645,8 @@ export default class extends Vue {
     })
       .then((res) => {
         if (res.data.code === 1) {
+          this.autoNextAfterAction = this.cancelDialogTitle === '拒绝' && fromDetail && this.isAutoNext
+          this.autoNextExcludeOrderId = this.orderId
           this.$message.success(String(this.$t('orders.operationSuccessful')))
           this.cancelDialogVisible = false
           this.orderId = ''
@@ -655,7 +668,8 @@ export default class extends Vue {
       status,
       id,
     }
-    ;(status === 3 ? deliveryOrder : completeOrder)(params)
+    this.confirmOperation(status === 3 ? 'orders.confirmDeliver' : 'orders.confirmComplete')
+      .then(() => (status === 3 ? deliveryOrder : completeOrder)(params))
       .then((res) => {
         if (res.data.code === 1) {
           this.$message.success(String(this.$t('orders.operationSuccessful')))
@@ -668,23 +682,39 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
+        if (err === 'cancel' || err === 'close') return
         this.$message.error(String(this.$t('orders.requestError')) + err.message)
       })
   }
   // 查看详情
-  async goDetail(id: any, status: number, row: any, event) {
-    event.stopPropagation()
-    // console.log(111, index, row)
-    this.diaForm = []
+  async goDetail(id: any, status: number, row: any, event?: any) {
+    if (event && typeof event.stopPropagation === 'function') event.stopPropagation()
+    this.diaForm = Object.assign({}, row || {})
     this.dialogVisible = true
     this.dialogOrderStatus = status
-    const { data } = await queryOrderDetailById({ orderId: id })
-    this.diaForm = data.data
     this.row = row
+    this.orderId = id
+    this.detailLoading = true
+    try {
+      const response = await queryOrderDetailById({ orderId: id })
+      const body = response && response.data
+      if (!body || body.code !== 1) {
+        throw new Error((body && (body.msg || body.message)) || 'Invalid order detail response')
+      }
+      const detail = body.data
+      if (!detail || typeof detail !== 'object') throw new Error('Invalid order detail response')
+      this.diaForm = Object.assign({}, row || {}, detail)
+    } catch (error) {
+      this.$message.error(String(this.$t('orders.requestError')))
+    } finally {
+      this.detailLoading = false
+    }
   }
   // 关闭弹层
-  handleClose() {
+  handleClose(done?: () => void) {
     this.dialogVisible = false
+    this.detailLoading = false
+    if (done) done()
   }
   // tab切换
   handleClass(index) {
@@ -728,15 +758,35 @@ export default class extends Vue {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  .order-top-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+  }
+  .order-identifier {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .order-date {
+    white-space: nowrap;
+  }
   .order-status {
-    width: 57.25px;
+    width: auto;
+    min-width: 100px;
+    padding: 0 12px;
     height: 27px;
     background: #333333;
     border-radius: 13.5px;
     color: white;
-    margin-left: 19px;
+    margin-left: 0;
     text-align: center;
     line-height: 27px;
+    flex-shrink: 0;
   }
   .status3 {
     background: #f56c6c;
@@ -765,32 +815,56 @@ export default class extends Vue {
     color: #333;
     .user-info-box {
       min-height: 55px;
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+      column-gap: 36px;
+      row-gap: 16px;
+      align-items: center;
+
+      > div {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+      }
+
       .user-name {
-        flex: 67%;
+        grid-column: 1;
+        grid-row: 1;
       }
       .user-phone {
-        flex: 33%;
+        grid-column: 2;
+        grid-row: 1;
       }
       .user-getTime {
-        margin-top: 14px;
-        flex: 80%;
-        label {
-          margin-right: 3px;
-        }
+        grid-column: 1;
+        grid-row: 2;
       }
       label {
-        margin-right: 17px;
+        flex: 0 0 auto;
+        margin-right: 12px;
         color: #666;
+        white-space: nowrap;
+      }
+      span {
+        min-width: 0;
+        text-align: left;
+      }
+      .user-name span,
+      .user-phone span,
+      .user-getTime span {
+        white-space: nowrap;
       }
 
       .user-address {
-        margin-top: 14px;
-        flex: 80%;
-        label {
-          margin-right: 30px;
-        }
+        grid-column: 2;
+        grid-row: 2;
+        white-space: nowrap;
+      }
+
+      .user-address span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
     .user-remark {
@@ -842,15 +916,39 @@ export default class extends Vue {
       color: #666;
     }
     .dish-list {
-      flex: 80%;
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-wrap: wrap;
       .dish-item {
-        flex: 50%;
+        flex: 0 0 100%;
         margin-bottom: 14px;
         color: #333;
-        .dish-num {
-          margin-right: 51px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        .dish-item-box {
+          display: flex;
+          flex: 1;
+          justify-content: flex-start;
+          min-width: 0;
+          gap: 16px;
+        }
+        .dish-name {
+          flex: 1 1 auto;
+          min-width: 0;
+          word-break: normal;
+          overflow-wrap: break-word;
+          hyphens: auto;
+        }
+        .dish-num,
+        .dish-price {
+          white-space: nowrap;
+        }
+        .dish-price {
+          margin-left: auto;
+          min-width: 100px;
+          text-align: right;
         }
       }
       // .dish-item:nth-child(odd) {
@@ -952,25 +1050,83 @@ export default class extends Vue {
 }
 
 .dashboard-container {
+  .workbench-order-table {
+    .el-table__header col:nth-child(3),
+    .el-table__body col:nth-child(3) {
+      width: 360px !important;
+    }
+
+    .workbench-time-header .cell,
+    .workbench-amount-header .cell {
+      white-space: nowrap;
+    }
+
+    td.workbench-amount-column .cell {
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    th.workbench-order-items-column .cell,
+    td.workbench-order-items-column .cell {
+      padding-left: 20px;
+    }
+
+    .workbench-dish-line {
+      line-height: 1.5;
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+
+    .workbench-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+
+      .el-button {
+        margin: 0;
+        padding: 3px 0;
+      }
+    }
+  }
+  .cancelDialog .el-form-item__label {
+    width: 175px !important;
+    white-space: nowrap;
+  }
+
   .cancelTime {
     padding-left: 30px;
   }
   .orderTime {
     padding-left: 30px;
   }
-  td.operate .cell {
-    .before,
-    .middle,
-    .after {
-      height: 39px;
-      width: 48px;
-    }
+}
+
+  .order-dialog {
+  .el-dialog {
+    max-height: 90vh !important;
   }
-  td.operate .cell,
-  td.otherOperate .cell {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
+
+  .el-dialog__body {
+    height: 520px !important;
+    max-height: calc(90vh - 150px);
+    box-sizing: border-box;
+  }
+
+  .dish-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start;
+    gap: 12px;
+  }
+
+  .dish-name {
+    overflow-wrap: anywhere;
+  }
+  .cancelDialog .el-form-item__label {
+    width: 175px !important;
+    white-space: nowrap;
   }
 }
 </style>

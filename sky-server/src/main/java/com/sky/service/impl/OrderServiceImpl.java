@@ -336,7 +336,7 @@ public class OrderServiceImpl implements OrderService{
 
         // Older orders may not have persisted the delivery address. Rebuild it
         // from the address book so the management detail view can still show it.
-        if ((orderVO.getAddress() == null || orderVO.getAddress().isBlank())
+        if ((orderVO.getAddress() == null || orderVO.getAddress().trim().isEmpty())
                 && orderVO.getAddressBookId() != null) {
             AddressBook addressBook = addressBookMapper.getById(orderVO.getAddressBookId());
             if (addressBook != null) {

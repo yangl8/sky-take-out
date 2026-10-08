@@ -6,6 +6,7 @@ const reasonKeys: Record<string, string> = {
   '餐厅已打烊，暂时无法接单': 'orders.reasonClosed',
   '骑手不足无法配送': 'orders.reasonNoCourier',
   '客户电话取消': 'orders.reasonCustomerCancelled',
+  '用户取消': 'orders.reasonUserCancelled',
   '自定义原因': 'orders.customReason',
 }
 

@@ -10,12 +10,28 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 
 @Component({
   'name': 'AppMain'
 })
-export default class extends Vue {}
+export default class extends Vue {
+  @Watch('$route')
+  onRouteChange() {
+    this.resetScrollPosition()
+  }
+
+  mounted() {
+    this.resetScrollPosition()
+  }
+
+  private resetScrollPosition() {
+    this.$nextTick(() => {
+      const appMain = this.$el as HTMLElement
+      appMain.scrollTop = 0
+    })
+  }
+}
 </script>
 
 <style lang="scss" scoped>
