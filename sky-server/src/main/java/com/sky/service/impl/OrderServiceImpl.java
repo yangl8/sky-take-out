@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -111,7 +112,9 @@ public class OrderServiceImpl implements OrderService{
     public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO){
 
         //1.处理各种业务异常（地址簿为空，购物车数据为空）
-        AddressBook addressBook = addressBookMapper.getById(ordersSubmitDTO.getAddressBookId());
+        Long userId = BaseContext.getCurrentId();
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(
+                ordersSubmitDTO.getAddressBookId(), userId);
         if(addressBook == null){
             //抛出业务异常
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
@@ -121,8 +124,6 @@ public class OrderServiceImpl implements OrderService{
         checkOutOfRange(addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
 
         //查询当前用户的购物车数据
-        Long userId = BaseContext.getCurrentId();
-
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
@@ -179,6 +180,10 @@ public class OrderServiceImpl implements OrderService{
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
         // 当前登录用户id
         Long userId = BaseContext.getCurrentId();
+        Orders order = orderMapper.getByNumberAndUserId(ordersPaymentDTO.getOrderNumber(), userId);
+        if (order == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
         User user = userMapper.getById(userId);
 
         //调用微信支付接口，生成预支付交易单
@@ -208,6 +213,24 @@ public class OrderServiceImpl implements OrderService{
 
         // 根据订单号查询订单
         Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+
+        processPaySuccess(ordersDB);
+    }
+
+    /**    (non-Javadoc)
+     * 开发环境模拟支付仅允许当前用户支付自己的订单
+     * @see com.sky.service.OrderService#mockPaySuccessForUser(java.lang.String, java.lang.Long)
+     */
+    public void mockPaySuccessForUser(String orderNumber, Long orderId) {
+        Orders ordersDB = orderMapper.getByIdAndUserId(orderId, BaseContext.getCurrentId());
+        if (ordersDB == null || !Objects.equals(ordersDB.getNumber(), orderNumber)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        processPaySuccess(ordersDB);
+    }
+
+    private void processPaySuccess(Orders ordersDB) {
 
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
@@ -325,6 +348,25 @@ public class OrderServiceImpl implements OrderService{
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
+        return toOrderVO(orders, null);
+    }
+
+   /**   (non-Javadoc)
+    * 用户端详情查询同时校验订单归属
+    * @see com.sky.service.OrderService#detailsForUser(java.lang.Long)
+    */
+    public OrderVO detailsForUser(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getByIdAndUserId(id, userId);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        return toOrderVO(orders, userId);
+    }
+
+    private OrderVO toOrderVO(Orders orders, Long userId) {
+
         // 查询该订单对应的菜品/套餐明细
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
 
@@ -338,7 +380,9 @@ public class OrderServiceImpl implements OrderService{
         // from the address book so the management detail view can still show it.
         if ((orderVO.getAddress() == null || orderVO.getAddress().trim().isEmpty())
                 && orderVO.getAddressBookId() != null) {
-            AddressBook addressBook = addressBookMapper.getById(orderVO.getAddressBookId());
+            AddressBook addressBook = userId == null
+                    ? addressBookMapper.getById(orderVO.getAddressBookId())
+                    : addressBookMapper.getByIdAndUserId(orderVO.getAddressBookId(), userId);
             if (addressBook != null) {
                 orderVO.setAddress(buildDeliveryAddress(addressBook));
             }
@@ -365,7 +409,7 @@ public class OrderServiceImpl implements OrderService{
      */
     public void userCancelById(Long id) throws Exception {
         // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(id);
+        Orders ordersDB = orderMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
 
         // 校验订单是否存在
         if (ordersDB == null) {
@@ -410,6 +454,12 @@ public class OrderServiceImpl implements OrderService{
     public void repetition(Long id) {
         // 查询当前用户id
         Long userId = BaseContext.getCurrentId();
+
+        // 确认订单属于当前用户后再读取订单明细
+        Orders orders = orderMapper.getByIdAndUserId(id, userId);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
 
         // 根据订单id查询当前订单详情
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
@@ -692,12 +742,12 @@ public class OrderServiceImpl implements OrderService{
      * @see com.sky.service.OrderService#reminder(java.lang.Long)
      */
     public void reminder(Long id){
-        // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(id);
+        // 客户只能催办自己的订单
+        Orders ordersDB = orderMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
 
-        // 校验订单是否存在
+        // 不区分订单不存在和不属于当前用户，避免泄露其他用户的订单信息
         if (ordersDB == null) {
-            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
         Map map = new HashMap();

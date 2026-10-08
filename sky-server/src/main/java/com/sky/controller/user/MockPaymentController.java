@@ -29,7 +29,7 @@ public class MockPaymentController {
     @PostMapping("/mockPaySuccess/{orderNumber}/{orderId}")
     @ApiOperation("模拟支付成功")
     public Result mockPaySuccess(@PathVariable String orderNumber, @PathVariable Long orderId) {
-        orderService.paySuccess(orderNumber);
+        orderService.mockPaySuccessForUser(orderNumber, orderId);
         return Result.success();
     }
 }

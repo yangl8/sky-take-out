@@ -34,10 +34,19 @@ public interface AddressBookMapper {
     AddressBook getById(Long id);
 
     /**
+     * 根据地址id和所属用户id查询，避免使用其他用户的收货地址下单
+     * @param id
+     * @param userId
+     * @return
+     */
+    @Select("select * from address_book where id = #{id} and user_id = #{userId}")
+    AddressBook getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    /**
      * 根据id修改
      * @param addressBook
      */
-    void update(AddressBook addressBook);
+    int update(AddressBook addressBook);
 
     /**
      * 根据 用户id修改 是否默认地址
@@ -50,7 +59,7 @@ public interface AddressBookMapper {
      * 根据id删除地址
      * @param id
      */
-    @Delete("delete from address_book where id = #{id}")
-    void deleteById(Long id);
+    @Delete("delete from address_book where id = #{id} and user_id = #{userId}")
+    int deleteById(@Param("id") Long id, @Param("userId") Long userId);
 
 }

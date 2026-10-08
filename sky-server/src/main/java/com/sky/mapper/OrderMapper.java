@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.github.pagehelper.Page;
@@ -29,6 +30,15 @@ public interface OrderMapper {
     Orders getByNumber(String orderNumber);
 
     /**
+     * 按订单号和用户id查询，供用户端支付预下单校验归属
+     * @param orderNumber
+     * @param userId
+     * @return
+     */
+    @Select("select * from orders where number = #{orderNumber} and user_id = #{userId}")
+    Orders getByNumberAndUserId(@Param("orderNumber") String orderNumber, @Param("userId") Long userId);
+
+    /**
      * 修改订单信息
      * @param orders
      */
@@ -46,6 +56,12 @@ public interface OrderMapper {
      */
     @Select("select * from orders where id=#{id}")
     Orders getById(Long id);
+
+    /**
+     * 按订单id和用户id查询，确保用户只能访问自己的订单
+     */
+    @Select("select * from orders where id = #{id} and user_id = #{userId}")
+    Orders getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * 根据状态统计订单数量

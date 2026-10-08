@@ -37,6 +37,9 @@ public interface OrderService {
      */
     void paySuccess(String outTradeNo);
 
+    /** 开发环境模拟支付成功，要求订单属于当前登录用户。 */
+    void mockPaySuccessForUser(String orderNumber, Long orderId);
+
     /**
      * 用户端订单分页查询
      * @param page
@@ -66,6 +69,9 @@ public interface OrderService {
      * @return
      */
     OrderVO details(Long id);
+
+    /** 查询当前登录用户自己的订单详情。 */
+    OrderVO detailsForUser(Long id);
 
     /**
      * 用户取消订单
