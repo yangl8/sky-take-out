@@ -120,11 +120,29 @@ class OrderStatusTransitionTest {
 
         orderTask.processTimeoutOrder();
 
+        ArgumentCaptor<LocalDateTime> cutoffCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(orderMapper).getByStatusAndOrderTimeLT(eq(Orders.PENDING_PAYMENT), cutoffCaptor.capture());
+        LocalDateTime timeoutCutoff = cutoffCaptor.getValue();
+        assertTrue(!timeoutCutoff.isAfter(LocalDateTime.now().minusMinutes(15)));
+
         ArgumentCaptor<Orders> targetOrder = ArgumentCaptor.forClass(Orders.class);
         verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
-                any(LocalDateTime.class), targetOrder.capture());
+                eq(timeoutCutoff), targetOrder.capture());
         assertEquals(Orders.CANCELLED, targetOrder.getValue().getStatus());
         assertEquals(Orders.UN_PAID, targetOrder.getValue().getPayStatus());
+    }
+
+    /**
+     * 验证没有超时待付款订单时不会执行条件取消更新
+     */
+    @Test
+    void timeoutTaskMustNotUpdateWhenNoEligibleOrdersAreFound() {
+        when(orderMapper.getByStatusAndOrderTimeLT(eq(Orders.PENDING_PAYMENT), any(LocalDateTime.class)))
+                .thenReturn(java.util.Collections.emptyList());
+
+        orderTask.processTimeoutOrder();
+
+        verify(orderMapper, never()).updateStatusIfCurrent(anyLong(), anyInt(), anyInt(), any(), any(Orders.class));
     }
 
     /**
@@ -150,7 +168,7 @@ class OrderStatusTransitionTest {
      * 验证管理端重复接单或接收已取消订单时影响行数为零并拒绝操作
      */
     @Test
-    void adminMustNotAcceptAlreadyChangedOrder() {
+    void adminMustNotAcceptCancelledOrderWhenConditionalUpdateAffectsNoRows() {
         OrdersConfirmDTO request = new OrdersConfirmDTO();
         request.setId(10L);
         when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.TO_BE_CONFIRMED), eq(Orders.PAID),
@@ -158,8 +176,10 @@ class OrderStatusTransitionTest {
 
         assertThrows(OrderBusinessException.class, () -> orderService.confirm(request));
 
+        ArgumentCaptor<Orders> targetOrder = ArgumentCaptor.forClass(Orders.class);
         verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.TO_BE_CONFIRMED), eq(Orders.PAID),
-                isNull(), any(Orders.class));
+                isNull(), targetOrder.capture());
+        assertEquals(Orders.CONFIRMED, targetOrder.getValue().getStatus());
         verify(webSocketServer, never()).sendToAllClient(any());
     }
 
