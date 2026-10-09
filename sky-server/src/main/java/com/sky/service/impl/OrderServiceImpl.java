@@ -89,19 +89,37 @@ public class OrderServiceImpl implements OrderService{
     private String amapKey;
 
     /**
-     * 开发环境使用模拟支付，因此退款也只模拟成功；其他环境调用微信退款。
+     * 申请订单退款
+     *
+     * @param currentOrder 已付款的订单
+     * @throws Exception 微信退款请求失败
      */
-    private void refundPaidOrder(Orders orders) throws Exception {
+    private void refundPaidOrder(Orders currentOrder) throws Exception {
         if (environment.acceptsProfiles(Profiles.of("dev & !prod"))) {
-            log.info("开发环境模拟退款成功，订单号：{}", orders.getNumber());
+            log.info("开发环境模拟退款成功，订单号：{}", currentOrder.getNumber());
             return;
         }
         String refund = weChatPayUtil.refund(
-                orders.getNumber(),
-                orders.getNumber(),
+                currentOrder.getNumber(),
+                currentOrder.getNumber(),
                 new BigDecimal(0.01),
                 new BigDecimal(0.01));
         log.info("申请退款：{}", refund);
+    }
+
+    /**
+     * 退款已付款订单
+     *
+     * @param currentOrder 已付款的订单
+     * @throws OrderBusinessException 退款失败并需要回滚本地取消状态
+     */
+    private void refundPaidOrderOrFail(Orders currentOrder) {
+        try {
+            refundPaidOrder(currentOrder);
+        } catch (Exception exception) {
+            log.error("订单退款失败，订单号：{}", currentOrder.getNumber(), exception);
+            throw new OrderBusinessException("退款失败，请检查微信支付配置后重试");
+        }
     }
 
     /**    (non-Javadoc)
@@ -205,52 +223,141 @@ public class OrderServiceImpl implements OrderService{
     }
 
     /**
-     * 支付成功，修改订单状态
+     * 处理微信支付成功回调
      *
-     * @param outTradeNo
+     * @param outTradeNo 微信支付回调中的商户订单号
+     * @throws OrderBusinessException 订单不存在或状态不允许支付完成
      */
     public void paySuccess(String outTradeNo) {
 
         // 根据订单号查询订单
-        Orders ordersDB = orderMapper.getByNumber(outTradeNo);
-
-        processPaySuccess(ordersDB);
-    }
-
-    /**    (non-Javadoc)
-     * 开发环境模拟支付仅允许当前用户支付自己的订单
-     * @see com.sky.service.OrderService#mockPaySuccessForUser(java.lang.String, java.lang.Long)
-     */
-    public void mockPaySuccessForUser(String orderNumber, Long orderId) {
-        Orders ordersDB = orderMapper.getByIdAndUserId(orderId, BaseContext.getCurrentId());
-        if (ordersDB == null || !Objects.equals(ordersDB.getNumber(), orderNumber)) {
+        Orders currentOrder = orderMapper.getByNumber(outTradeNo);
+        if (currentOrder == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        processPaySuccess(ordersDB);
+        processPaySuccess(currentOrder, true);
     }
 
-    private void processPaySuccess(Orders ordersDB) {
+    /**
+     * 处理当前用户的模拟支付请求
+     *
+     * @param orderNumber 请求中的订单编号
+     * @param orderId 请求中的订单ID
+     * @throws OrderBusinessException 订单归属或状态不符合模拟支付条件
+     */
+    public void mockPaySuccessForUser(String orderNumber, Long orderId) {
+        Orders currentOrder = orderMapper.getByIdAndUserId(orderId, BaseContext.getCurrentId());
+        if (currentOrder == null || !Objects.equals(currentOrder.getNumber(), orderNumber)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        processPaySuccess(currentOrder, false);
+    }
+
+    /**
+     * 更新支付成功订单的状态
+     *
+     * @param currentOrder 当前读取到的订单状态
+     * @param paymentCallback 是否来自微信支付回调，决定竞争失败时的回调处理方式
+     * @return 本次调用完成状态转换时返回 true，重复或已变化时返回 false
+     * @throws OrderBusinessException 模拟支付遇到不允许的订单状态
+     */
+    private boolean processPaySuccess(Orders currentOrder, boolean paymentCallback) {
+        if (Orders.CANCELLED.equals(currentOrder.getStatus())) {
+            log.error("已取消订单收到支付成功通知，订单号：{}，需核对并补偿资金", currentOrder.getNumber());
+            if (paymentCallback) {
+                return false;
+            }
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        if (isPaidOrderInProgress(currentOrder)) {
+            return false;
+        }
+
+        if (!Orders.PENDING_PAYMENT.equals(currentOrder.getStatus())
+                || !Orders.UN_PAID.equals(currentOrder.getPayStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
 
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
-        Orders orders = Orders.builder()
-                .id(ordersDB.getId())
+        Orders targetOrder = Orders.builder()
+                .id(currentOrder.getId())
                 .status(Orders.TO_BE_CONFIRMED)
                 .payStatus(Orders.PAID)
                 .checkoutTime(LocalDateTime.now())
                 .build();
 
-        orderMapper.update(orders);
+        int updatedRows = updateOrderState(currentOrder, targetOrder);
+        if (updatedRows != 1) {
+            Orders latestOrder = orderMapper.getById(currentOrder.getId());
+            if (isPaidOrderInProgress(latestOrder)) {
+                return false;
+            }
+            if (latestOrder != null && Orders.CANCELLED.equals(latestOrder.getStatus())) {
+                log.error("支付成功与订单取消竞争，订单号：{}，订单保持取消状态，需核对并补偿资金",
+                        currentOrder.getNumber());
+                if (paymentCallback) {
+                    return false;
+                }
+            }
+            if (paymentCallback) {
+                log.warn("支付回调未能更新订单状态，订单号：{}，当前状态已变化", currentOrder.getNumber());
+                return false;
+            }
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
 
-        //通过websocket向客户端浏览器推送消息 type orderId content
+        // 只有数据库确认本次状态转换成功后才广播新订单
         Map map = new HashMap();
         map.put("type",1); //1表示来单提醒 2表示客户催单
-        map.put("orderId", ordersDB.getId());
-        map.put("orderNumber", ordersDB.getNumber());
-        map.put("content", "订单号: " + ordersDB.getNumber());
+        map.put("orderId", currentOrder.getId());
+        map.put("orderNumber", currentOrder.getNumber());
+        map.put("content", "订单号: " + currentOrder.getNumber());
 
         String json = JSON.toJSONString(map);
         webSocketServer.sendToAllClient(json);
+        return true;
+    }
+
+    /**
+     * 判断订单是否已进入支付后的状态
+     *
+     * @param currentOrder 当前订单
+     * @return 订单已支付且处于待接单至已完成状态时返回 true
+     */
+    private boolean isPaidOrderInProgress(Orders currentOrder) {
+        if (currentOrder == null || !Orders.PAID.equals(currentOrder.getPayStatus())
+                || currentOrder.getStatus() == null) {
+            return false;
+        }
+        return currentOrder.getStatus() >= Orders.TO_BE_CONFIRMED
+                && currentOrder.getStatus() <= Orders.COMPLETED;
+    }
+
+    /**
+     * 更新订单状态
+     *
+     * @param expectedCurrentOrder 预期的原订单状态及支付状态
+     * @param targetOrder 需要写入的订单状态和相关字段
+     * @return 实际更新的记录数
+     */
+    private int updateOrderState(Orders expectedCurrentOrder, Orders targetOrder) {
+        return orderMapper.updateStatusIfCurrent(expectedCurrentOrder.getId(), expectedCurrentOrder.getStatus(),
+                expectedCurrentOrder.getPayStatus(), null, targetOrder);
+    }
+
+    /**
+     * 执行订单状态转换
+     *
+     * @param expectedCurrentOrder 预期的原订单状态及支付状态
+     * @param targetOrder 需要写入的目标订单状态
+     */
+    private void requireStateTransition(Orders expectedCurrentOrder, Orders targetOrder) {
+        if (updateOrderState(expectedCurrentOrder, targetOrder) != 1) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
     }
 
     /**
@@ -405,45 +512,39 @@ public class OrderServiceImpl implements OrderService{
     /**
      * 用户取消订单
      *
-     * @param id
+     * @param id 当前用户要取消的订单ID
+     * @throws Exception 订单退款操作失败
      */
+    @Transactional(rollbackFor = Exception.class)
     public void userCancelById(Long id) throws Exception {
         // 根据id查询订单
-        Orders ordersDB = orderMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
+        Orders currentOrder = orderMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
 
         // 校验订单是否存在
-        if (ordersDB == null) {
+        if (currentOrder == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        //订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
-        if (ordersDB.getStatus() > 2) {
+        boolean pendingUnpaid = Orders.PENDING_PAYMENT.equals(currentOrder.getStatus())
+                && Orders.UN_PAID.equals(currentOrder.getPayStatus());
+        boolean acceptedPaid = Orders.TO_BE_CONFIRMED.equals(currentOrder.getStatus())
+                && Orders.PAID.equals(currentOrder.getPayStatus());
+        if (!pendingUnpaid && !acceptedPaid) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(ordersDB.getId());
+        Orders targetOrder = Orders.builder()
+                .id(currentOrder.getId())
+                .status(Orders.CANCELLED)
+                .payStatus(acceptedPaid ? Orders.REFUND : Orders.UN_PAID)
+                .cancelReason("用户取消")
+                .cancelTime(LocalDateTime.now())
+                .build();
+        requireStateTransition(currentOrder, targetOrder);
 
-        // 订单处于待接单状态下取消，需要进行退款
-        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)
-                && Orders.PAID.equals(ordersDB.getPayStatus())) {
-            //调用微信支付退款接口
-            try {
-                refundPaidOrder(ordersDB);
-            } catch (Exception exception) {
-                log.error("订单退款失败，订单号：{}", ordersDB.getNumber(), exception);
-                throw new OrderBusinessException("退款失败，请检查微信支付配置后重试");
-            }
-
-            //支付状态修改为 退款
-            orders.setPayStatus(Orders.REFUND);
+        if (acceptedPaid) {
+            refundPaidOrderOrFail(currentOrder);
         }
-
-        // 更新订单状态、取消原因、取消时间
-        orders.setStatus(Orders.CANCELLED);
-        orders.setCancelReason("用户取消");
-        orders.setCancelTime(LocalDateTime.now());
-        orderMapper.update(orders);
     }
 
     /**
@@ -518,7 +619,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     /**
-     * 根据订单id获取菜品信息字符串
+     * 根据订单获取菜品信息字符串
      *
      * @param orders
      * @return
@@ -559,122 +660,124 @@ public class OrderServiceImpl implements OrderService{
     /**
      * 接单
      *
-     * @param ordersConfirmDTO
+     * @param ordersConfirmDTO 包含待接单订单ID的请求对象
      */
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
-        Orders orders = Orders.builder()
+        Orders expectedCurrentOrder = Orders.builder()
+                .id(ordersConfirmDTO.getId())
+                .status(Orders.TO_BE_CONFIRMED)
+                .payStatus(Orders.PAID)
+                .build();
+        Orders targetOrder = Orders.builder()
                 .id(ordersConfirmDTO.getId())
                 .status(Orders.CONFIRMED)
                 .build();
 
-        orderMapper.update(orders);
+        requireStateTransition(expectedCurrentOrder, targetOrder);
     }
 
     /**
      * 拒单
      *
-     * @param ordersRejectionDTO
+     * @param ordersRejectionDTO 包含订单ID和拒单原因的请求对象
+     * @throws Exception 订单退款操作失败
      */
+    @Transactional(rollbackFor = Exception.class)
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception {
         // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+        Orders currentOrder = orderMapper.getById(ordersRejectionDTO.getId());
 
         // 订单只有存在且状态为2（待接单）才可以拒单
-        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+        if (currentOrder == null
+                || !Orders.TO_BE_CONFIRMED.equals(currentOrder.getStatus())
+                || !Orders.PAID.equals(currentOrder.getPayStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        //支付状态
-        Integer payStatus = ordersDB.getPayStatus();
-        if (payStatus == Orders.PAID) {
-            //用户已支付，需要退款
-            refundPaidOrder(ordersDB);
-        }
-
         // 拒单需要退款，根据订单id更新订单状态、拒单原因、取消时间
-        Orders orders = new Orders();
-        orders.setId(ordersDB.getId());
-        orders.setStatus(Orders.CANCELLED);
-        if (Orders.PAID.equals(payStatus)) {
-            orders.setPayStatus(Orders.REFUND);
-        }
-        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
-        orders.setCancelTime(LocalDateTime.now());
-
-        orderMapper.update(orders);
+        Orders targetOrder = Orders.builder()
+                .id(currentOrder.getId())
+                .status(Orders.CANCELLED)
+                .payStatus(Orders.REFUND)
+                .rejectionReason(ordersRejectionDTO.getRejectionReason())
+                .cancelTime(LocalDateTime.now())
+                .build();
+        requireStateTransition(currentOrder, targetOrder);
+        refundPaidOrderOrFail(currentOrder);
     }
 
     /**
      * 取消订单
      *
-     * @param ordersCancelDTO
+     * @param ordersCancelDTO 包含订单ID和取消原因的请求对象
+     * @throws Exception 订单退款操作失败
      */
+    @Transactional(rollbackFor = Exception.class)
     public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception {
         // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(ordersCancelDTO.getId());
-
-        //支付状态
-        Integer payStatus = ordersDB.getPayStatus();
-        if (Orders.PAID.equals(payStatus)) {
-            //用户已支付，需要退款
-            refundPaidOrder(ordersDB);
-        }
-
-        // 管理端取消订单需要退款，根据订单id更新订单状态、取消原因、取消时间
-        Orders orders = new Orders();
-        orders.setId(ordersCancelDTO.getId());
-        orders.setStatus(Orders.CANCELLED);
-        if (Orders.PAID.equals(payStatus)) {
-            orders.setPayStatus(Orders.REFUND);
-        }
-        orders.setCancelReason(ordersCancelDTO.getCancelReason());
-        orders.setCancelTime(LocalDateTime.now());
-        orderMapper.update(orders);
-    }
-
-    /**
-     * 派送订单
-     *
-     * @param id
-     */
-    public void delivery(Long id) {
-        // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(id);
-
-        // 校验订单是否存在，并且状态为3
-        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.CONFIRMED)) {
+        Orders currentOrder = orderMapper.getById(ordersCancelDTO.getId());
+        if (currentOrder == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(ordersDB.getId());
-        // 更新订单状态,状态转为派送中
-        orders.setStatus(Orders.DELIVERY_IN_PROGRESS);
+        boolean pendingUnpaid = Orders.PENDING_PAYMENT.equals(currentOrder.getStatus())
+                && Orders.UN_PAID.equals(currentOrder.getPayStatus());
+        boolean paidCancelable = (Orders.CONFIRMED.equals(currentOrder.getStatus())
+                || Orders.DELIVERY_IN_PROGRESS.equals(currentOrder.getStatus())
+                || Orders.COMPLETED.equals(currentOrder.getStatus()))
+                && Orders.PAID.equals(currentOrder.getPayStatus());
+        if (!pendingUnpaid && !paidCancelable) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
 
-        orderMapper.update(orders);
+        Orders targetOrder = Orders.builder()
+                .id(currentOrder.getId())
+                .status(Orders.CANCELLED)
+                .payStatus(paidCancelable ? Orders.REFUND : Orders.UN_PAID)
+                .cancelReason(ordersCancelDTO.getCancelReason())
+                .cancelTime(LocalDateTime.now())
+                .build();
+        requireStateTransition(currentOrder, targetOrder);
+        if (paidCancelable) {
+            refundPaidOrderOrFail(currentOrder);
+        }
+    }
+
+    /**
+     * 开始派送订单
+     *
+     * @param id 要开始派送的订单ID
+     */
+    public void delivery(Long id) {
+        Orders expectedCurrentOrder = Orders.builder()
+                .id(id)
+                .status(Orders.CONFIRMED)
+                .payStatus(Orders.PAID)
+                .build();
+        Orders targetOrder = Orders.builder()
+                .id(id)
+                .status(Orders.DELIVERY_IN_PROGRESS)
+                .build();
+        requireStateTransition(expectedCurrentOrder, targetOrder);
     }
 
     /**
      * 完成订单
      *
-     * @param id
+     * @param id 要标记为完成的订单ID
      */
     public void complete(Long id) {
-        // 根据id查询订单
-        Orders ordersDB = orderMapper.getById(id);
-
-        // 校验订单是否存在，并且状态为4
-        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
-            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
-        }
-
-        Orders orders = new Orders();
-        orders.setId(ordersDB.getId());
-        // 更新订单状态,状态转为完成
-        orders.setStatus(Orders.COMPLETED);
-        orders.setDeliveryTime(LocalDateTime.now());
-
-        orderMapper.update(orders);
+        Orders expectedCurrentOrder = Orders.builder()
+                .id(id)
+                .status(Orders.DELIVERY_IN_PROGRESS)
+                .payStatus(Orders.PAID)
+                .build();
+        Orders targetOrder = Orders.builder()
+                .id(id)
+                .status(Orders.COMPLETED)
+                .deliveryTime(LocalDateTime.now())
+                .build();
+        requireStateTransition(expectedCurrentOrder, targetOrder);
     }
 
     /**

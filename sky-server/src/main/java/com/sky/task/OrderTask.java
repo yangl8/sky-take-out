@@ -24,43 +24,60 @@ public class OrderTask {
     private OrderMapper orderMapper;
 
     /**
-     * 处理超时订单的方法
+     * 取消超时未付款订单
      */
     @Scheduled(cron = "0 * * * * ?") //每分钟触发一次
     public void processTimeoutOrder(){
 
         log.info("定时处理超时订单: {}", LocalDateTime.now());
 
-        LocalDateTime time = LocalDateTime.now().plusMinutes(-15);
+        LocalDateTime pendingPaymentCutoff = LocalDateTime.now().plusMinutes(-15);
 
         //select * from orders where status = ? and order_time < (当前时间 - 15分钟)
-        List<Orders> ordersList = orderMapper.getByStatusAndOrderTimeLT(Orders.PENDING_PAYMENT, time);
+        List<Orders> pendingPaymentOrders = orderMapper.getByStatusAndOrderTimeLT(
+                Orders.PENDING_PAYMENT, pendingPaymentCutoff);
 
-        if(ordersList != null && ordersList.size() > 0){
-            for(Orders orders : ordersList){
-                orders.setStatus(Orders.CANCELLED);
-                orders.setCancelReason("订单超时，自动取消");
-                orders.setCancelTime(LocalDateTime.now());
-                orderMapper.update(orders);
+        if(pendingPaymentOrders != null && pendingPaymentOrders.size() > 0){
+            for(Orders currentOrder : pendingPaymentOrders){
+                Orders cancelledOrder = Orders.builder()
+                        .id(currentOrder.getId())
+                        .status(Orders.CANCELLED)
+                        .payStatus(Orders.UN_PAID)
+                        .cancelReason("订单超时，自动取消")
+                        .cancelTime(LocalDateTime.now())
+                        .build();
+                int updatedRows = orderMapper.updateStatusIfCurrent(currentOrder.getId(),
+                        Orders.PENDING_PAYMENT, Orders.UN_PAID, pendingPaymentCutoff, cancelledOrder);
+                if (updatedRows != 1) {
+                    log.debug("超时订单状态已变化，跳过自动取消，订单ID：{}", currentOrder.getId());
+                }
             }
         }
     }
 
     /**
-     * 处理一直处于派送中状态的订单
+     * 完成超时配送订单
      */
     @Scheduled(cron = "0 0 1 * * ?") //每天凌晨1点触发一次
     public void processDeliveryOrder(){
         log.info("定时处理处于派送中的订单: {}", LocalDateTime.now());
 
-        LocalDateTime time = LocalDateTime.now().plusMinutes(-60);
+        LocalDateTime deliveryCutoff = LocalDateTime.now().plusMinutes(-60);
 
-        List<Orders> ordersList = orderMapper.getByStatusAndOrderTimeLT(Orders.DELIVERY_IN_PROGRESS, time);
+        List<Orders> deliveryOrders = orderMapper.getByStatusAndOrderTimeLT(
+                Orders.DELIVERY_IN_PROGRESS, deliveryCutoff);
         
-        if(ordersList != null && ordersList.size() > 0){
-            for(Orders orders : ordersList){
-                orders.setStatus(Orders.COMPLETED);
-                orderMapper.update(orders);
+        if(deliveryOrders != null && deliveryOrders.size() > 0){
+            for(Orders currentOrder : deliveryOrders){
+                Orders completedOrder = Orders.builder()
+                        .id(currentOrder.getId())
+                        .status(Orders.COMPLETED)
+                        .build();
+                int updatedRows = orderMapper.updateStatusIfCurrent(currentOrder.getId(),
+                        Orders.DELIVERY_IN_PROGRESS, Orders.PAID, deliveryCutoff, completedOrder);
+                if (updatedRows != 1) {
+                    log.debug("配送订单状态已变化，跳过自动完成，订单ID：{}", currentOrder.getId());
+                }
             }
         }
     }

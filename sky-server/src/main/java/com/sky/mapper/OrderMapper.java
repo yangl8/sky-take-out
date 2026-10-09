@@ -39,10 +39,20 @@ public interface OrderMapper {
     Orders getByNumberAndUserId(@Param("orderNumber") String orderNumber, @Param("userId") Long userId);
 
     /**
-     * 修改订单信息
-     * @param orders
+     * 按预期状态更新订单
+     *
+     * @param id 订单ID
+     * @param expectedStatus 预期的原订单状态
+     * @param expectedPayStatus 预期的原支付状态
+     * @param orderTimeBefore 超时取消时要求早于的下单时间，其他状态变更传入空值
+     * @param targetOrder 需要写入的目标状态和相关订单字段
+     * @return 实际更新的记录数
      */
-    void update(Orders orders);
+    int updateStatusIfCurrent(@Param("id") Long id,
+                              @Param("expectedStatus") Integer expectedStatus,
+                              @Param("expectedPayStatus") Integer expectedPayStatus,
+                              @Param("orderTimeBefore") LocalDateTime orderTimeBefore,
+                              @Param("targetOrder") Orders targetOrder);
 
     /**
      * 分页条件查询并按下单时间排序

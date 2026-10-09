@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,12 +47,19 @@ class OrderRefundProfileTest {
         BaseContext.removeCurrentId();
     }
 
+    /**
+     * 验证已付款待接单订单取消成功后生产 profile 使用真实退款客户端
+     *
+     * @throws Exception 订单取消或退款失败
+     */
     @Test
     void devAndProdProfilesMustUseRealRefundPath() throws Exception {
         BaseContext.setCurrentId(42L);
         ReflectionTestUtils.setField(orderService, "environment",
                 environmentWithProfiles("dev", "prod"));
         when(orderMapper.getByIdAndUserId(10L, 42L)).thenReturn(paidOrder());
+        when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.TO_BE_CONFIRMED), eq(Orders.PAID),
+                isNull(), any(Orders.class))).thenReturn(1);
 
         orderService.userCancelById(10L);
 
@@ -59,12 +67,19 @@ class OrderRefundProfileTest {
                 any(BigDecimal.class), any(BigDecimal.class));
     }
 
+    /**
+     * 验证已付款待接单订单取消成功后仅 dev profile 保持模拟退款
+     *
+     * @throws Exception 订单取消或退款失败
+     */
     @Test
     void devOnlyProfileMustKeepMockRefundForLocalTesting() throws Exception {
         BaseContext.setCurrentId(42L);
         ReflectionTestUtils.setField(orderService, "environment",
                 environmentWithProfiles("dev"));
         when(orderMapper.getByIdAndUserId(10L, 42L)).thenReturn(paidOrder());
+        when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.TO_BE_CONFIRMED), eq(Orders.PAID),
+                isNull(), any(Orders.class))).thenReturn(1);
 
         orderService.userCancelById(10L);
 

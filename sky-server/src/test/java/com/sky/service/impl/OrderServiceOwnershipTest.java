@@ -28,6 +28,10 @@ import org.springframework.core.env.Environment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,6 +94,9 @@ class OrderServiceOwnershipTest {
         verify(orderDetailMapper).getByOrderId(10L);
     }
 
+    /**
+     * 验证其他用户的订单不能进入状态条件更新
+     */
     @Test
     void cancellationShouldRejectAnotherUsersOrderWithoutUpdatingIt() {
         BaseContext.setCurrentId(1L);
@@ -97,20 +104,29 @@ class OrderServiceOwnershipTest {
 
         assertThrows(OrderBusinessException.class, () -> orderService.userCancelById(20L));
 
-        verify(orderMapper, never()).update(any(Orders.class));
+        verify(orderMapper, never()).updateStatusIfCurrent(anyLong(), anyInt(), anyInt(), any(), any(Orders.class));
     }
 
+    /**
+     * 验证当前用户的待付款订单可以按原状态和支付状态取消
+     *
+     * @throws Exception 取消操作异常
+     */
     @Test
     void cancellationShouldAllowCurrentUsersUnpaidOrder() throws Exception {
         BaseContext.setCurrentId(1L);
         when(orderMapper.getByIdAndUserId(10L, 1L)).thenReturn(Orders.builder()
                 .id(10L).userId(1L).status(Orders.PENDING_PAYMENT).payStatus(Orders.UN_PAID).build());
+        when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
+                isNull(), any(Orders.class))).thenReturn(1);
 
         orderService.userCancelById(10L);
 
-        ArgumentCaptor<Orders> update = ArgumentCaptor.forClass(Orders.class);
-        verify(orderMapper).update(update.capture());
-        assertEquals(Orders.CANCELLED, update.getValue().getStatus());
+        ArgumentCaptor<Orders> targetOrder = ArgumentCaptor.forClass(Orders.class);
+        verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
+                isNull(), targetOrder.capture());
+        assertEquals(Orders.CANCELLED, targetOrder.getValue().getStatus());
+        assertEquals(Orders.UN_PAID, targetOrder.getValue().getPayStatus());
     }
 
     @Test
@@ -150,6 +166,9 @@ class OrderServiceOwnershipTest {
         verify(weChatPayUtil, never()).pay(any(), any(), any(), any());
     }
 
+    /**
+     * 验证其他用户的订单不能经模拟支付改变状态或触发通知
+     */
     @Test
     void mockPaymentShouldRejectAnotherUsersOrderWithoutChangingIt() {
         BaseContext.setCurrentId(1L);
@@ -158,19 +177,26 @@ class OrderServiceOwnershipTest {
         assertThrows(OrderBusinessException.class,
                 () -> orderService.mockPaySuccessForUser("order-20", 20L));
 
-        verify(orderMapper, never()).update(any(Orders.class));
+        verify(orderMapper, never()).updateStatusIfCurrent(anyLong(), anyInt(), anyInt(), any(), any(Orders.class));
         verify(webSocketServer, never()).sendToAllClient(any());
     }
 
+    /**
+     * 验证当前用户待付款订单模拟支付后执行条件更新并通知管理端
+     */
     @Test
     void mockPaymentShouldProcessCurrentUsersMatchingOrder() {
         BaseContext.setCurrentId(1L);
-        Orders ownOrder = Orders.builder().id(10L).userId(1L).number("order-10").build();
-        when(orderMapper.getByIdAndUserId(10L, 1L)).thenReturn(ownOrder);
+        Orders currentOrder = Orders.builder().id(10L).userId(1L).number("order-10")
+                .status(Orders.PENDING_PAYMENT).payStatus(Orders.UN_PAID).build();
+        when(orderMapper.getByIdAndUserId(10L, 1L)).thenReturn(currentOrder);
+        when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
+                isNull(), any(Orders.class))).thenReturn(1);
 
         orderService.mockPaySuccessForUser("order-10", 10L);
 
-        verify(orderMapper).update(any(Orders.class));
+        verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
+                isNull(), any(Orders.class));
         verify(webSocketServer).sendToAllClient(any());
     }
 

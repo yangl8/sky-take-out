@@ -44,35 +44,40 @@
         order by order_time desc
     </select>
 
-    <update id="update" parameterType="com.sky.entity.Orders">
+    <update id="updateStatusIfCurrent">
         update orders
         <set>
-            <if test="cancelReason != null and cancelReason!='' ">
-                cancel_reason=#{cancelReason},
+            <if test="targetOrder.cancelReason != null and targetOrder.cancelReason!='' ">
+                cancel_reason=#{targetOrder.cancelReason},
             </if>
-            <if test="rejectionReason != null and rejectionReason!='' ">
-                rejection_reason=#{rejectionReason},
+            <if test="targetOrder.rejectionReason != null and targetOrder.rejectionReason!='' ">
+                rejection_reason=#{targetOrder.rejectionReason},
             </if>
-            <if test="cancelTime != null">
-                cancel_time=#{cancelTime},
+            <if test="targetOrder.cancelTime != null">
+                cancel_time=#{targetOrder.cancelTime},
             </if>
-            <if test="payStatus != null">
-                pay_status=#{payStatus},
+            <if test="targetOrder.payStatus != null">
+                pay_status=#{targetOrder.payStatus},
             </if>
-            <if test="payMethod != null">
-                pay_method=#{payMethod},
+            <if test="targetOrder.payMethod != null">
+                pay_method=#{targetOrder.payMethod},
             </if>
-            <if test="checkoutTime != null">
-                checkout_time=#{checkoutTime},
+            <if test="targetOrder.checkoutTime != null">
+                checkout_time=#{targetOrder.checkoutTime},
             </if>
-            <if test="status != null">
-                status = #{status},
+            <if test="targetOrder.status != null">
+                status = #{targetOrder.status},
             </if>
-            <if test="deliveryTime != null">
-                delivery_time = #{deliveryTime}
+            <if test="targetOrder.deliveryTime != null">
+                delivery_time = #{targetOrder.deliveryTime}
             </if>
         </set>
         where id = #{id}
+          and status = #{expectedStatus}
+          and pay_status = #{expectedPayStatus}
+        <if test="orderTimeBefore != null">
+          and order_time &lt; #{orderTimeBefore}
+        </if>
     </update>
     
     <select id="sumByMap" resultType="java.lang.Double">
