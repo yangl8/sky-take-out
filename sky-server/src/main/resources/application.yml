@@ -2,8 +2,6 @@ server:
   port: 8080
 
 spring:
-  profiles:
-    active: dev
   main:
     allow-circular-references: true
   datasource:
@@ -35,6 +33,8 @@ logging:
         controller: info
 
 sky:
+  payment:
+    mock-enabled: false
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: ${JWT_ADMIN_SECRET_KEY:}

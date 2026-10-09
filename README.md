@@ -6,7 +6,7 @@
 2. Fill in the local database, JWT, and OSS values in `.env`.
 3. In VS Code, run the `SkyApplication` launch configuration.
 
-The `.env` file contains local credentials and is intentionally excluded from Git.
+The `.env` file contains local credentials and is intentionally excluded from Git. The VS Code `SkyApplication` launch configuration explicitly uses the `dev` profile and loads this file.
 
 ### JWT keys
 
@@ -17,3 +17,7 @@ openssl rand -base64 32 | tr -d '\n'
 ```
 
 Run the command separately for each variable, then put the two outputs in the matching `.env` entries. The command generates 32 random bytes and encodes them as Base64. Keep `.env` local, do not paste either value into tracked files or logs, and do not regenerate keys on each application start: changing a key invalidates tokens signed with its previous value. Startup fails with a configuration error if a key is missing, malformed, too short, or equal to the other key.
+
+### Mock payment
+
+The mock payment endpoint is enabled only by the local `dev` profile. The base configuration disables it, and the `prod` profile disables it even if `dev` is accidentally active at the same time. Use the provided VS Code launch configuration for local order-flow testing. Production deployments must explicitly activate `prod`; missing real WeChat payment configuration does not enable mock payment or fall back to it.

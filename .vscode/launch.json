@@ -7,6 +7,7 @@
       "request": "launch",
       "mainClass": "com.sky.SkyApplication",
       "projectName": "sky-server",
+      "vmArgs": "-Dspring.profiles.active=dev",
       "envFile": "${workspaceFolder}/.env"
     }
   ]

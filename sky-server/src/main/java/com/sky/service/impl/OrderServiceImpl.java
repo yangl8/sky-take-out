@@ -92,7 +92,7 @@ public class OrderServiceImpl implements OrderService{
      * 开发环境使用模拟支付，因此退款也只模拟成功；其他环境调用微信退款。
      */
     private void refundPaidOrder(Orders orders) throws Exception {
-        if (environment.acceptsProfiles(Profiles.of("dev"))) {
+        if (environment.acceptsProfiles(Profiles.of("dev & !prod"))) {
             log.info("开发环境模拟退款成功，订单号：{}", orders.getNumber());
             return;
         }
