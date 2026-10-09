@@ -33,20 +33,25 @@ import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersRejectionDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.AddressBook;
+import com.sky.entity.Dish;
 import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
+import com.sky.entity.Setmeal;
 import com.sky.entity.ShoppingCart;
 import com.sky.entity.User;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.AddressBookMapper;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
+import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.constant.StatusConstant;
 import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -69,6 +74,10 @@ public class OrderServiceImpl implements OrderService{
     @Autowired
     private AddressBookMapper addressBookMapper;
     @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+    @Autowired
     private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private UserMapper userMapper;
@@ -81,6 +90,8 @@ public class OrderServiceImpl implements OrderService{
 
     @Value("${sky.shop.delivery-fee:0}")
     private BigDecimal deliveryFee;
+
+    private static final BigDecimal PACKING_FEE_PER_ITEM = BigDecimal.ONE;
 
     @Value("${sky.shop.address}")
     private String shopAddress;
@@ -122,9 +133,11 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-    /**    (non-Javadoc)
-     * 用户下单
-     * @see com.sky.service.OrderService#submitOrder(com.sky.dto.OrdersSubmitDTO)
+    /**
+     * 提交用户订单
+     *
+     * @param ordersSubmitDTO 订单提交信息
+     * @return 创建成功的订单信息
      */
     @Transactional 
     public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO){
@@ -149,10 +162,30 @@ public class OrderServiceImpl implements OrderService{
             //抛出业务异常
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
+
+        List<OrderDetail> orderDetailList = buildOrderDetailsWithCurrentPrices(shoppingCartList);
+        BigDecimal goodsAmount = BigDecimal.ZERO;
+        long totalItemCount = 0;
+        for (OrderDetail orderDetail : orderDetailList) {
+            goodsAmount = goodsAmount.add(orderDetail.getAmount()
+                    .multiply(BigDecimal.valueOf(orderDetail.getNumber())));
+            if (totalItemCount > Integer.MAX_VALUE - (long) orderDetail.getNumber()) {
+                throw new OrderBusinessException("订单商品数量超出可处理范围");
+            }
+            totalItemCount += orderDetail.getNumber();
+        }
+        if (deliveryFee == null || deliveryFee.signum() < 0) {
+            throw new OrderBusinessException("配送费配置无效，无法下单");
+        }
+        int serverPackAmount = (int) totalItemCount;
+        BigDecimal packingAmount = PACKING_FEE_PER_ITEM.multiply(BigDecimal.valueOf(totalItemCount));
+        BigDecimal serverOrderAmount = goodsAmount.add(packingAmount).add(deliveryFee);
         
         //2.向订单表插入1条数据
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersSubmitDTO, orders);
+        BeanUtils.copyProperties(ordersSubmitDTO, orders, "amount", "packAmount");
+        orders.setAmount(serverOrderAmount);
+        orders.setPackAmount(serverPackAmount);
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
@@ -164,13 +197,9 @@ public class OrderServiceImpl implements OrderService{
 
         orderMapper.insert(orders);
 
-        List<OrderDetail> orderDetailList = new ArrayList<>();
         //3.向订单明细表插入n条数据
-        for(ShoppingCart cart : shoppingCartList){
-            OrderDetail orderDetail = new OrderDetail();
-            BeanUtils.copyProperties(cart, orderDetail);
+        for (OrderDetail orderDetail : orderDetailList) {
             orderDetail.setOrderId(orders.getId());//设置当前订单明细关联的订单id
-            orderDetailList.add(orderDetail);
         }
 
         orderDetailMapper.insertBatch(orderDetailList);
@@ -187,6 +216,60 @@ public class OrderServiceImpl implements OrderService{
                         .build();
 
         return orderSubmitVO;
+    }
+
+    /**
+     * 根据当前商品信息构建订单明细
+     *
+     * @param shoppingCartList 当前用户的购物车商品
+     * @return 使用当前名称、图片和单价构建的订单明细
+     */
+    private List<OrderDetail> buildOrderDetailsWithCurrentPrices(List<ShoppingCart> shoppingCartList) {
+        List<OrderDetail> orderDetailList = new ArrayList<>();
+        for (ShoppingCart cartItem : shoppingCartList) {
+            if (cartItem.getNumber() == null || cartItem.getNumber() <= 0) {
+                throw new OrderBusinessException("购物车商品数量必须大于零");
+            }
+
+            boolean dishItem = cartItem.getDishId() != null;
+            boolean setmealItem = cartItem.getSetmealId() != null;
+            if (dishItem == setmealItem) {
+                throw new OrderBusinessException("购物车商品信息无效，请刷新后重试");
+            }
+
+            String itemName;
+            String itemImage;
+            BigDecimal currentPrice;
+            if (dishItem) {
+                Dish currentDish = dishMapper.getById(cartItem.getDishId());
+                if (currentDish == null || !StatusConstant.ENABLE.equals(currentDish.getStatus())) {
+                    throw new OrderBusinessException("菜品不存在或已停售，请刷新后重试");
+                }
+                itemName = currentDish.getName();
+                itemImage = currentDish.getImage();
+                currentPrice = currentDish.getPrice();
+            } else {
+                Setmeal currentSetmeal = setmealMapper.getById(cartItem.getSetmealId());
+                if (currentSetmeal == null || !StatusConstant.ENABLE.equals(currentSetmeal.getStatus())) {
+                    throw new OrderBusinessException("套餐不存在或已停售，请刷新后重试");
+                }
+                itemName = currentSetmeal.getName();
+                itemImage = currentSetmeal.getImage();
+                currentPrice = currentSetmeal.getPrice();
+            }
+
+            if (currentPrice == null || currentPrice.signum() < 0) {
+                throw new OrderBusinessException("商品价格无效，无法下单");
+            }
+
+            OrderDetail orderDetail = new OrderDetail();
+            BeanUtils.copyProperties(cartItem, orderDetail, "id", "orderId", "name", "image", "amount");
+            orderDetail.setName(itemName);
+            orderDetail.setImage(itemImage);
+            orderDetail.setAmount(currentPrice);
+            orderDetailList.add(orderDetail);
+        }
+        return orderDetailList;
     }
 
     /**
@@ -781,10 +864,11 @@ public class OrderServiceImpl implements OrderService{
     }
 
     /**
-     * 检查客户的收货地址是否超出配送范围
-     * @param address
+     * 检查收货地址是否在配送范围内
+     *
+     * @param deliveryAddress 收货地址
      */
-    private void checkOutOfRange(String address) {
+    void checkOutOfRange(String deliveryAddress) {
         Map map = new HashMap();
         map.put("address",shopAddress);
         map.put("output","json");
@@ -803,7 +887,7 @@ public class OrderServiceImpl implements OrderService{
         //店铺经纬度坐标
         String shopLngLat = geocodes.getJSONObject(0).getString("location");
 
-        map.put("address",address);
+        map.put("address",deliveryAddress);
         //获取用户收货地址的经纬度坐标
         String userCoordinate = HttpClientUtil.doGet("https://restapi.amap.com/v3/geocode/geo", map);
 
