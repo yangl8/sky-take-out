@@ -1,3 +1,5 @@
+import regionTranslations from './regionTranslations.json';
+
 const menuNames = {
   "王老吉": ["Wanglaoji herbal tea", "Thé aux plantes Wanglaoji"], "北冰洋": ["Beibingyang soft drink", "Soda Beibingyang"], "雪花啤酒": ["Snow beer", "Bière Snow"],
   "米饭": ["Steamed rice", "Riz vapeur"], "馒头": ["Steamed wheat bun", "Pain de blé à la vapeur"], "老坛酸菜鱼": ["Fish with fermented mustard greens", "Poisson aux feuilles de moutarde fermentées"],
@@ -56,21 +58,54 @@ const regions = {
   "广西壮族自治区": ["Guangxi", "Guangxi"], "四川省": ["Sichuan", "Sichuan"], "贵州省": ["Guizhou", "Guizhou"], "云南省": ["Yunnan", "Yunnan"],
   "陕西省": ["Shaanxi", "Shaanxi"], "甘肃省": ["Gansu", "Gansu"], "青海省": ["Qinghai", "Qinghai"], "台湾省": ["Taiwan", "Taïwan"],
   "海南省": ["Hainan", "Hainan"], "宁夏回族自治区": ["Ningxia", "Ningxia"], "西藏自治区": ["Tibet", "Tibet"], "新疆维吾尔自治区": ["Xinjiang", "Xinjiang"],
+  "长治市": ["Changzhi", "Changzhi"], "襄垣县": ["Xiangyuan County", "district de Xiangyuan"],
   "香港特别行政区": ["Hong Kong", "Hong Kong"], "澳门特别行政区": ["Macau", "Macao"]
 };
 
-export function displayText(value, locale = "zh", kind = "name") {
+const regionNameTranslations = {};
+Object.keys(regionTranslations).forEach((code) => {
+  const [name, english, french] = regionTranslations[code];
+  if (!regionNameTranslations[name]) regionNameTranslations[name] = [english, french];
+});
+const orderedRegionNames = Object.keys(regionNameTranslations).sort((left, right) => right.length - left.length);
+
+function translateRegionName(value, locale) {
+  if (regions[value]) return regions[value][locale === "fr" ? 1 : 0];
+  const translation = regionNameTranslations[value];
+  return translation ? translation[locale === "fr" ? 1 : 0] : value;
+}
+
+export function displayText(value, locale = "zh", kind = "name", regionCode) {
   if (typeof value !== "string" || locale === "zh") return value;
   if (kind === "address") {
     const compactAddress = value.replace(/\//g, "");
     if (shopAddresses[compactAddress]) return shopAddresses[compactAddress][locale === "fr" ? 1 : 0];
+    let remainingAddress = compactAddress;
+    const addressParts = [];
+    while (remainingAddress) {
+      const regionName = orderedRegionNames.find((name) => remainingAddress.startsWith(name));
+      if (!regionName) break;
+      if (regionName !== "市辖区") addressParts.push(translateRegionName(regionName, locale));
+      remainingAddress = remainingAddress.slice(regionName.length);
+    }
+    if (addressParts.length) {
+      const detail = remainingAddress
+        .replace(/新街大道/g, locale === "fr" ? "avenue Xinjie" : "Xinjie Avenue")
+        .replace(/([0-9]+)号楼/g, locale === "fr" ? "bâtiment $1" : "Building $1")
+        .replace(/([0-9]+)号/g, locale === "fr" ? "n° $1" : "No. $1")
+        .replace(/([0-9]+)层/g, locale === "fr" ? "$1e étage" : "Floor $1");
+      if (detail) addressParts.push(detail);
+      return addressParts.join(", ");
+    }
     const replacements = locale === "fr"
       ? [["北京市", "Pékin, "], ["市辖区", ""], ["朝阳区", "district de Chaoyang, "], ["丰台区", "district de Fengtai, "], ["海淀区", "district de Haidian, "], ["东城区", "district de Dongcheng, "], ["西城区", "district de Xicheng, "], ["新街大道", "avenue Xinjie"], [/([0-9]+)号楼/g, "bâtiment $1"], [/([0-9]+)号/g, "n° $1"], [/([0-9]+)层/g, "$1e étage"]]
       : [["北京市", "Beijing, "], ["市辖区", ""], ["朝阳区", "Chaoyang District, "], ["丰台区", "Fengtai District, "], ["海淀区", "Haidian District, "], ["东城区", "Dongcheng District, "], ["西城区", "Xicheng District, "], ["新街大道", "Xinjie Avenue"], [/([0-9]+)号楼/g, "Building $1"], [/([0-9]+)号/g, "No. $1"], [/([0-9]+)层/g, "Floor $1"]];
     return replacements.reduce((address, [source, target]) => address.replace(source, target), compactAddress).replace(/,\s*,/g, ", ").trim();
   }
   if (kind === "region") {
-    if (regions[value]) return regions[value][locale === "fr" ? 1 : 0];
+    const knownName = translateRegionName(value, locale);
+    if (knownName !== value) return knownName;
+    if (regionCode && regionTranslations[regionCode]) return regionTranslations[regionCode][locale === "fr" ? 2 : 1];
     return value;
   }
   if (kind === "flavor") {

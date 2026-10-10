@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "generate:regions": "node scripts/generate-region-translations.js",
+    "check:regions": "node scripts/check-region-translations.js"
+  },
   "dependencies": {
     "@dcloudio/uni-ui": "^1.4.14"
+  },
+  "devDependencies": {
+    "pinyin-pro": "^3.29.5"
   }
 }

@@ -20,27 +20,27 @@
 
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
+						<view class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region', item.value + '0000') }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
+						<text class="picker-item" v-for="(item,index) in provinceDataList" :key="index">{{ $displayText(item.label, 'region', item.value + '0000') }}</text>
 						<!-- #endif -->
 					</picker-view-column>
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
+						<view class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region', item.value + '00') }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
+						<text class="picker-item" v-for="(item,index) in cityDataList" :key="index">{{ $displayText(item.label, 'region', item.value + '00') }}</text>
 						<!-- #endif -->
 
 					</picker-view-column>
 					<picker-view-column>
 						<!-- #ifndef APP-NVUE -->
-						<view class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region') }}</view>
+						<view class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region', item.value) }}</view>
 						<!-- #endif -->
 						<!-- #ifdef APP-NVUE -->
-						<text class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region') }}</text>
+						<text class="picker-item" v-for="(item,index) in areaDataList" :key="index">{{ $displayText(item.label, 'region', item.value) }}</text>
 						<!-- #endif -->
 
 					</picker-view-column>
