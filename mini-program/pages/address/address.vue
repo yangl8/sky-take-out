@@ -32,7 +32,7 @@
             <view class="item_left">
               <!-- 地址 -->
               <view class="details">
-                <text class="tag" :class="'tag' + item.label">{{
+                <text v-if="item.label" class="tag" :class="'tag' + item.label">{{
                   getLableVal(item.label)
                 }}</text>
                 <text class="address_word"

@@ -180,7 +180,7 @@ export default {
       form: {
         name: "",
         phone: "",
-        type: 1,
+        type: "",
         sex: "0",
         provinceCode: "11",
         provinceName: "",
@@ -258,7 +258,7 @@ export default {
             phone: res.data.phone,
             name: res.data.consignee,
             sex: res.data.sex,
-            type: Number(res.data.label),
+            type: res.data.label ? Number(res.data.label) : "",
             detail: res.data.detail,
             id: res.data.id,
           }
@@ -315,12 +315,6 @@ export default {
       } else if (this.form.phone === "") {
         return uni.showToast({
           title: this.$t("address.phoneRequired"),
-          duration: 1000,
-          icon: "none",
-        })
-      } else if (this.form.type === "") {
-        return uni.showToast({
-          title: this.$t("address.labelRequired"),
           duration: 1000,
           icon: "none",
         })
@@ -402,7 +396,7 @@ export default {
           this.form.name = ""
           this.form.phone = ""
           this.form.address = ""
-          this.form.type = 1
+          this.form.type = ""
           this.form.radio = 0
           this.form.provinceCode = "11"
           this.form.cityCode = "1101"
@@ -412,7 +406,7 @@ export default {
     },
     // 标签的事件
     getTextOption (item) {
-      this.form.type = item.type
+      this.form.type = this.form.type === item.type ? "" : item.type
     },
   },
 };
