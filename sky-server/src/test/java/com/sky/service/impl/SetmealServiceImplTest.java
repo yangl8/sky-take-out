@@ -13,7 +13,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.RedisConnectionFailureException;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,5 +65,19 @@ class SetmealServiceImplTest {
 
         verify(menuCacheService).evictSetmeals(20L);
         verify(menuCacheService, never()).evictSetmeals(10L);
+    }
+
+    /**
+     * 验证套餐修改后的缓存失效异常会中断业务方法
+     */
+    @Test
+    void updateShouldPropagateCacheEvictionFailureAfterDatabaseUpdate() {
+        when(setmealMapper.getById(1L)).thenReturn(Setmeal.builder().id(1L).categoryId(20L).build());
+        doThrow(new RedisConnectionFailureException("Redis unavailable"))
+            .when(menuCacheService).evictSetmeals(20L);
+
+        assertThrows(RedisConnectionFailureException.class, () -> setmealService.update(setmealDTO));
+
+        verify(setmealMapper).update(any(Setmeal.class));
     }
 }
