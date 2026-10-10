@@ -129,6 +129,9 @@
 
 <script>
 import simpleAddress from "../common/simple-address/simple-address.nvue"
+import provinceData from "../common/simple-address/city-data/province.js"
+import cityData from "../common/simple-address/city-data/city.js"
+import areaData from "../common/simple-address/city-data/area.js"
 import {
   addAddressBook,
   delAddressBook,
@@ -238,6 +241,16 @@ export default {
     queryAddressBookById (id) {
       queryAddressBookById({ id }).then((res) => {
         if (res.code === 1) {
+          const provinceIndex = provinceData.findIndex((item) => item.value === res.data.provinceCode)
+          const cityIndex = provinceIndex >= 0
+            ? cityData[provinceIndex].findIndex((item) => item.value === res.data.cityCode)
+            : -1
+          const areaIndex = provinceIndex >= 0 && cityIndex >= 0
+            ? areaData[provinceIndex][cityIndex].findIndex((item) => item.value === res.data.districtCode)
+            : -1
+          if (provinceIndex >= 0 && cityIndex >= 0 && areaIndex >= 0) {
+            this.cityPickerValueDefault = [provinceIndex, cityIndex, areaIndex]
+          }
           this.form = {
             provinceCode: res.data.provinceCode,
             cityCode: res.data.cityCode,
