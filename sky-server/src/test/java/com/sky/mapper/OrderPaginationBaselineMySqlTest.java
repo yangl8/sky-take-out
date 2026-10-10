@@ -76,10 +76,12 @@ class OrderPaginationBaselineMySqlTest {
         String mode = System.getProperty("order.pagination.mode", "interleaved");
         assertTrue("baseline".equals(mode) || "interleaved".equals(mode), "未知订单分页基准模式");
         boolean interleaved = "interleaved".equals(mode);
+        boolean preservePreviousReport = Boolean.parseBoolean(
+                System.getProperty("order.pagination.baseline.preservePrevious", "true"));
         Path outputPath = Paths.get(System.getProperty("order.pagination.baseline.output",
                 "target/order-pagination-baseline.json"));
         String previousReport = "";
-        if (interleaved && Files.exists(outputPath)) {
+        if (interleaved && preservePreviousReport && Files.exists(outputPath)) {
             previousReport = new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8);
             assertTrue(previousReport.trim().startsWith("{") && previousReport.trim().endsWith("}"),
                     "已有基准 JSON 格式无效");
@@ -118,14 +120,14 @@ class OrderPaginationBaselineMySqlTest {
         String explainPlan = explainQueryPlans(jdbcUrl, username, password);
         String report = buildReport(databaseVersion, orderCount, detailCount, explainPlan, measurements,
                 warmupRounds, measuredRounds, interleaved);
-        if (interleaved) {
+        if (interleaved && preservePreviousReport) {
             report = "{\n  \"finalBaselineRun\": \"interleavedFollowup\",\n"
                     + "  \"previousBaseline\": " + (previousReport.isEmpty() ? "null" : previousReport) + ",\n"
                     + "  \"interleavedFollowup\": " + report + "\n}\n";
         }
         Files.createDirectories(outputPath.getParent());
         Files.write(outputPath, report.getBytes(StandardCharsets.UTF_8));
-        System.out.println("订单分页优化前基准已写入 " + outputPath.toAbsolutePath());
+        System.out.println("订单分页基准已写入 " + outputPath.toAbsolutePath());
         System.out.println(report);
     }
 
@@ -411,21 +413,35 @@ class OrderPaginationBaselineMySqlTest {
      * @param jdbcUrl 独立性能数据库 JDBC 地址
      * @param username 数据库用户名
      * @param password 数据库密码
-     * @return 订单 COUNT、分页和单订单明细查询的 EXPLAIN 输出
+     * @return 订单 COUNT、分页和当前页批量明细查询的 EXPLAIN 输出
      * @throws Exception 数据库连接或 EXPLAIN 执行失败
      */
     private String explainQueryPlans(String jdbcUrl, String username, String password) throws Exception {
-        String[] sqlStatements = {
-                "EXPLAIN SELECT count(0) FROM orders WHERE user_id = 9001 AND EXISTS "
-                        + "(SELECT 1 FROM order_detail od WHERE od.order_id = orders.id)",
-                "EXPLAIN SELECT * FROM orders WHERE user_id = 9001 AND EXISTS "
-                        + "(SELECT 1 FROM order_detail od WHERE od.order_id = orders.id) "
-                        + "ORDER BY order_time DESC LIMIT 0, 10",
-                "EXPLAIN SELECT * FROM order_detail WHERE order_id = 1"
-        };
         StringBuilder plans = new StringBuilder();
         try (Connection connection = new PooledDataSource("com.mysql.cj.jdbc.Driver", jdbcUrl, username, password)
                 .getConnection(); Statement statement = connection.createStatement()) {
+            StringBuilder pageOrderIds = new StringBuilder();
+            String selectPageIds = "SELECT id FROM orders WHERE user_id = 9001 AND EXISTS "
+                    + "(SELECT 1 FROM order_detail od WHERE od.order_id = orders.id) "
+                    + "ORDER BY order_time DESC LIMIT 0, 50";
+            try (ResultSet resultSet = statement.executeQuery(selectPageIds)) {
+                while (resultSet.next()) {
+                    if (pageOrderIds.length() > 0) {
+                        pageOrderIds.append(", ");
+                    }
+                    pageOrderIds.append(resultSet.getLong(1));
+                }
+            }
+            assertTrue(pageOrderIds.length() > 0, "执行计划需要当前页订单 ID");
+            String[] sqlStatements = {
+                    "EXPLAIN SELECT count(0) FROM orders WHERE user_id = 9001 AND EXISTS "
+                            + "(SELECT 1 FROM order_detail od WHERE od.order_id = orders.id)",
+                    "EXPLAIN SELECT * FROM orders WHERE user_id = 9001 AND EXISTS "
+                            + "(SELECT 1 FROM order_detail od WHERE od.order_id = orders.id) "
+                            + "ORDER BY order_time DESC LIMIT 0, 10",
+                    "EXPLAIN SELECT * FROM order_detail WHERE order_id IN (" + pageOrderIds
+                            + ") ORDER BY order_id, id"
+            };
             for (String sql : sqlStatements) {
                 plans.append(sql).append('\n');
                 try (ResultSet resultSet = statement.executeQuery(sql)) {
