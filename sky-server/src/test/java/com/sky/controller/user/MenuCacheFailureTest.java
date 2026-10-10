@@ -17,12 +17,12 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,13 +53,14 @@ class MenuCacheFailureTest {
     }
 
     /**
-     * 验证菜品和套餐缓存读取失败且清理成功时会回源业务查询并返回数据
+     * 验证 Redis 连接异常时菜品和套餐接口均回源业务查询并返回数据
      */
     @Test
     void shouldLoadBothMenusFromDatabaseAfterCacheReadFailure() {
         when(valueOperations.get(anyString()))
             .thenThrow(new RedisConnectionFailureException("Redis unavailable"));
-        when(redisTemplate.delete(anyString())).thenReturn(true);
+        when(redisTemplate.delete(anyString()))
+            .thenThrow(new RedisConnectionFailureException("Redis unavailable"));
         List<DishVO> dishes = Collections.singletonList(DishVO.builder().id(1L).build());
         List<Setmeal> setmeals = Collections.singletonList(Setmeal.builder().id(2L).build());
         when(dishService.listWithFlavor(any(Dish.class))).thenReturn(dishes);
@@ -78,10 +79,11 @@ class MenuCacheFailureTest {
 
         verify(dishService).listWithFlavor(any(Dish.class));
         verify(setmealService).list(any(Setmeal.class));
+        verify(redisTemplate, never()).delete(anyString());
     }
 
     /**
-     * 验证数据库回源成功后缓存写入失败仍会使菜品和套餐接口抛出异常
+     * 验证数据库回源成功后缓存写入失败不影响菜品和套餐接口返回
      */
     @Test
     void shouldFailBothMenuRequestsWhenCacheWriteFailsAfterDatabaseRead() {
@@ -99,8 +101,8 @@ class MenuCacheFailureTest {
         ReflectionTestUtils.setField(setmealController, "menuCacheService", menuCacheService);
         ReflectionTestUtils.setField(setmealController, "orderService", orderService);
 
-        assertThrows(RedisConnectionFailureException.class, () -> dishController.list(10L));
-        assertThrows(RedisConnectionFailureException.class, () -> setmealController.list(20L));
+        assertEquals(Collections.emptyList(), dishController.list(10L).getData());
+        assertEquals(Collections.emptyList(), setmealController.list(20L).getData());
 
         verify(dishService).listWithFlavor(any(Dish.class));
         verify(setmealService).list(any(Setmeal.class));

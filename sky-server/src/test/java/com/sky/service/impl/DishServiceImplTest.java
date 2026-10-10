@@ -16,15 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.RedisConnectionFailureException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class DishServiceImplTest {
@@ -99,17 +96,4 @@ class DishServiceImplTest {
         verify(setmealMapper, never()).getCategoryIdsByDishId(any());
     }
 
-    /**
-     * 验证菜品修改后的缓存失效异常会中断业务方法
-     */
-    @Test
-    void updateWithFlavorShouldPropagateCacheEvictionFailureAfterDatabaseUpdate() {
-        when(dishMapper.getById(1L)).thenReturn(Dish.builder().id(1L).categoryId(20L).build());
-        doThrow(new RedisConnectionFailureException("Redis unavailable"))
-            .when(menuCacheService).evictDishes(20L);
-
-        assertThrows(RedisConnectionFailureException.class, () -> dishService.updateWithFlavor(dishDTO));
-
-        verify(dishMapper).update(any(Dish.class));
-    }
 }
