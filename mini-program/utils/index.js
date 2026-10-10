@@ -9,6 +9,24 @@ export const call = (val, callbacks = {}) => {
 		...phoneCallbacks,
 	})
 }
+
+// 将后端业务错误转换为当前语言的用户提示
+export const userFacingErrorMessage = (message, locale = 'zh', fallbackKey = 'order.operationFailed') => {
+	if (typeof message !== 'string' || !message.trim()) {
+		return translate(locale, fallbackKey)
+	}
+	if (message.includes('超出配送范围')) return translate(locale, 'order.outOfRange')
+	if (message.includes('购物车') && (message.includes('空') || message.includes('不能下单'))) {
+		return translate(locale, 'order.emptyCart')
+	}
+	if (message.includes('地址')) return translate(locale, 'order.addressUnavailable')
+	if (message.includes('菜品') || message.includes('套餐') || message.includes('商品')) {
+		return translate(locale, 'order.cartItemsUnavailable')
+	}
+	if (message.includes('订单')) return translate(locale, 'order.orderUnavailable')
+	return translate(locale, fallbackKey)
+}
+
 // 分割电话号码
 export const splitMobile = (mobile) => {
 	return String(mobile).replace(/(?=(\d{4})+$)/g, '-')

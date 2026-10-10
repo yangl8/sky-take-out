@@ -101,7 +101,7 @@ import {
 import { mapMutations } from "vuex";
 import Empty from "@/components/empty/empty";
 import Phone from "@/components/uni-phone/index.vue";
-import { statusWord, getOvertime } from "@/utils/index.js";
+import { statusWord, getOvertime, userFacingErrorMessage } from "@/utils/index.js";
 export default {
   components: {
     Empty,
@@ -365,7 +365,7 @@ export default {
               this.getList();
             }
           }).catch((error) => {
-            uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+            uni.showToast({ title: userFacingErrorMessage(error && error.msg, this.$store.state.locale), icon: "none" });
           });
         }
       });

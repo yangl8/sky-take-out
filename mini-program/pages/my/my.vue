@@ -72,7 +72,7 @@
 <script>
 import { getOrderPage, repetitionOrder, delShoppingCart, reminderOrder, cancelOrder } from "../api/api.js";
 import { mapMutations } from "vuex";
-import { statusWord, getOvertime } from "@/utils/index.js";
+import { statusWord, getOvertime, userFacingErrorMessage } from "@/utils/index.js";
 import { supportedLocales } from "@/locales";
 
 import HeadInfo from "./components/headInfo.vue"; //头部
@@ -254,7 +254,7 @@ export default {
               this.getList();
             }
           }).catch((error) => {
-            uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+            uni.showToast({ title: userFacingErrorMessage(error && error.msg, this.$store.state.locale), icon: "none" });
           });
         }
       });

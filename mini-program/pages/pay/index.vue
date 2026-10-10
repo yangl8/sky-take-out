@@ -69,6 +69,7 @@
 import { mapState, mapMutations } from "vuex";
 import { paymentOrder, mockPaymentSuccess, cancelOrder, getOrderDetail, repetitionOrder } from "@/pages/api/api.js";
 import { isLocalDevelopment } from "@/utils/env.js";
+import { userFacingErrorMessage } from "@/utils/index.js";
 export default {
   data() {
     return {
@@ -126,7 +127,7 @@ export default {
         uni.navigateBack({ delta: 1 });
       } catch (error) {
         this.restoringCart = false;
-        uni.showToast({ title: error.msg || this.$t("order.operationFailed"), icon: "none" });
+        uni.showToast({ title: userFacingErrorMessage(error && (error.msg || error.message), this.$store.state.locale), icon: "none" });
       }
     },
     goToPendingPayment() {
@@ -178,7 +179,7 @@ export default {
             }, 800);
           } catch (error) {
             uni.showToast({
-              title: error.msg || this.$t("payment.failed"),
+              title: userFacingErrorMessage(error && error.msg, this.$store.state.locale, "payment.failed"),
               icon: "none",
             });
           }
@@ -214,7 +215,7 @@ export default {
             }
           } else {
             uni.showToast({
-              title: res.msg,
+              title: userFacingErrorMessage(res.msg, this.$store.state.locale, "payment.failed"),
               duration: 1000,
               icon: "none",
             });

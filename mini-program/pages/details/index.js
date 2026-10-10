@@ -9,7 +9,7 @@ import {
 } from '../api/api.js'
 import { mapState, mapMutations } from 'vuex'
 import { baseUrl } from '../../utils/env'
-import { call } from '@/utils/index.js'
+import { call, userFacingErrorMessage } from '@/utils/index.js'
 import Status from './components/status.vue'//订单状态
 import OrderDetail from "./components/orderDetail.vue" //菜品详情
 import DeliveryInfo from "./components/deliveryInfo.vue" //配送信息
@@ -154,7 +154,7 @@ export default {
 					this.orderId = obj.id
 				}
 			}).catch(error => {
-				uni.showToast({ title: error.msg || this.$t('order.operationFailed'), icon: 'none' })
+				uni.showToast({ title: userFacingErrorMessage(error && error.msg, this.$store.state.locale), icon: 'none' })
 			})
 		},
 		// 取消订单

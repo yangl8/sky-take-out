@@ -16,7 +16,8 @@ import {
 	getLableVal,
 	dateFormat,
 	presentFormat,
-	getWeekDate
+	getWeekDate,
+	userFacingErrorMessage
 
 } from '../../utils/index.js'
 import Pikers from '@/components/uni-piker/index.vue'//餐具信息
@@ -339,12 +340,7 @@ export default {
 			})
 		},
 		orderErrorMessage(message) {
-			if (typeof message !== 'string') return this.$t('order.operationFailed')
-			if (message.includes('超出配送范围')) return this.$t('order.outOfRange')
-			if (message.includes('购物车') && (message.includes('空') || message.includes('不能下单'))) {
-				return this.$t('order.emptyCart')
-			}
-			return message
+			return userFacingErrorMessage(message, this.$store.state.locale)
 		},
 		// 拨打电话
 		call() {
