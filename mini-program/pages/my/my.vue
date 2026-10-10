@@ -64,6 +64,7 @@
         </picker-view>
       </view>
     </view>
+    <phone ref="phone" :phoneData="phoneData" @closePopup="closePhonePopup"></phone>
     </view>
   </view>
 </template>
@@ -77,6 +78,7 @@ import { supportedLocales } from "@/locales";
 import HeadInfo from "./components/headInfo.vue"; //头部
 import OrderInfo from "./components/orderInfo.vue"; //地址
 import OrderList from "./components/orderList.vue"; //最近订单
+import Phone from "@/components/uni-phone/index.vue";
 export default {
   data() {
     return {
@@ -84,6 +86,7 @@ export default {
       nickName: "",
       gender: "0",
       phoneNumber: "18500557668",
+      phoneData: "",
       recentOrdersList: [],
       sumOrder: {
         amount: 0,
@@ -106,6 +109,7 @@ export default {
     HeadInfo,
     OrderInfo,
     OrderList,
+    Phone,
   },
   computed: {
     languageNames() {
@@ -263,9 +267,14 @@ export default {
         confirmText: this.$t("common.modalCall"),
         cancelText: this.$t("common.modalCancel"),
         success: ({ confirm }) => {
-          if (confirm && phone) uni.makePhoneCall({ phoneNumber: String(phone) });
+          if (!confirm || !phone) return;
+          this.phoneData = String(phone);
+          this.$nextTick(() => this.$refs.phone.$refs.popup.open("bottom"));
         },
       });
+    },
+    closePhonePopup(type) {
+      this.$refs.phone.$refs.popup.close(type);
     },
     quitClick() {},
     // 去详情页面

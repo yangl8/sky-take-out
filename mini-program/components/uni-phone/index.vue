@@ -24,8 +24,19 @@ export default {
   methods: {
     // 电话号码拨打
     call() {
-      // 暂时关闭打电话
-      call(this.phoneData);
+      this.$refs.popup.close();
+      call(this.phoneData, {
+        fail: (error) => {
+          const message = String((error && error.errMsg) || "").toLowerCase();
+          if (message.includes("cancel")) return;
+          uni.showToast({ title: this.$t("popup.callFailed"), icon: "none" });
+        },
+        simulatedDialog: {
+          content: this.$t("popup.simulatedCall", { phone: this.phoneData }),
+          confirmText: this.$t("common.modalCall"),
+          cancelText: this.$t("common.modalCancel"),
+        },
+      });
     },
 	// 取消关闭弹层
     closePopup() {

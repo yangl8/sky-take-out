@@ -1,13 +1,12 @@
 // 拨打电话
-export const call = (val) => {
-	uni.makePhoneCall({
+export const call = (val, callbacks = {}) => {
+	const { simulatedDialog, ...phoneCallbacks } = callbacks
+	if (uni.getSystemInfoSync().platform === 'devtools' && simulatedDialog) {
+		return uni.showModal(simulatedDialog)
+	}
+	return uni.makePhoneCall({
 		phoneNumber: val,
-		success(e) {
-			// console(e)
-		},
-		fail(e) {
-			// console(e)
-		}
+		...phoneCallbacks,
 	})
 }
 // 分割电话号码

@@ -22,6 +22,7 @@ export default {
 			rocallTime: '',
 			textTip: '',
 			showConfirm: false,
+			showContactPrompt: false,
 			orderDetailsData: {},
 			timeout: false,
 			isOvertime: false,
@@ -171,6 +172,7 @@ export default {
 			} else {
 				this.phone = val.obj.shopTelephone || this.shopPhone() || (this.shopInfo() || {}).phone
 				this.showConfirm = false
+				this.showContactPrompt = true
 				this.$refs.commonPopup.open(val.type)
 				this.textTip = this.$t('popup.contactMerchantCancel', { phone: this.phone || '-' })
 			}
@@ -265,6 +267,7 @@ export default {
 		// 联系商家进行退款弹层
 		handleRefund(type) {
 			this.showConfirm = false
+			this.showContactPrompt = true
 			this.openPopuos(type)
 			this.textTip = this.$t('order.contactRefund')
 		},
@@ -275,7 +278,13 @@ export default {
 				uni.showToast({ title: this.$t('order.operationFailed'), icon: 'none' })
 				return
 			}
-			this.$refs.phone.open(type)
+			if (this.showContactPrompt) {
+				this.showContactPrompt = false
+				this.$refs.commonPopup.close()
+				setTimeout(() => this.$refs.phone.open(type), 300)
+			} else {
+				this.$refs.phone.open(type)
+			}
 		},
 		// 关闭弹层
 		closePopup(type) {
@@ -283,6 +292,7 @@ export default {
 		},
 		// closePopupInfo
 		closePopupInfo(type) {
+			this.showContactPrompt = false
 			this.$refs.commonPopup.close(type)
 			this.getBaseData(this.orderId)
 		},
@@ -299,7 +309,19 @@ export default {
 			})
 		},
 		call() {
-			call(this.phone)
+			this.closePopup()
+			call(this.phone, {
+				fail: (error) => {
+					const message = String((error && error.errMsg) || '').toLowerCase()
+					if (message.includes('cancel')) return
+					uni.showToast({ title: this.$t('popup.callFailed'), icon: 'none' })
+				},
+				simulatedDialog: {
+					content: this.$t('popup.simulatedCall', { phone: this.phone }),
+					confirmText: this.$t('common.modalCall'),
+					cancelText: this.$t('common.modalCancel'),
+				}
+			})
 		},
 	}
 }

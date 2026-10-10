@@ -86,6 +86,7 @@
         </view>
       </view>
     </uni-popup>
+    <phone ref="phone" :phoneData="phoneData" @closePopup="closePhonePopup"></phone>
   </view>
 </template>
 
@@ -99,10 +100,12 @@ import {
 } from "../api/api.js";
 import { mapMutations } from "vuex";
 import Empty from "@/components/empty/empty";
+import Phone from "@/components/uni-phone/index.vue";
 import { statusWord, getOvertime } from "@/utils/index.js";
 export default {
   components: {
     Empty,
+    Phone,
   },
   data() {
     return {
@@ -140,6 +143,7 @@ export default {
       textTip: "",
       showConfirm: false,
       isEmpty: false,
+      phoneData: "",
     };
   },
   computed: {
@@ -374,9 +378,14 @@ export default {
         confirmText: this.$t("common.modalCall"),
         cancelText: this.$t("common.modalCancel"),
         success: ({ confirm }) => {
-          if (confirm && phone) uni.makePhoneCall({ phoneNumber: String(phone) });
+          if (!confirm || !phone) return;
+          this.phoneData = String(phone);
+          this.$nextTick(() => this.$refs.phone.$refs.popup.open("bottom"));
         },
       });
+    },
+    closePhonePopup(type) {
+      this.$refs.phone.$refs.popup.close(type);
     },
     // 关闭弹层
     closePopup(type) {

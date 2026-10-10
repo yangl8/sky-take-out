@@ -11,5 +11,5 @@ export default {
   payment: { title: "支付订单", timedOut: "订单已超时", remaining: "支付剩余时间", confirm: "确认支付", confirmTitle: "确认付款", confirmMessage: "确定要支付这笔订单吗？", wechat: "微信支付", failed: "支付失败", successful: "支付成功" },
   success: { title: "下单成功", arrival: "预计{time}送达", preparing: "后厨已开始备餐，请耐心等待", home: "返回首页", order: "查看订单" },
   network: { title: "无网络", unavailable: "网络无法连接", refresh: "点击刷新" },
-  popup: { contactMerchant: "请联系商家进行取消！", contactMerchantCancel: "订单已由商家处理，请联系商家取消或退款。商家电话：{phone}", reminderSent: "您的催单信息已发出！", orderCancelled: "您的订单已取消！", cancelOrderTitle: "取消订单", cancelOrderConfirm: "确定要取消这个订单吗？" },
+  popup: { contactMerchant: "请联系商家进行取消！", contactMerchantCancel: "订单已由商家处理，请联系商家取消或退款。商家电话：{phone}", simulatedCall: "拨打 {phone}？【仅为模拟】", callFailed: "无法拨打电话，请稍后重试", reminderSent: "您的催单信息已发出！", orderCancelled: "您的订单已取消！", cancelOrderTitle: "取消订单", cancelOrderConfirm: "确定要取消这个订单吗？" },
 };
