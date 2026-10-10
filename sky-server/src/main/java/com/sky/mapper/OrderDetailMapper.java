@@ -28,6 +28,14 @@ public interface OrderDetailMapper {
     List<OrderDetail> getByOrderId(Long orderId);
 
     /**
+     * 根据订单id集合批量查询订单明细
+     *
+     * @param orderIds 当前页订单id集合
+     * @return 按订单id及明细id排序的订单明细集合
+     */
+    List<OrderDetail> getByOrderIds(@Param("orderIds") List<Long> orderIds);
+
+    /**
      * 查询指定菜品的本月销量
      * @param ids 菜品id集合
      * @param begin 本月开始时间

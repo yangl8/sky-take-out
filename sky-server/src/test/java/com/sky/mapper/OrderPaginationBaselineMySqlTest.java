@@ -30,16 +30,22 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -108,6 +114,7 @@ class OrderPaginationBaselineMySqlTest {
         List<PageMeasurement> measurements = interleaved
                 ? measureInterleaved(sessionFactory, sqlCounter, warmupRounds, measuredRounds)
                 : measureSequential(sessionFactory, sqlCounter, warmupRounds, measuredRounds);
+        verifySecondPageBatchQuery(sessionFactory, sqlCounter);
         String explainPlan = explainQueryPlans(jdbcUrl, username, password);
         String report = buildReport(databaseVersion, orderCount, detailCount, explainPlan, measurements,
                 warmupRounds, measuredRounds, interleaved);
@@ -120,6 +127,78 @@ class OrderPaginationBaselineMySqlTest {
         Files.write(outputPath, report.getBytes(StandardCharsets.UTF_8));
         System.out.println("订单分页优化前基准已写入 " + outputPath.toAbsolutePath());
         System.out.println(report);
+    }
+
+    /**
+     * 使用真实 PageHelper 验证第2页批量明细查询只读取当前页订单
+     *
+     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
+     * @param sqlCounter 记录 MyBatis 实际 Mapper 查询的计数器
+     */
+    private void verifySecondPageBatchQuery(SqlSessionFactory sessionFactory, SqlCounter sqlCounter) {
+        Set<Long> firstPageOrderIds = new HashSet<>();
+        LocalDateTime firstPageLastOrderTime;
+        try (SqlSession session = sessionFactory.openSession()) {
+            OrdersPageQueryDTO query = new OrdersPageQueryDTO();
+            query.setUserId(USER_ID);
+
+            sqlCounter.reset();
+            PageHelper.startPage(1, 10);
+            Page<Orders> firstPage = session.getMapper(OrderMapper.class).pageQuery(query);
+            assertEquals(10, firstPage.size());
+            assertEquals(EXPECTED_ORDER_COUNT, firstPage.getTotal());
+            assertNull(PageHelper.getLocalPage(), "订单分页结束后 PageHelper 状态应已清理");
+            for (Orders order : firstPage) {
+                firstPageOrderIds.add(order.getId());
+            }
+            firstPageLastOrderTime = firstPage.get(firstPage.size() - 1).getOrderTime();
+            List<OrderDetail> firstPageDetails = session.getMapper(OrderDetailMapper.class)
+                    .getByOrderIds(new ArrayList<>(firstPageOrderIds));
+            assertEquals(30, firstPageDetails.size());
+            assertEquals(3, sqlCounter.totalSqlCount, "首页 SQL 应包含 COUNT、分页和批量明细查询");
+        }
+
+        try (SqlSession session = sessionFactory.openSession()) {
+            OrdersPageQueryDTO query = new OrdersPageQueryDTO();
+            query.setUserId(USER_ID);
+            sqlCounter.reset();
+            PageHelper.startPage(2, 10);
+            Page<Orders> secondPage = session.getMapper(OrderMapper.class).pageQuery(query);
+            assertEquals(10, secondPage.size());
+            assertEquals(EXPECTED_ORDER_COUNT, secondPage.getTotal());
+            assertNull(PageHelper.getLocalPage(), "第2页订单查询结束后 PageHelper 状态应已清理");
+            assertTrue(!secondPage.get(0).getOrderTime().isAfter(firstPageLastOrderTime),
+                    "第2页订单时间应排在首页之后");
+            for (int index = 1; index < secondPage.size(); index++) {
+                assertTrue(!secondPage.get(index).getOrderTime().isAfter(secondPage.get(index - 1).getOrderTime()),
+                        "第2页应保持下单时间降序");
+            }
+            List<Long> secondPageOrderIds = new ArrayList<>();
+            for (Orders order : secondPage) {
+                secondPageOrderIds.add(order.getId());
+            }
+            assertTrue(Collections.disjoint(firstPageOrderIds, secondPageOrderIds),
+                    "第2页不能包含首页订单");
+
+            List<OrderDetail> secondPageDetails = session.getMapper(OrderDetailMapper.class)
+                    .getByOrderIds(secondPageOrderIds);
+            assertEquals(30, secondPageDetails.size());
+            Map<Long, Integer> detailsByOrderId = new HashMap<>();
+            Set<Long> detailIds = new HashSet<>();
+            for (OrderDetail detail : secondPageDetails) {
+                assertTrue(secondPageOrderIds.contains(detail.getOrderId()), "批量查询不能返回其他页的明细");
+                assertTrue(detailIds.add(detail.getId()), "批量查询不能重复返回订单明细");
+                detailsByOrderId.put(detail.getOrderId(), detailsByOrderId.getOrDefault(detail.getOrderId(), 0) + 1);
+            }
+            assertEquals(30, detailIds.size());
+            for (Long orderId : secondPageOrderIds) {
+                assertEquals(3, detailsByOrderId.get(orderId), "第2页订单明细不能遗漏或重复");
+            }
+            assertEquals(3, sqlCounter.totalSqlCount, "第2页 SQL 应包含 COUNT、分页和批量明细查询");
+            assertEquals(1, sqlCounter.countQueryCount);
+            assertEquals(1, sqlCounter.orderPageQueryCount);
+            assertEquals(1, sqlCounter.detailQueryCount);
+        }
     }
 
     /**
@@ -234,7 +313,7 @@ class OrderPaginationBaselineMySqlTest {
             samplesMs.add(latencySample / 1_000_000.0);
         }
         int returnedOrders = pageSize;
-        return new PageMeasurement(pageSize, returnedOrders, pageSize + 2, pageSize,
+        return new PageMeasurement(pageSize, returnedOrders, 3, 1,
                 medianNanos / 1_000_000.0, p95Nanos / 1_000_000.0, samplesMs);
     }
 
@@ -255,22 +334,28 @@ class OrderPaginationBaselineMySqlTest {
             query.setUserId(USER_ID);
             PageHelper.startPage(1, pageSize);
             Page<Orders> page = session.getMapper(OrderMapper.class).pageQuery(query);
-            int returnedOrders = 0;
-            int detailQueries = 0;
+            List<Long> orderIds = new ArrayList<>();
             for (Orders order : page) {
-                List<OrderDetail> details = session.getMapper(OrderDetailMapper.class).getByOrderId(order.getId());
-                assertEquals(3, details.size());
-                returnedOrders++;
-                detailQueries++;
+                orderIds.add(order.getId());
             }
+            List<OrderDetail> details = session.getMapper(OrderDetailMapper.class).getByOrderIds(orderIds);
+            Map<Long, Integer> detailsByOrderId = new HashMap<>();
+            for (OrderDetail detail : details) {
+                detailsByOrderId.put(detail.getOrderId(), detailsByOrderId.getOrDefault(detail.getOrderId(), 0) + 1);
+            }
+            int returnedOrders = page.size();
             assertEquals(pageSize, returnedOrders);
             assertEquals(EXPECTED_ORDER_COUNT, page.getTotal());
-            assertEquals(1 + returnedOrders, sqlCounter.mapperQueryCount,
-                    "Mapper 层应执行一次订单分页 SQL 和每单一次明细 SQL");
+            assertEquals(2, sqlCounter.mapperQueryCount,
+                    "Mapper 层应执行一次订单分页 SQL 和一次批量明细 SQL");
             assertEquals(1, sqlCounter.countQueryCount, "总 SQL 数必须包含 PageHelper 实际执行的 COUNT");
             assertEquals(1, sqlCounter.orderPageQueryCount);
-            assertEquals(returnedOrders, sqlCounter.detailQueryCount);
-            assertEquals(2 + returnedOrders, sqlCounter.totalSqlCount);
+            assertEquals(1, sqlCounter.detailQueryCount);
+            assertEquals(3, sqlCounter.totalSqlCount);
+            assertEquals(pageSize * 3, details.size());
+            for (Long orderId : orderIds) {
+                assertEquals(3, detailsByOrderId.get(orderId));
+            }
             return new QueryResult(returnedOrders, sqlCounter.detailQueryCount, sqlCounter.totalSqlCount);
         }
     }
@@ -399,7 +484,7 @@ class OrderPaginationBaselineMySqlTest {
                 .append(", \"schedule\": \"").append(interleaved ? "cyclic-interleaved" : "sequential")
                 .append("\", \"orderRotation\": \"10,20,50 / 20,50,10 / 50,10,20\", ")
                 .append("\"sampleOrder\": \"").append(interleaved ? "chronological" : "sorted-by-latency")
-                .append("\", \"queryPath\": \"OrderMapper.pageQuery + PageHelper + OrderDetailMapper.getByOrderId per row\"},\n")
+                .append("\", \"queryPath\": \"OrderMapper.pageQuery + PageHelper + OrderDetailMapper.getByOrderIds for current page\"},\n")
                 .append("  \"pages\": [\n");
         for (int index = 0; index < measurements.size(); index++) {
             PageMeasurement measurement = measurements.get(index);
@@ -462,7 +547,7 @@ class OrderPaginationBaselineMySqlTest {
                 totalSqlCount++;
                 if (sql.startsWith("select count(")) {
                     countQueryCount++;
-                } else if (sql.contains("from order_detail where order_id")) {
+                } else if (sql.contains("from order_detail") && sql.contains("where order_id")) {
                     detailQueryCount++;
                 } else if (sql.contains("from orders")) {
                     orderPageQueryCount++;

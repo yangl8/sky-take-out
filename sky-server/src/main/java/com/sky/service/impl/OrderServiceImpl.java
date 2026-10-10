@@ -446,10 +446,11 @@ public class OrderServiceImpl implements OrderService{
     /**
      * 用户端订单分页查询
      *
-     * @param pageNum
-     * @param pageSize
-     * @param status
-     * @return
+     * @param pageNum 当前页码
+     * @param pageSize 每页订单数
+     * @param status 订单状态筛选条件
+     * @param payStatus 支付状态筛选条件
+     * @return 包含分页总数和当前页订单的查询结果
      */
     public PageResult pageQuery4User(int pageNum, int pageSize, Integer status, Integer payStatus) {
         // 设置分页
@@ -463,25 +464,30 @@ public class OrderServiceImpl implements OrderService{
         // 分页条件查询
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
 
-        List<OrderVO> list = new ArrayList();
-
-        // 查询出订单明细，并封装入OrderVO进行响应
-        if (page != null && page.getTotal() > 0) {
+        List<OrderVO> list = new ArrayList<>();
+        long total = page == null ? 0 : page.getTotal();
+        if (page != null && !page.isEmpty()) {
+            List<Long> orderIds = new ArrayList<>();
             for (Orders orders : page) {
-                Long orderId = orders.getId();// 订单id
+                orderIds.add(orders.getId());
+            }
+            List<OrderDetail> details = orderDetailMapper.getByOrderIds(orderIds);
+            Map<Long, List<OrderDetail>> detailsByOrderId = new HashMap<>();
+            for (OrderDetail detail : details) {
+                detailsByOrderId.computeIfAbsent(detail.getOrderId(), key -> new ArrayList<>()).add(detail);
+            }
 
-                // 查询订单明细
-                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
-
+            for (Orders orders : page) {
                 OrderVO orderVO = new OrderVO();
                 BeanUtils.copyProperties(orders, orderVO);
-                orderVO.setOrderDetailList(orderDetails);
+                List<OrderDetail> orderDetails = detailsByOrderId.get(orders.getId());
+                orderVO.setOrderDetailList(orderDetails == null
+                        ? new ArrayList<>() : new ArrayList<>(orderDetails));
                 orderVO.setDeliveryFee(deliveryFee);
-
                 list.add(orderVO);
             }
         }
-        return new PageResult(page.getTotal(), list);
+        return new PageResult(total, list);
     }
 
     /**
