@@ -23,6 +23,8 @@
 </template>
 <script>
 import { mapState } from "vuex";
+import { getOrderDetail } from "@/pages/api/api.js";
+import { formatDeliveryDateTime } from "@/utils/scheduledDeliveryTime.js";
 export default {
   data() {
     return {
@@ -35,16 +37,26 @@ export default {
       return this.shopInfo();
     },
   },
-  onLoad(options) {
-    // 获取一小时以后的时间
-    this.getHarfAnOur();
+  async onLoad(options) {
     this.orderId = options.orderId;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      try {
+        const result = await getOrderDetail(this.orderId);
+        if (result && result.code === 1 && result.data && Number(result.data.payStatus) === 1) {
+          this.arrivalTime = formatDeliveryDateTime(result.data.estimatedDeliveryTime);
+          return;
+        }
+      } catch (error) {
+        // 支付已成功；短暂重试，等待服务端支付记录完成。
+      }
+      if (attempt < 9) await new Promise(resolve => setTimeout(resolve, 500));
+    }
   },
   onShow() {
     uni.setNavigationBarTitle({ title: this.$t("payment.successful") });
   },
   methods: {
-    ...mapState(["shopInfo", "arrivals"]),
+    ...mapState(["shopInfo"]),
     // 回首页
     goIndex() {
       uni.reLaunch({
@@ -56,10 +68,6 @@ export default {
       uni.redirectTo({
         url: "/pages/details/index?orderId=" + this.orderId + "&fromSuccess=1&sex=" + this.$store.state.gender,
       });
-    },
-    // 获取一小时以后的时间
-    getHarfAnOur() {
-      this.arrivalTime = this.arrivals();
     },
   },
 };

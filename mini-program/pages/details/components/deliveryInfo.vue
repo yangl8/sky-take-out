@@ -4,11 +4,7 @@
     <view class="orderBaseInfo">
       <view class="info-row">
         <view class="info-label">{{ $t("details.expectedTime") }}</view>
-        <view class="info-value single-line">{{
-          orderDetailsData.deliveryStatus === 1
-          ? $t("order.immediateDelivery")
-          : orderDetailsData.estimatedDeliveryTime
-        }}</view>
+        <view class="info-value single-line">{{ expectedDeliveryTime }}</view>
       </view>
       <view class="info-row">
         <view class="info-label">{{ $t("details.deliveryAddress") }}</view>
@@ -24,6 +20,7 @@
   </view>
 </template>
 <script>
+import { formatDeliveryDateTime } from "@/utils/scheduledDeliveryTime.js";
 export default {
   // 获取父级传的数据
   props: {
@@ -34,6 +31,14 @@ export default {
     },
   },
   computed: {
+    expectedDeliveryTime() {
+      const order = this.orderDetailsData || {};
+      if (Number(order.deliveryStatus) === 1 && Number(order.payStatus) !== 1) {
+        return this.$t("order.immediateDelivery");
+      }
+      return formatDeliveryDateTime(order.estimatedDeliveryTime) ||
+        (Number(order.deliveryStatus) === 1 ? this.$t("order.immediateDelivery") : order.estimatedDeliveryTime || "");
+    },
     // 处理姓名 如x先生
     cryptoName() {
       if (!this.orderDetailsData.consignee) return "";

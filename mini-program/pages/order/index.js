@@ -15,9 +15,6 @@ import {
 } from '../../utils/env'
 import {
 	getLableVal,
-	dateFormat,
-	presentFormat,
-	getWeekDate,
 	userFacingErrorMessage
 
 } from '../../utils/index.js'
@@ -25,9 +22,16 @@ import Pikers from '@/components/uni-piker/index.vue'//餐具信息
 import AddressPop from "./components/address.vue" //地址
 import DishDetail from "./components/dishDetail.vue" //菜品详情
 import DishInfo from "./components/dishInfo.vue" //菜品信息
-import dayjs from "@/utils/lib/dayjs.min.js";
 import getCheckoutAddressState from '@/utils/checkoutAddress.js'
 import getImmediateDeliveryStatusNotice from '@/utils/shopStatusDecision.js'
+import {
+	formatBeijingDateTime,
+	formatBeijingTime,
+	getBeijingDateKey,
+	getBeijingWeekday,
+	getScheduledDeliverySlots,
+	normalizeOrderDateTime
+} from '@/utils/scheduledDeliveryTime.js'
 export default {
 	data() {
 		return {
@@ -61,24 +65,21 @@ export default {
 			scrollinto: 'tab0',
 			scrollH: 0,
 			popleft: ['今天', '明天'],// 时间选中的左侧数据（今天、明天）
+			scheduleNeedsReselect: false,
+			scheduleTimer: null,
+			scheduleInitialized: false,
+			beijingDateKey: '',
 			visible: true,
 			baseData: [
 				'无需餐具', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'
 			],
 			activeRadio: '无需餐具', //存的是选中的value值
 			radioGroup: ['依据餐量提供', '无需餐具'],
-			popright: ['立即派送', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00',
-				'13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
-				'19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00'
-			],
 			newDateData: [],// 时间段
 			// styleType: 'button',
 			textTip: '',
 			showConfirm: false,
 			phoneData: '15200000001',
-			toDate: null,
-			tomorrowStart: null,
-			newDate: null,
 			selectValue: 0,
 			selectDateValue: 0,
 			timeout: false,
@@ -123,18 +124,7 @@ export default {
 		this.tablewareData = this.$t('order.noTableware')
 		this.activeRadio = this.$t('order.noTableware')
 		this.radioGroup = [this.$t('order.provideByMeal'), this.$t('order.noTableware')]
-		this.popright[0] = this.$t('order.immediateDelivery')
-		let time = new Date()
-		this.toDate = new Date(time.toLocaleDateString()).getTime()
-		this.tomorrowStart = this.toDate + 3600 * 24 * 1000
-		this.newDate = time.getHours() * 3600 + time.getMinutes() * 60
-
-		const weekDay = [this.toDate, this.tomorrowStart]
-
-		weekDay.forEach((date) => {
-			this.weeks.push(getWeekDate(date, this.$store.state.locale))
-
-		})
+		this.refreshBeijingDateLabels()
 
 		this.getAddressList()
 	},
@@ -165,21 +155,25 @@ export default {
 		}
 
 		await this.getEstimatedDeliveryTime();
-		this.getDateDate()
+		this.refreshScheduledTimeOptions()
 		this.setArrivalTime(this.arrivalTime)
 		this.setGender(this.gender)
 	},
 	onShow() {
 		this.shopStatusPageVisible = true
 		this.refreshShopStatus()
+		this.refreshScheduledTimeOptions()
+		this.startScheduledTimeRefresh()
 	},
 	onHide() {
 		this.shopStatusPageVisible = false
 		this.shopStatusRequestSequence += 1
+		this.stopScheduledTimeRefresh()
 	},
 	onUnload() {
 		this.shopStatusPageVisible = false
 		this.shopStatusRequestSequence += 1
+		this.stopScheduledTimeRefresh()
 	},
 	onReady() {
 		uni.getSystemInfo({
@@ -222,33 +216,59 @@ export default {
 				const result = await getEstimatedDeliveryTime({ shopId: this.shopInfo().shopId, customerAddress: this.address })
 				this.orderTime = result && result.code === 1 && result.data
 					? result.data
-					: dayjs().add(30, 'minute').format('YYYY-MM-DD HH:mm:ss')
+					: formatBeijingDateTime(Date.now() + 30 * 60 * 1000, formatBeijingTime(Date.now() + 30 * 60 * 1000))
 			} catch (error) {
-				// 接口暂时不可用时，仍然提供当天可选的送达时间
-				this.orderTime = dayjs().add(30, 'minute').format('YYYY-MM-DD HH:mm:ss')
+				// 接口暂时不可用时，仍然展示按北京时间计算的立即配送预计时间
+				const estimated = Date.now() + 30 * 60 * 1000
+				this.orderTime = formatBeijingDateTime(estimated, formatBeijingTime(estimated))
 			}
-			this.arrivalTime = dayjs(this.orderTime).format('HH:mm')
+			this.arrivalTime = this.getTimePart(this.orderTime)
 		},
-		// 根据系统派送时间 格式化时间  [16:00,16:30]
-		getDateDate() {
-			let currentDayjs = dayjs(this.orderTime);
-			const list = [this.$t('order.immediateDelivery')]
-			if (!(currentDayjs.hour() >= 22 && currentDayjs.minute() > 30)) {
-				if (currentDayjs.minute() > 30) {
-					currentDayjs = currentDayjs.add(1, 'hour').set('minute', 0)
-				} else {
-					currentDayjs = currentDayjs.set('minute', 30)
-				}
-				while (true) {
-					if (currentDayjs.hour() === 23 && currentDayjs.minute() === 30) {
-						break
-					}
-					const start = `${currentDayjs.format("HH")}:${currentDayjs.format('mm')}`;
-					list.push(`${start}`)
-					currentDayjs = currentDayjs.add(30, 'minute')
-				}
+		getTimePart(value) {
+			const match = typeof value === 'string' && /(?:T|\s)(\d{2}:\d{2})/.exec(value)
+			return match ? match[1] : formatBeijingTime(Date.now() + 30 * 60 * 1000)
+		},
+		refreshBeijingDateLabels() {
+			const weekdays = ['common.sunday', 'common.monday', 'common.tuesday', 'common.wednesday', 'common.thursday', 'common.friday', 'common.saturday']
+			this.popleft = [this.$t('order.today'), this.$t('order.tomorrow')]
+			this.weeks = [0, 1].map(offset => this.$t(weekdays[getBeijingWeekday(Date.now(), offset)]))
+		},
+		refreshScheduledTimeOptions() {
+			const now = Date.now()
+			const dateKey = getBeijingDateKey(now)
+			if (this.beijingDateKey && this.beijingDateKey !== dateKey) {
+				if (!this.isImmediateDelivery) this.scheduleNeedsReselect = true
+				this.isTomorrow = false
+				this.tabIndex = 0
+				this.arrivalTime = this.isImmediateDelivery ? this.getTimePart(this.orderTime) : ''
+				if (!this.isImmediateDelivery) this.setArrivalTime('')
 			}
-			this.newDateData = list
+			this.beijingDateKey = dateKey
+			this.refreshBeijingDateLabels()
+			const dayOffset = this.isTomorrow ? 1 : 0
+			const slots = getScheduledDeliverySlots(now, dayOffset)
+			this.newDateData = dayOffset === 0 ? [this.$t('order.immediateDelivery'), ...slots] : slots
+			if (!this.isImmediateDelivery && this.arrivalTime && !slots.includes(this.arrivalTime)) {
+				this.arrivalTime = ''
+				this.selectValue = -1
+				this.scheduleNeedsReselect = true
+				this.setArrivalTime('')
+			}
+			if (!this.isImmediateDelivery && this.arrivalTime && slots.includes(this.arrivalTime)) {
+				this.selectValue = slots.indexOf(this.arrivalTime) + (dayOffset === 0 ? 1 : 0)
+			}
+			if (!this.scheduleInitialized) {
+				this.scheduleInitialized = true
+				this.selectValue = dayOffset === 0 ? 0 : -1
+			}
+		},
+		startScheduledTimeRefresh() {
+			this.stopScheduledTimeRefresh()
+			this.scheduleTimer = setInterval(() => this.refreshScheduledTimeOptions(), 30000)
+		},
+		stopScheduledTimeRefresh() {
+			if (this.scheduleTimer) clearInterval(this.scheduleTimer)
+			this.scheduleTimer = null
 		},
 		// 获取地址
 		getAddressList() {
@@ -324,6 +344,10 @@ export default {
 				})
 				return false
 			}
+			if (!this.validateScheduledTimeBeforeSubmit()) {
+				this.isHandlePy = false
+				return false
+			}
 			const currentShopStatus = await this.refreshShopStatus()
 			if (this.isImmediateDelivery) {
 				const statusNoticeKey = getImmediateDeliveryStatusNotice(currentShopStatus)
@@ -333,13 +357,17 @@ export default {
 					return false
 				}
 			}
+			if (!this.validateScheduledTimeBeforeSubmit()) {
+				this.isHandlePy = false
+				return false
+			}
 			const params = {
 				payMethod: 1,
 				addressBookId: this.addressBookId,
 				remark: this.remark,
 				estimatedDeliveryTime: this.isImmediateDelivery
-					? dayjs(this.orderTime || presentFormat()).format('YYYY-MM-DD HH:mm:ss')
-					: dateFormat(this.isTomorrow, this.arrivalTime),
+					? this.normalizeServerDateTime(this.orderTime)
+					: formatBeijingDateTime(Date.now(), this.arrivalTime, this.isTomorrow ? 1 : 0),
 				deliveryStatus: this.isImmediateDelivery ? 1 : 0,
 				tablewareStatus: this.status,
 				tablewareNumber: this.num,
@@ -363,6 +391,15 @@ export default {
 			} catch (error) {
 				await this.handleOrderSubmissionError(error && (error.msg || (error.data && error.data.msg)))
 			}
+		},
+		validateScheduledTimeBeforeSubmit() {
+			this.refreshScheduledTimeOptions()
+			if (this.isImmediateDelivery || (!this.scheduleNeedsReselect && this.arrivalTime)) return true
+			uni.showToast({ title: this.$t('order.scheduledTimeExpired'), icon: 'none' })
+			return false
+		},
+		normalizeServerDateTime(value) {
+			return normalizeOrderDateTime(value, Date.now() + 30 * 60 * 1000)
 		},
 		async handleOrderSubmissionError(message) {
 			const currentShopStatus = await this.refreshShopStatus()
@@ -470,19 +507,16 @@ export default {
 		},
 		// 星期几选择
 		dateChange(index) {
-			if (index === 1) {
-				this.newDateData = this.popright.slice(1)
-				this.isTomorrow = true
-			} else {
-				this.isTomorrow = false
-				this.newDateData = []
-				this.getDateDate()
-			}
-			// 点击的还是当前数据的时候直接return
-			if (this.tabIndex == index) {
-				return
-			}
+			this.isTomorrow = index === 1
 			this.tabIndex = index
+			if (this.isTomorrow && this.isImmediateDelivery) {
+				this.isImmediateDelivery = false
+				this.arrivalTime = ''
+				this.selectValue = -1
+				this.scheduleNeedsReselect = true
+				this.setArrivalTime('')
+			}
+			this.refreshScheduledTimeOptions()
 		},
 		// 选中时间段
 		timeClick: function (val) {
@@ -493,11 +527,13 @@ export default {
 		setTime(val) {
 			this.deliveryStatusNoticeKey = ''
 			if (val === this.$t('order.immediateDelivery')) {
-				this.arrivalTime = dayjs(this.orderTime).format('HH:mm')
+				this.arrivalTime = this.getTimePart(this.orderTime)
 				this.isImmediateDelivery = true
+				this.scheduleNeedsReselect = false
 			} else {
 				this.arrivalTime = val
 				this.isImmediateDelivery = false
+				this.scheduleNeedsReselect = false
 			}
 
 			this.setArrivalTime(this.arrivalTime)
