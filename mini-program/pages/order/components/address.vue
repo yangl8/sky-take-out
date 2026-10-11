@@ -10,7 +10,7 @@
       <!-- end -->
       <!-- 有地址 -->
       <view v-else class="address_name">
-        <view class="address">
+        <view class="address" :class="{ 'has-tag': !!tagLabel }">
           <text v-if="tagLabel" class="tag" :class="'tag' + tagLabel">{{ addressLabel }}</text>
           <view class="word">{{ $displayText(address, 'address') }}</view>
         </view>

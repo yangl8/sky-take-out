@@ -25,6 +25,7 @@ import AddressPop from "./components/address.vue" //地址
 import DishDetail from "./components/dishDetail.vue" //菜品详情
 import DishInfo from "./components/dishInfo.vue" //菜品信息
 import dayjs from "@/utils/lib/dayjs.min.js";
+import getCheckoutAddressState from '@/utils/checkoutAddress.js'
 export default {
 	data() {
 		return {
@@ -151,15 +152,8 @@ export default {
 		this.init()
 		// 存在options说明换地址了
 		if (this.addressData() && this.addressData().detail) {
-			this.addressBookId = ''
 			const newAddress = this.addressData()
-			this.address = newAddress.provinceName + newAddress.cityName + newAddress.districtName + newAddress.detail
-			this.phoneNumber = newAddress.phone
-			this.nickName = newAddress.consignee
-			this.gender = newAddress.sex
-
-			this.addressBookId = newAddress.id
-			this.addressLabel = getLableVal(newAddress.label, this.$store.state.locale)
+			Object.assign(this, getCheckoutAddressState(newAddress, this.$store.state.locale, getLableVal))
 		} else {
 			// 默认地址查询
 			await this.getAddressBookDefault()
@@ -236,15 +230,7 @@ export default {
 		getAddressBookDefault() {
 			return getAddressBookDefault().then(res => {
 				if (res.code === 1) {
-					this.addressBookId = ''
-					this.address = res.data.provinceName + res.data.cityName + res.data.districtName + res.data
-						.detail
-					this.phoneNumber = res.data.phone
-					this.nickName = res.data.consignee
-					this.gender = res.data.sex
-					this.addressBookId = res.data.id
-					this.addressLabel = getLableVal(res.data.label, this.$store.state.locale)
-					this.tagLabel = res.data.label
+					Object.assign(this, getCheckoutAddressState(res.data, this.$store.state.locale, getLableVal))
 				}
 			})
 		},

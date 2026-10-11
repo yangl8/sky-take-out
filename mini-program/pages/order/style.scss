@@ -92,7 +92,10 @@ $desc-font-color: #818693;
           line-height: 40rpx;
           // margin-top: 22rpx;
           position: relative;
-          padding-left: 76rpx;
+          padding-left: 0;
+          &.has-tag {
+            padding-left: 76rpx;
+          }
           .tag {
             position: absolute;
             left: 0;
@@ -106,7 +109,9 @@ $desc-font-color: #818693;
             font-weight: 550;
             color: #20232a;
             white-space: normal;
-            word-break: break-all;
+            word-break: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
           }
         }
         .name {

@@ -99,6 +99,7 @@ import { queryAddressBookList, putAddressBookDefault } from "../api/api.js";
 import { mapState, mapMutations } from "vuex";
 import uniNavBar from "@/components/uni-nav-bar/uni-nav-bar.vue";
 import Empty from "@/components/empty/empty";
+import getCheckoutAddressState from "@/utils/checkoutAddress.js";
 export default {
   components: {
     uniNavBar,
@@ -121,14 +122,17 @@ export default {
     }
   },
   computed: {
-    ...mapState(["addressBackUrl"]),
+    ...mapState(["addressBackUrl", "addressData"]),
     statusBarHeight() {
       return uni.getSystemInfoSync().statusBarHeight + "px";
     },
   },
   methods: {
     ...mapMutations(["setAddress"]),
-    goBack() {
+    async goBack() {
+      if (this.addressBackUrl === "/pages/order/index") {
+        await this.getAddressList().catch(() => {});
+      }
       uni.redirectTo({
         url: this.addressBackUrl,
       });
@@ -148,13 +152,18 @@ export default {
     getAddressList() {
       this.testValue = false;
       uni.showLoading({ title: this.$t("common.loading"), mask: true });
-      queryAddressBookList().then((res) => {
+      return queryAddressBookList().then((res) => {
         if (res.code === 1) {
           setTimeout(function () {
             uni.hideLoading();
           }, 100);
           this.testValue = true;
           this.addressList = res.data;
+          if (this.addressBackUrl === "/pages/order/index") {
+            this.setAddress(
+              getCheckoutAddressState.refreshSelectedAddress(this.addressData, this.addressList)
+            );
+          }
           this.isEmpty = true;
           this.addressList.map((val, index) => {
             if (val.isDefault === 1) {
@@ -189,10 +198,10 @@ export default {
       if (this.addressBackUrl !== "/pages/order/index") {
         return false;
       }
+      this.setAddress(item);
       uni.redirectTo({
         url: "/pages/order/index?address=" + JSON.stringify(item),
       });
-      this.setAddress(item);
     },
     getRadio(index, item) {
       // // 提供默认接口
