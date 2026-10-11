@@ -28,6 +28,7 @@ import {
 import { mapState, mapMutations } from "vuex"
 import { baseUrl } from "../../utils/env"
 import prepareMultiFlavorPopup from "../../utils/multiFlavorPopup.js"
+import aggregateMenuCartQuantities from "../../utils/menuCartQuantities.js"
 export default {
 	data() {
 		return {
@@ -348,7 +349,9 @@ export default {
 					})
 					.catch((err) => { })
 			}
-			this.typeIndex = index
+			if (typeof index === "number") {
+				this.typeIndex = index
+			}
 			this.setOrderNum()
 		},
 		// 获取首页店铺信息
@@ -385,6 +388,7 @@ export default {
 					if (res.code === 1) {
 						this.initdishListMut(res.data)
 						this.computOrderInfo()
+						this.setOrderNum()
 					}
 				})
 				.catch((err) => { })
@@ -592,36 +596,12 @@ export default {
 		},
 		// 处理点餐数量 - 更新菜品已点餐数量
 		setOrderNum() {
-			let ODate = this.dishListData
-			let CData = this.orderListDataes
-			ODate &&
-				ODate.map((obj, index) => {
-					obj.dishNumber = 0
-					// 去除空的规格
-					if (obj.flavors) {
-						obj.flavors.forEach((value, i) => {
-							if (value.name === "") {
-								obj.flavors.splice(i, 1)
-							}
-						})
-					}
-
-					if (CData.length > 0) {
-						CData &&
-							CData.forEach((tg, ind) => {
-								if (obj.id === tg.dishId) {
-									obj.dishNumber = tg.number
-								}
-								if (obj.id === tg.setmealId) {
-									obj.dishNumber = tg.number
-								}
-							})
-					}
-				})
+			const menuItems = aggregateMenuCartQuantities(this.dishListData || [], this.orderListDataes)
+			this.dishListData = menuItems
 			if (this.dishListItems.length == 0) {
-				this.dishListItems = ODate
+				this.dishListItems = menuItems
 			} else {
-				this.dishListItems.splice(0, this.dishListItems.length, ...ODate)
+				this.dishListItems.splice(0, this.dishListItems.length, ...menuItems)
 			}
 		},
 		// 拨打电话弹层

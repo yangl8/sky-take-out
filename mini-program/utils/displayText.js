@@ -13,9 +13,9 @@ const menuNames = {
 };
 
 const categories = {
-  "蜀味牛蛙": ["Sichuan-style frog", "Grenouille à la sichuanaise"], "蜀味烤鱼": ["Sichuan-style grilled fish", "Poisson grillé à la sichuanaise"], "特色蒸菜": ["Steamed specialties", "Spécialités à la vapeur"],
-  "新鲜时蔬": ["Seasonal vegetables", "Légumes de saison"], "水煮鱼": ["Sichuan poached fish", "Poisson poché à la sichuanaise"], "传统主食": ["Traditional staples", "Féculents traditionnels"],
-  "酒水饮料": ["Drinks", "Boissons"], "汤类": ["Soups", "Soupes"], "人气套餐": ["Popular combos", "Menus populaires"], "商务套餐": ["Business combos", "Menus affaires"]
+  "蜀味牛蛙": ["Sichuan-style frog", "Grenouilles sichuanaises"], "蜀味烤鱼": ["Sichuan-style grilled fish", "Poisson grillé sichuanais"], "特色蒸菜": ["Steamed specialties", "Plats vapeur"],
+  "新鲜时蔬": ["Seasonal vegetables", "Légumes"], "水煮鱼": ["Sichuan poached fish", "Poisson poché sichuanais"], "传统主食": ["Traditional staples", "Féculents"],
+  "酒水饮料": ["Drinks", "Boissons"], "汤类": ["Soups", "Soupes"], "人气套餐": ["Popular combos", "Menus populaires"], "商务套餐": ["Business combos", "Menus d’affaires"]
 };
 
 const descriptions = {

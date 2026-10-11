@@ -5,7 +5,7 @@
 			<view class="title">{{ $displayText(item.food_name, 'name') }}</view>
 			<view class="foodNum">{{ $t('home.monthlySales', { count: item.num }) }}</view>
 			<view class="money">￥{{item.food_price}}</view>
-			<view class="search">{{ $t('home.selectOptions') }}</view>
+			<view class="search">{{ $t('home.selectOptionsShort') }}</view>
 		</view>
 	</view>
 </template>

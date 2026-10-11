@@ -225,13 +225,13 @@ $desc-font-color: #818693;
     display: flex;
     width: 100%;
     height: calc(100vh - 260rpx);
-    margin-top: 135rpx;
+    margin-top: 150rpx;
     .type_list {
       display: flex;
       overflow: hidden;
       background-color: #f3f4f7;
-      flex: 0 0 190rpx;
-      width: 190rpx;
+      flex: 0 0 176rpx;
+      width: 176rpx;
       padding-top: 160rpx;
       box-sizing: border-box;
       padding-bottom: 60rpx;
@@ -243,7 +243,7 @@ $desc-font-color: #818693;
         width: 100%;
         line-height: 36rpx;
         text-align: left;
-        padding: 8rpx 12rpx;
+        padding: 8rpx 8rpx;
         font-family: PingFangSC, PingFangSC-Regular;
         font-weight: 400;
         color: #666666;
@@ -255,11 +255,10 @@ $desc-font-color: #818693;
         .item {
           width: 100%;
           line-height: 36rpx;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+          max-height: 72rpx;
           overflow: hidden;
-          word-break: break-word;
+          word-break: normal;
+          white-space: normal;
         }
         .allLine {
           padding: 0;
@@ -303,7 +302,6 @@ $desc-font-color: #818693;
         display: flex;
         padding-top: 20rpx;
         padding-bottom: 24rpx;
-        min-height: 230rpx;
         box-sizing: border-box;
         .dish_img {
           width: 172rpx;
@@ -318,37 +316,63 @@ $desc-font-color: #818693;
         .dish_info {
           position: relative;
           flex: 1;
-          min-height: 206rpx;
-          padding-bottom: 72rpx;
+          display: flex;
+          flex-wrap: wrap;
+          align-content: flex-start;
           box-sizing: border-box;
           .dish_name {
             font-size: 32rpx;
+            line-height: 40rpx;
+            width: 100%;
+            flex: 0 0 100%;
+            margin-bottom: 6rpx;
             font-family: PingFangSC, PingFangSC-Semibold;
             font-weight: 600;
             color: #333333;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
-            width: calc(100vw - 452rpx);
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
           }
           .dish_label,
           .dish_num {
             font-size: 22rpx;
             line-height: 40rpx;
+            max-height: 80rpx;
+            width: 100%;
+            flex: 0 0 100%;
             font-family: PingFangSC, PingFangSC-Regular;
             font-weight: 400;
             color: #666666;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+          }
+          .dish_sales {
+            -webkit-line-clamp: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            width: calc(100vw - 452rpx);
           }
           .dish_price {
-            position: absolute;
-            left: 0;
-            bottom: 0;
+            position: static;
+            flex: 1 1 auto;
+            min-width: 0;
             height: 72rpx;
             line-height: 72rpx;
+            white-space: nowrap;
+            align-self: flex-end;
             font-size: 36rpx;
             color: #e94e3c;
             font-family: DIN, DIN-Medium;
@@ -358,11 +382,20 @@ $desc-font-color: #818693;
               font-size: 24rpx;
             }
           }
-          .dish_active {
-            position: absolute;
-            right: 20rpx;
-            bottom: 0rpx;
+          .dish_action_area {
+            flex-shrink: 0;
+            margin-left: auto;
+            padding-right: 20rpx;
+            box-sizing: border-box;
             display: flex;
+            justify-content: flex-end;
+            max-width: 100%;
+          }
+          .dish_active {
+            position: static;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
             .dish_add,
             .dish_red {
               display: block;
@@ -378,10 +411,21 @@ $desc-font-color: #818693;
             }
           }
           .dish_active_btn {
-            position: absolute;
-            right: 20rpx;
-            bottom: 10rpx;
+            position: static;
+            flex-shrink: 0;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 100%;
+            .dish_cart_quantity {
+              max-width: 100%;
+              margin-bottom: 4rpx;
+              font-size: 18rpx;
+              line-height: 28rpx;
+              color: #666666;
+              text-align: center;
+              white-space: nowrap;
+            }
             .check_but {
               min-width: 128rpx;
               max-width: 180rpx;
@@ -749,4 +793,17 @@ $desc-font-color: #818693;
 
 .class-item:last-child {
   min-height: 100vh;
+}
+
+@media screen and (max-width: 360px) {
+  .home_content .restaurant_menu_list .vegetable_order_list .type_item {
+    .dish_info {
+      .dish_price {
+        flex: 0 0 100%;
+        height: 44rpx;
+        line-height: 44rpx;
+        font-size: 30rpx;
+      }
+    }
+  }
 }

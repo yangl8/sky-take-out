@@ -35,7 +35,7 @@
 
       <view class="active" v-if="dishDetailes.flavors.length > 0"
         ><view class="dish_card_add" @click="moreNormDataesHandle(dishDetailes)"
-          >{{ $t("home.selectOptions") }}</view
+          >{{ $t("home.selectOptionsShort") }}</view
         ></view
       >
       <view

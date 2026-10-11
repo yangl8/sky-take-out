@@ -3,7 +3,9 @@
     "generate:regions": "node scripts/generate-region-translations.js",
     "check:regions": "node scripts/check-region-translations.js",
     "check:checkout-address": "node scripts/check-checkout-address.js",
-    "check:multiflavor-popup": "node scripts/check-multiflavor-popup.js"
+    "check:multiflavor-popup": "node scripts/check-multiflavor-popup.js",
+    "check:menu-layout": "node scripts/check-menu-layout.js",
+    "check:menu-cart": "node scripts/check-menu-cart.js"
   },
   "dependencies": {
     "@dcloudio/uni-ui": "^1.4.14"

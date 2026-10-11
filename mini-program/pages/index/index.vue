@@ -71,23 +71,28 @@
               <view class="dish_label" @click="openDetailHandle(item)">{{
                 $displayText(item.description || item.name, item.description ? 'description' : 'name')
               }}</view>
-              <view class="dish_label" @click="openDetailHandle(item)">{{ $t("home.monthlySales", { count: item.monthlySales || 0 }) }}</view>
+              <view class="dish_label dish_sales" @click="openDetailHandle(item)">{{ $t("home.monthlySales", { count: item.monthlySales || 0 }) }}</view>
               <view class="dish_price">
                 <text class="ico">￥</text>
                 {{ item.price.toFixed(2) }}
               </view>
-              <view class="dish_active" v-if="!item.flavors || item.flavors.length === 0">
-                <!-- 减菜 -->
-                <image v-if="item.dishNumber >= 1" src="../../static/btn_red.png" @click="redDishAction(item, '普通')"
-                  class="dish_red"></image>
-                <text v-if="item.dishNumber > 0" class="dish_number">{{
-                  item.dishNumber
-                }}</text>
-                <!-- 加菜 -->
-                <image src="../../static/btn_add.png" class="dish_add" @click="addDishAction(item, '普通')"></image>
-              </view>
-              <view class="dish_active_btn" v-else>
-                <view class="check_but" @click="moreNormDataesHandle(item)">{{ $t("home.selectOptions") }}</view>
+              <view class="dish_action_area">
+                <view class="dish_active" v-if="!item.flavors || item.flavors.length === 0">
+                  <!-- 减菜 -->
+                  <image v-if="item.dishNumber >= 1" src="../../static/btn_red.png" @click="redDishAction(item, '普通')"
+                    class="dish_red"></image>
+                  <text v-if="item.dishNumber > 0" class="dish_number">{{
+                    item.dishNumber
+                  }}</text>
+                  <!-- 加菜 -->
+                  <image src="../../static/btn_add.png" class="dish_add" @click="addDishAction(item, '普通')"></image>
+                </view>
+                <view class="dish_active_btn" v-else>
+                  <text class="dish_cart_quantity">
+                    {{ $t("home.cartQuantity", { count: item.dishNumber }) }}
+                  </text>
+                  <view class="check_but" @click="moreNormDataesHandle(item)">{{ $t("home.selectOptionsShort") }}</view>
+                </view>
               </view>
             </view>
           </view>
