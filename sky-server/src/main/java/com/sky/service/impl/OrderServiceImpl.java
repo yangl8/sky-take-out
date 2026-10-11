@@ -3,6 +3,10 @@ package com.sky.service.impl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +60,7 @@ import com.sky.service.OrderService;
 import com.sky.service.DeliveryTimeValidationResult;
 import com.sky.service.DeliveryTimeValidationService;
 import com.sky.constant.StatusConstant;
+import com.sky.config.DeliveryTimeProperties;
 import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -97,6 +102,12 @@ public class OrderServiceImpl implements OrderService{
 
     @Autowired
     private DeliveryTimeValidationService deliveryTimeValidationService;
+
+    @Autowired
+    private DeliveryTimeProperties deliveryTimeProperties;
+
+    @Autowired
+    private Clock clock;
 
     @Value("${sky.shop.delivery-fee:0}")
     private BigDecimal deliveryFee;
@@ -198,7 +209,7 @@ public class OrderServiceImpl implements OrderService{
         BeanUtils.copyProperties(ordersSubmitDTO, orders, "amount", "packAmount");
         orders.setAmount(serverOrderAmount);
         orders.setPackAmount(serverPackAmount);
-        orders.setOrderTime(LocalDateTime.now());
+        orders.setOrderTime(currentServerLocalTime());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
@@ -340,6 +351,7 @@ public class OrderServiceImpl implements OrderService{
         if (order == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
+        validatePaymentEligibility(order);
         User user = userMapper.getById(userId);
 
         //调用微信支付接口，生成预支付交易单
@@ -364,17 +376,22 @@ public class OrderServiceImpl implements OrderService{
      * 处理微信支付成功回调
      *
      * @param outTradeNo 微信支付回调中的商户订单号
+     * @param successTime 微信支付回调中带偏移量的实际成功时间
      * @throws OrderBusinessException 订单不存在或状态不允许支付完成
      */
-    public void paySuccess(String outTradeNo) {
+    public void paySuccess(String outTradeNo, OffsetDateTime successTime) {
 
         // 根据订单号查询订单
         Orders currentOrder = orderMapper.getByNumber(outTradeNo);
         if (currentOrder == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
+        if (successTime == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
 
-        processPaySuccess(currentOrder, true);
+        LocalDateTime paidAt = LocalDateTime.ofInstant(successTime.toInstant(), deliveryTimeProperties.getZoneId());
+        processPaySuccess(currentOrder, paidAt, true);
     }
 
     /**
@@ -390,7 +407,8 @@ public class OrderServiceImpl implements OrderService{
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        processPaySuccess(currentOrder, false);
+        validatePaymentEligibility(currentOrder);
+        processPaySuccess(currentOrder, currentBusinessTime(), false);
     }
 
     /**
@@ -401,7 +419,7 @@ public class OrderServiceImpl implements OrderService{
      * @return 本次调用完成状态转换时返回 true，重复或已变化时返回 false
      * @throws OrderBusinessException 模拟支付遇到不允许的订单状态
      */
-    private boolean processPaySuccess(Orders currentOrder, boolean paymentCallback) {
+    private boolean processPaySuccess(Orders currentOrder, LocalDateTime paidAt, boolean paymentCallback) {
         if (Orders.CANCELLED.equals(currentOrder.getStatus())) {
             log.error("已取消订单收到支付成功通知，订单号：{}，需核对并补偿资金", currentOrder.getNumber());
             if (paymentCallback) {
@@ -419,13 +437,22 @@ public class OrderServiceImpl implements OrderService{
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
+        if (paidAt == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders targetOrder = Orders.builder()
                 .id(currentOrder.getId())
                 .status(Orders.TO_BE_CONFIRMED)
                 .payStatus(Orders.PAID)
-                .checkoutTime(LocalDateTime.now())
+                .checkoutTime(paidAt)
                 .build();
+        if (Integer.valueOf(DeliveryTimeValidationService.DELIVERY_STATUS_NOW)
+                .equals(currentOrder.getDeliveryStatus())) {
+            targetOrder.setEstimatedDeliveryTime(paidAt.plusMinutes(
+                    deliveryTimeProperties.getMinimumPreparationMinutes()));
+        }
 
         int updatedRows = updateOrderState(currentOrder, targetOrder);
         if (updatedRows != 1) {
@@ -457,6 +484,77 @@ public class OrderServiceImpl implements OrderService{
         String json = JSON.toJSONString(map);
         webSocketServer.sendToAllClient(json);
         return true;
+    }
+
+    /**
+     * 校验订单是否仍可发起支付
+     *
+     * @param order 当前用户订单
+     * @throws OrderBusinessException 订单状态、付款期限或配送条件不允许支付
+     */
+    private void validatePaymentEligibility(Orders order) {
+        if (!Orders.PENDING_PAYMENT.equals(order.getStatus())
+                || !Orders.UN_PAID.equals(order.getPayStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_PAYMENT_NOT_ALLOWED);
+        }
+        if (order.getOrderTime() == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_PAYMENT_EXPIRED);
+        }
+        // order_time 由现有下单逻辑按 JVM 本地时区写入，按相同区域还原为时间点比较付款期限
+        Instant orderCreatedAt = order.getOrderTime().atZone(ZoneId.systemDefault()).toInstant();
+        if (clock.instant().isAfter(orderCreatedAt.plusSeconds(15 * 60L))) {
+            throw new OrderBusinessException(MessageConstant.ORDER_PAYMENT_EXPIRED);
+        }
+
+        DeliveryTimeValidationResult result = deliveryTimeValidationService.validate(
+                order.getDeliveryStatus(), order.getEstimatedDeliveryTime());
+        switch (result) {
+            case VALID:
+                break;
+            case CURRENTLY_CLOSED:
+                throw new OrderBusinessException(MessageConstant.SHOP_CLOSED_FOR_IMMEDIATE_PAYMENT);
+            case PREPARATION_TIME_NOT_MET:
+                throw new OrderBusinessException(MessageConstant.SCHEDULED_ORDER_PREPARATION_TIME_NOT_MET);
+            case DELIVERY_TIME_REQUIRED:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TIME_REQUIRED);
+            case OUTSIDE_BUSINESS_HOURS:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TIME_OUTSIDE_BUSINESS_HOURS);
+            default:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TYPE_INVALID);
+        }
+
+        if (!Integer.valueOf(DeliveryTimeValidationService.DELIVERY_STATUS_NOW)
+                .equals(order.getDeliveryStatus())) {
+            return;
+        }
+        Object shopStatus;
+        try {
+            shopStatus = redisTemplate.opsForValue().get(ShopStatusConstant.KEY);
+        } catch (RuntimeException exception) {
+            log.error("读取店铺营业状态失败，拒绝发起立即配送支付", exception);
+            throw new OrderBusinessException(MessageConstant.SHOP_STATUS_UNAVAILABLE);
+        }
+        if (!Integer.valueOf(1).equals(shopStatus)) {
+            throw new OrderBusinessException(MessageConstant.SHOP_CLOSED_FOR_IMMEDIATE_PAYMENT);
+        }
+    }
+
+    /**
+     * 获取配置业务时区下的当前时间
+     *
+     * @return 当前业务时区日期时间
+     */
+    private LocalDateTime currentBusinessTime() {
+        return LocalDateTime.ofInstant(clock.instant(), deliveryTimeProperties.getZoneId());
+    }
+
+    /**
+     * 获取与现有无时区订单时间字段一致的服务器本地时间
+     *
+     * @return 当前 JVM 默认时区下的日期时间
+     */
+    private LocalDateTime currentServerLocalTime() {
+        return LocalDateTime.ofInstant(clock.instant(), ZoneId.systemDefault());
     }
 
     /**

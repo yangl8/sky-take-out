@@ -69,7 +69,10 @@
                 status = #{targetOrder.status},
             </if>
             <if test="targetOrder.deliveryTime != null">
-                delivery_time = #{targetOrder.deliveryTime}
+                delivery_time = #{targetOrder.deliveryTime},
+            </if>
+            <if test="targetOrder.estimatedDeliveryTime != null">
+                estimated_delivery_time = #{targetOrder.estimatedDeliveryTime}
             </if>
         </set>
         where id = #{id}

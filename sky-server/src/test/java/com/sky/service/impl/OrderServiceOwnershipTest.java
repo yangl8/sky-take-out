@@ -1,6 +1,7 @@
 package com.sky.service.impl;
 
 import com.sky.context.BaseContext;
+import com.sky.config.DeliveryTimeProperties;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.AddressBook;
@@ -14,8 +15,13 @@ import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.utils.WeChatPayUtil;
+import com.sky.service.DeliveryTimeValidationService;
 import com.sky.websocket.WebSocketServer;
 import java.util.Collections;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -187,8 +194,16 @@ class OrderServiceOwnershipTest {
     @Test
     void mockPaymentShouldProcessCurrentUsersMatchingOrder() {
         BaseContext.setCurrentId(1L);
+        DeliveryTimeProperties properties = new DeliveryTimeProperties();
+        Clock clock = Clock.fixed(Instant.parse("2026-10-11T10:00:00Z"), ZoneId.of("UTC"));
+        ReflectionTestUtils.setField(orderService, "deliveryTimeProperties", properties);
+        ReflectionTestUtils.setField(orderService, "clock", clock);
+        ReflectionTestUtils.setField(orderService, "deliveryTimeValidationService",
+                new DeliveryTimeValidationService(properties, clock));
         Orders currentOrder = Orders.builder().id(10L).userId(1L).number("order-10")
-                .status(Orders.PENDING_PAYMENT).payStatus(Orders.UN_PAID).build();
+                .status(Orders.PENDING_PAYMENT).payStatus(Orders.UN_PAID).deliveryStatus(0)
+                .orderTime(LocalDateTime.of(2026, 10, 11, 17, 55))
+                .estimatedDeliveryTime(LocalDateTime.of(2026, 10, 12, 12, 0)).build();
         when(orderMapper.getByIdAndUserId(10L, 1L)).thenReturn(currentOrder);
         when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
                 isNull(), any(Orders.class))).thenReturn(1);

@@ -2,10 +2,13 @@ package com.sky.service.impl;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.sky.context.BaseContext;
+import com.sky.config.DeliveryTimeProperties;
 import com.sky.dto.OrdersConfirmDTO;
 import com.sky.entity.Orders;
 import com.sky.exception.OrderBusinessException;
@@ -22,6 +25,7 @@ import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +44,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,12 +62,19 @@ class OrderStatusTransitionTest {
     @Mock private WeChatPayUtil weChatPayUtil;
     @Mock private WebSocketServer webSocketServer;
     @Mock private Environment environment;
+    @Mock private DeliveryTimeProperties deliveryTimeProperties;
 
     @InjectMocks
     private OrderServiceImpl orderService;
 
     @InjectMocks
     private OrderTask orderTask;
+
+    @BeforeEach
+    void setUpTimeZone() {
+        lenient().when(deliveryTimeProperties.getZoneId()).thenReturn(ZoneId.of("Asia/Shanghai"));
+        lenient().when(deliveryTimeProperties.getMinimumPreparationMinutes()).thenReturn(30);
+    }
 
     /**
      * 清理测试线程中的当前用户身份
@@ -82,7 +94,7 @@ class OrderStatusTransitionTest {
         when(orderMapper.updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
                 isNull(), any(Orders.class))).thenReturn(1);
 
-        orderService.paySuccess("order-10");
+        orderService.paySuccess("order-10", OffsetDateTime.parse("2026-10-11T17:18:00+08:00"));
 
         ArgumentCaptor<Orders> targetOrder = ArgumentCaptor.forClass(Orders.class);
         verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
@@ -101,7 +113,7 @@ class OrderStatusTransitionTest {
         when(orderMapper.getByNumber("order-10"))
                 .thenReturn(order(10L, "order-10", Orders.CANCELLED, Orders.UN_PAID));
 
-        orderService.paySuccess("order-10");
+        orderService.paySuccess("order-10", OffsetDateTime.parse("2026-10-11T17:18:00+08:00"));
 
         verify(orderMapper, never()).updateStatusIfCurrent(anyLong(), anyInt(), anyInt(), any(), any(Orders.class));
         verify(webSocketServer, never()).sendToAllClient(any());
@@ -157,7 +169,7 @@ class OrderStatusTransitionTest {
                 isNull(), any(Orders.class))).thenReturn(0);
         when(orderMapper.getById(10L)).thenReturn(alreadyPaidOrder);
 
-        orderService.paySuccess("order-10");
+        orderService.paySuccess("order-10", OffsetDateTime.parse("2026-10-11T17:18:00+08:00"));
 
         verify(orderMapper).updateStatusIfCurrent(eq(10L), eq(Orders.PENDING_PAYMENT), eq(Orders.UN_PAID),
                 isNull(), any(Orders.class));
@@ -252,7 +264,9 @@ class OrderStatusTransitionTest {
         Orders targetOrder = Orders.builder()
                 .status(Orders.CANCELLED)
                 .payStatus(Orders.UN_PAID)
+                .checkoutTime(LocalDateTime.of(2026, 10, 11, 18, 0))
                 .cancelTime(LocalDateTime.now())
+                .estimatedDeliveryTime(LocalDateTime.of(2026, 10, 12, 12, 0))
                 .build();
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", 10L);
@@ -267,6 +281,8 @@ class OrderStatusTransitionTest {
         String sql = boundSql.getSql().replaceAll("\\s+", " ").toLowerCase();
 
         assertTrue(sql.contains("where id = ? and status = ? and pay_status = ? and order_time < ?"));
+        assertTrue(sql.contains("checkout_time=?"));
+        assertTrue(sql.contains("estimated_delivery_time = ?"));
         assertTrue(boundSql.getParameterMappings().stream()
                 .map(parameterMapping -> parameterMapping.getProperty())
                 .anyMatch("expectedStatus"::equals));

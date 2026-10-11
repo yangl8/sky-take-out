@@ -25,7 +25,10 @@ import com.sky.vo.OrderSubmitVO;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -89,9 +92,12 @@ class OrderPricingTest {
     void setUp() {
         BaseContext.setCurrentId(USER_ID);
         ReflectionTestUtils.setField(orderService, "deliveryFee", new BigDecimal("2.50"));
+        DeliveryTimeProperties properties = new DeliveryTimeProperties();
+        Clock clock = Clock.fixed(Instant.parse("2026-10-10T02:00:00Z"), ZoneOffset.UTC);
+        ReflectionTestUtils.setField(orderService, "deliveryTimeProperties", properties);
+        ReflectionTestUtils.setField(orderService, "clock", clock);
         ReflectionTestUtils.setField(orderService, "deliveryTimeValidationService",
-                new DeliveryTimeValidationService(new DeliveryTimeProperties(),
-                        Clock.fixed(Instant.parse("2026-10-10T02:00:00Z"), ZoneOffset.UTC)));
+                new DeliveryTimeValidationService(properties, clock));
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         lenient().when(valueOperations.get(ShopStatusConstant.KEY)).thenReturn(1);
         doNothing().when(orderService).checkOutOfRange(anyString());
@@ -164,6 +170,30 @@ class OrderPricingTest {
         assertEquals("Current setmeal name", savedDetails.get(1).getName());
         assertEquals(new BigDecimal("8.25"), savedDetails.get(1).getAmount());
         verify(shoppingCartMapper).deleteByUserId(USER_ID);
+    }
+
+    @Test
+    void submitOrderTimeUsesInjectedClockInNonBeijingJvmZone() {
+        TimeZone originalTimeZone = TimeZone.getDefault();
+        ZoneId jvmZone = ZoneId.of("America/Los_Angeles");
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone(jvmZone));
+            Clock fixedClock = Clock.fixed(Instant.parse("2026-10-10T02:00:00Z"), ZoneOffset.UTC);
+            DeliveryTimeProperties properties = new DeliveryTimeProperties();
+            ReflectionTestUtils.setField(orderService, "deliveryTimeProperties", properties);
+            ReflectionTestUtils.setField(orderService, "clock", fixedClock);
+            ReflectionTestUtils.setField(orderService, "deliveryTimeValidationService",
+                    new DeliveryTimeValidationService(properties, fixedClock));
+            prepareSuccessfulDishOrder();
+
+            orderService.submitOrder(request());
+
+            ArgumentCaptor<Orders> orderCaptor = ArgumentCaptor.forClass(Orders.class);
+            verify(orderMapper).insert(orderCaptor.capture());
+            assertEquals(LocalDateTime.ofInstant(fixedClock.instant(), jvmZone), orderCaptor.getValue().getOrderTime());
+        } finally {
+            TimeZone.setDefault(originalTimeZone);
+        }
     }
 
     /**
@@ -279,6 +309,17 @@ class OrderPricingTest {
                 .image("stale-cart.png")
                 .dishFlavor("spicy")
                 .build();
+    }
+
+    private void prepareSuccessfulDishOrder() {
+        when(shoppingCartMapper.list(any(ShoppingCart.class)))
+                .thenReturn(Arrays.asList(cartItem(100L, null, 1, "3.50")));
+        when(dishMapper.getById(100L)).thenReturn(Dish.builder().id(100L).name("Dish")
+                .image("dish.png").price(new BigDecimal("3.50")).status(1).build());
+        doAnswer(invocation -> {
+            invocation.<Orders>getArgument(0).setId(500L);
+            return null;
+        }).when(orderMapper).insert(any(Orders.class));
     }
 
     /**

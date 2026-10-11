@@ -270,8 +270,11 @@ class OrderDeliveryRulesTest {
     }
 
     private DeliveryTimeValidationService validationService(String instant) {
-        return new DeliveryTimeValidationService(new DeliveryTimeProperties(),
-                Clock.fixed(Instant.parse(instant), ZoneOffset.UTC));
+        DeliveryTimeProperties properties = new DeliveryTimeProperties();
+        Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
+        ReflectionTestUtils.setField(orderService, "deliveryTimeProperties", properties);
+        ReflectionTestUtils.setField(orderService, "clock", clock);
+        return new DeliveryTimeValidationService(properties, clock);
     }
 
     private void assertRejectedWithoutOrderSideEffects(OrdersSubmitDTO request) {

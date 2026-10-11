@@ -30,5 +30,9 @@ public class MessageConstant {
     public static final String DELIVERY_TIME_OUTSIDE_BUSINESS_HOURS = "预约送达时间不在允许营业时段内";
     public static final String SHOP_CLOSED_FOR_IMMEDIATE_DELIVERY = "店铺当前未营业，无法提交立即配送订单";
     public static final String SHOP_STATUS_UNAVAILABLE = "店铺营业状态暂不可用，请稍后重试";
+    public static final String ORDER_PAYMENT_EXPIRED = "订单超过15分钟付款期限，无法继续支付";
+    public static final String ORDER_PAYMENT_NOT_ALLOWED = "订单当前状态不允许支付";
+    public static final String SCHEDULED_ORDER_PREPARATION_TIME_NOT_MET = "预约送达时间不足30分钟准备时间，无法支付";
+    public static final String SHOP_CLOSED_FOR_IMMEDIATE_PAYMENT = "店铺当前未营业，无法发起立即配送支付";
 
 }

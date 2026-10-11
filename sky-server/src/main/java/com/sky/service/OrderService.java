@@ -34,8 +34,9 @@ public interface OrderService {
     /**
      * 支付成功，修改订单状态
      * @param outTradeNo
+     * @param successTime 微信通知中的支付成功时间及其时区偏移
      */
-    void paySuccess(String outTradeNo);
+    void paySuccess(String outTradeNo, java.time.OffsetDateTime successTime);
 
     /** 开发环境模拟支付成功，要求订单属于当前登录用户。 */
     void mockPaySuccessForUser(String orderNumber, Long orderId);
