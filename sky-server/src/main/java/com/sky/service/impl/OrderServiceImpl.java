@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +26,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
+import com.sky.constant.ShopStatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersConfirmDTO;
@@ -51,6 +53,8 @@ import com.sky.mapper.ShoppingCartMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.service.DeliveryTimeValidationResult;
+import com.sky.service.DeliveryTimeValidationService;
 import com.sky.constant.StatusConstant;
 import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
@@ -87,6 +91,12 @@ public class OrderServiceImpl implements OrderService{
     private WebSocketServer webSocketServer;
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private DeliveryTimeValidationService deliveryTimeValidationService;
 
     @Value("${sky.shop.delivery-fee:0}")
     private BigDecimal deliveryFee;
@@ -150,6 +160,8 @@ public class OrderServiceImpl implements OrderService{
             //抛出业务异常
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
+
+        validateDeliveryRules(ordersSubmitDTO);
 
         //检查用户的收货地址是否超出配送范围
         checkOutOfRange(addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
@@ -216,6 +228,49 @@ public class OrderServiceImpl implements OrderService{
                         .build();
 
         return orderSubmitVO;
+    }
+
+    /**
+     * 校验下单配送方式、预约送达时间及立即配送的店铺营业状态
+     *
+     * @param ordersSubmitDTO 用户提交的配送信息
+     * @throws OrderBusinessException 配送信息无效、当前不在营业时间或店铺状态不可用
+     */
+    private void validateDeliveryRules(OrdersSubmitDTO ordersSubmitDTO) {
+        DeliveryTimeValidationResult result = deliveryTimeValidationService.validate(
+                ordersSubmitDTO.getDeliveryStatus(), ordersSubmitDTO.getEstimatedDeliveryTime());
+        switch (result) {
+            case INVALID_DELIVERY_STATUS:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TYPE_INVALID);
+            case DELIVERY_TIME_REQUIRED:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TIME_REQUIRED);
+            case PREPARATION_TIME_NOT_MET:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_PREPARATION_TIME_NOT_MET);
+            case OUTSIDE_BUSINESS_HOURS:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TIME_OUTSIDE_BUSINESS_HOURS);
+            case CURRENTLY_CLOSED:
+                throw new OrderBusinessException(MessageConstant.SHOP_CLOSED_FOR_IMMEDIATE_DELIVERY);
+            case VALID:
+                break;
+            default:
+                throw new OrderBusinessException(MessageConstant.DELIVERY_TYPE_INVALID);
+        }
+
+        if (!Integer.valueOf(DeliveryTimeValidationService.DELIVERY_STATUS_NOW)
+                .equals(ordersSubmitDTO.getDeliveryStatus())) {
+            return;
+        }
+
+        Object shopStatus;
+        try {
+            shopStatus = redisTemplate.opsForValue().get(ShopStatusConstant.KEY);
+        } catch (RuntimeException exception) {
+            log.error("读取店铺营业状态失败，拒绝创建立即配送订单", exception);
+            throw new OrderBusinessException(MessageConstant.SHOP_STATUS_UNAVAILABLE);
+        }
+        if (!Integer.valueOf(1).equals(shopStatus)) {
+            throw new OrderBusinessException(MessageConstant.SHOP_CLOSED_FOR_IMMEDIATE_DELIVERY);
+        }
     }
 
     /**

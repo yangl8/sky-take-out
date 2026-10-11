@@ -24,5 +24,11 @@ public class MessageConstant {
     public static final String DISH_BE_RELATED_BY_SETMEAL = "当前菜品关联了套餐,不能删除";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";
+    public static final String DELIVERY_TYPE_INVALID = "配送方式无效，无法下单";
+    public static final String DELIVERY_TIME_REQUIRED = "请选择有效的预约送达时间";
+    public static final String DELIVERY_PREPARATION_TIME_NOT_MET = "预约送达时间不足最短准备时间";
+    public static final String DELIVERY_TIME_OUTSIDE_BUSINESS_HOURS = "预约送达时间不在允许营业时段内";
+    public static final String SHOP_CLOSED_FOR_IMMEDIATE_DELIVERY = "店铺当前未营业，无法提交立即配送订单";
+    public static final String SHOP_STATUS_UNAVAILABLE = "店铺营业状态暂不可用，请稍后重试";
 
 }

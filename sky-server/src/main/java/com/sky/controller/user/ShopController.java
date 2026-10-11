@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sky.result.Result;
+import com.sky.constant.ShopStatusConstant;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j 
 public class ShopController {
     
-    public static final String KEY = "SHOP STATUS";
+    public static final String KEY = ShopStatusConstant.KEY;
 
     @Autowired 
     private RedisTemplate redisTemplate;

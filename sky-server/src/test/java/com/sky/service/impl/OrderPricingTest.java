@@ -1,6 +1,8 @@
 package com.sky.service.impl;
 
 import com.sky.context.BaseContext;
+import com.sky.config.DeliveryTimeProperties;
+import com.sky.constant.ShopStatusConstant;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.AddressBook;
 import com.sky.entity.Dish;
@@ -16,10 +18,14 @@ import com.sky.mapper.OrderMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.mapper.UserMapper;
+import com.sky.service.DeliveryTimeValidationService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.websocket.WebSocketServer;
 import com.sky.vo.OrderSubmitVO;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +41,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +52,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +75,8 @@ class OrderPricingTest {
     @Mock private WeChatPayUtil weChatPayUtil;
     @Mock private WebSocketServer webSocketServer;
     @Mock private Environment environment;
+    @Mock private RedisTemplate<String, Object> redisTemplate;
+    @Mock private ValueOperations<String, Object> valueOperations;
 
     @Spy
     @InjectMocks
@@ -78,6 +89,11 @@ class OrderPricingTest {
     void setUp() {
         BaseContext.setCurrentId(USER_ID);
         ReflectionTestUtils.setField(orderService, "deliveryFee", new BigDecimal("2.50"));
+        ReflectionTestUtils.setField(orderService, "deliveryTimeValidationService",
+                new DeliveryTimeValidationService(new DeliveryTimeProperties(),
+                        Clock.fixed(Instant.parse("2026-10-10T02:00:00Z"), ZoneOffset.UTC)));
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(valueOperations.get(ShopStatusConstant.KEY)).thenReturn(1);
         doNothing().when(orderService).checkOutOfRange(anyString());
         when(addressBookMapper.getByIdAndUserId(ADDRESS_ID, USER_ID)).thenReturn(AddressBook.builder()
                 .id(ADDRESS_ID)
@@ -273,6 +289,9 @@ class OrderPricingTest {
     private OrdersSubmitDTO request() {
         OrdersSubmitDTO request = new OrdersSubmitDTO();
         request.setAddressBookId(ADDRESS_ID);
+        request.setDeliveryStatus(1);
+        request.setTablewareNumber(0);
+        request.setTablewareStatus(0);
         request.setAmount(new BigDecimal("999.99"));
         return request;
     }
