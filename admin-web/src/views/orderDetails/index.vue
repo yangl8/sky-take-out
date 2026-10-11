@@ -52,7 +52,12 @@
         stripe
         class="tableBox order-table"
       >
-        <el-table-column key="number" prop="number" :label="String($t('orders.orderNumber'))" min-width="190" align="center" header-align="center" />
+        <el-table-column key="number" prop="number" :label="String($t('orders.orderNumber'))" min-width="190" align="center" header-align="center">
+          <template slot-scope="{ row }">
+            <span>{{ row.number }}</span>
+            <el-tag v-if="isScheduledDelivery(row)" size="mini" type="warning" class="scheduled-tag">{{ $t('orders.scheduledDelivery') }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column
           v-if="[0].includes(orderStatus)"
           key="status"
@@ -215,6 +220,10 @@
         <div class="order-middle">
           <div class="user-info">
             <div class="user-info-box">
+              <div class="delivery-summary" :class="{ scheduled: isScheduledDelivery(diaForm) }">
+                <strong>{{ deliveryTypeLabel(diaForm.deliveryStatus) }}</strong>
+                <span>{{ deliveryTimeLabel(diaForm.deliveryStatus, dialogOrderStatus) }}：{{ (dialogOrderStatus === 5 && Number(diaForm.deliveryStatus) === 1 ? diaForm.deliveryTime : diaForm.estimatedDeliveryTime) || '—' }}</span>
+              </div>
               <div class="user-name">
                 <label>{{ $t('orders.customerName') }}：</label>
                 <span>{{ diaForm.consignee }}</span>
@@ -223,34 +232,24 @@
                 <label>{{ $t('orders.phone') }}：</label>
                 <span>{{ diaForm.phone || '—' }}</span>
               </div>
-              <div
-                v-if="[2, 3, 4, 5].includes(dialogOrderStatus)"
-                class="user-getTime"
-              >
-                <label>{{
-                  dialogOrderStatus === 5 ? $t('orders.deliveryTime') + '：' : $t('orders.estimatedDeliveryTime') + '：'
-                }}</label>
-                <span>{{
-                  dialogOrderStatus === 5
-                    ? diaForm.deliveryTime
-                    : diaForm.estimatedDeliveryTime
-                }}</span>
-              </div>
               <div class="user-address">
                 <label>{{ $t('orders.address') }}：</label>
                 <span :title="diaForm.address || '—'">{{ diaForm.address || '—' }}</span>
               </div>
             </div>
-            <div
-              class="user-remark"
-              :class="{ orderCancel: dialogOrderStatus === 6 }"
-            >
-              <div>{{ dialogOrderStatus === 6 ? $t('orders.cancelReason') : $t('orders.remark') }}</div>
-              <span>{{
-                dialogOrderStatus === 6
-                  ? orderReasonLabel(diaForm.cancelReason || diaForm.rejectionReason)
-                  : diaForm.remark
-              }}</span>
+            <div class="fulfillment-info">
+              <div class="user-remark">
+                <div>{{ $t('orders.remark') }}</div>
+                <span>{{ diaForm.remark || $t('orders.noRemark') }}</span>
+              </div>
+              <div class="user-remark">
+                <div>{{ $t('orders.tablewareNumber') }}</div>
+                <span>{{ tablewareLabel(diaForm.tablewareStatus, diaForm.tablewareNumber) }}</span>
+              </div>
+              <div v-if="dialogOrderStatus === 6" class="user-remark orderCancel">
+                <div>{{ $t('orders.cancelReason') }}</div>
+                <span>{{ orderReasonLabel(diaForm.cancelReason || diaForm.rejectionReason) || '—' }}</span>
+              </div>
             </div>
           </div>
 
@@ -416,6 +415,7 @@
 <script lang="ts">
 import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
 import { orderReasonLabel } from '@/i18n/orders'
+import { isScheduledDelivery as isScheduledDeliveryStatus, resolveTablewareDisplay } from '@/utils/orderFulfillment'
 import { Component, Vue } from 'vue-property-decorator'
 import HeadLable from '@/components/HeadLable/index.vue'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
@@ -469,6 +469,7 @@ export default class extends Vue {
   private listLoading = false
   private autoNextAfterAction = false
   private autoNextExcludeOrderId = ''
+  private detailRequestSequence = 0
   private isSearch: boolean = false
   private orderStatus = 0 //列表字段展示所需订单状态,用于分页请求数据
   private dialogOrderStatus = 0 //弹窗所需订单状态，用于详情展示字段
@@ -733,9 +734,33 @@ export default class extends Vue {
     }
   }
 
+  isScheduledDelivery(order: any) {
+    return order && isScheduledDeliveryStatus(order.deliveryStatus)
+  }
+
+  deliveryTypeLabel(status: any) {
+    if (Number(status) === 1) return this.$t('orders.immediateDelivery')
+    if (Number(status) === 0) return this.$t('orders.scheduledDelivery')
+    return this.$t('orders.deliveryTypeUnknown')
+  }
+
+  deliveryTimeLabel(status: any, orderStatus: any) {
+    if (Number(status) === 1 && Number(orderStatus) === 5) return this.$t('orders.deliveryTime')
+    return Number(status) === 0 ? this.$t('orders.scheduledDeliveryTime') : this.$t('orders.estimatedDeliveryTime')
+  }
+
+  tablewareLabel(status: any, number: any) {
+    const display = resolveTablewareDisplay(status, number)
+    if (display.type === 'none') return this.$t('orders.noCutlery')
+    if (display.type === 'sets') return this.$t('orders.tablewareSets', { count: display.count })
+    if (display.type === 'byMeal') return this.$t('orders.tablewareByMeal', { count: display.count })
+    return this.$t('orders.tablewareUnknown')
+  }
+
   // 查看详情
   async goDetail(id: any, status: number, row?: any) {
-    this.diaForm = Object.assign({}, row || {})
+    const requestSequence = ++this.detailRequestSequence
+    this.diaForm = {}
     this.dialogVisible = true
     this.dialogOrderStatus = status
     this.orderId = id
@@ -749,14 +774,20 @@ export default class extends Vue {
       }
       const detail = body.data
       if (!detail || typeof detail !== 'object') throw new Error('Invalid order detail response')
-      this.diaForm = Object.assign({}, row || {}, detail)
+      if (requestSequence !== this.detailRequestSequence) return
+      this.diaForm = Object.assign({}, detail)
+      if (detail.status != null && Number.isFinite(Number(detail.status))) {
+        this.dialogOrderStatus = Number(detail.status)
+      }
+      this.row = Object.assign({ id: id, status: status }, detail)
       if (this.$route.query.orderId) this.$router.push('/order')
     } catch (error) {
+      if (requestSequence !== this.detailRequestSequence) return
       const detail = error && error.response && error.response.data
       const reason = (detail && (detail.msg || detail.message)) || (error && error.message) || ''
       this.$message.error(String(this.$t('orders.requestError')) + reason)
     } finally {
-      this.detailLoading = false
+      if (requestSequence === this.detailRequestSequence) this.detailLoading = false
     }
   }
 
@@ -866,7 +897,10 @@ export default class extends Vue {
   }
 
   handleClose() {
+    this.detailRequestSequence++
     this.dialogVisible = false
+    this.detailLoading = false
+    this.diaForm = {}
   }
 
   private handleSizeChange(val: any) {
@@ -1104,15 +1138,41 @@ export default class extends Vue {
 
       .user-name {
         grid-column: 1;
-        grid-row: 1;
+        grid-row: 2;
       }
       .user-phone {
         grid-column: 2;
-        grid-row: 1;
-      }
-      .user-getTime {
-        grid-column: 1;
         grid-row: 2;
+      }
+      .delivery-summary {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        min-width: 0;
+        padding: 10px 14px;
+        border-radius: 4px;
+        background: #fff8e8;
+        border-left: 4px solid #e6a23c;
+        color: #303133;
+        strong {
+          color: #b87412;
+          font-size: 16px;
+          white-space: nowrap;
+        }
+        span {
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+        &.scheduled {
+          background: #eef5ff;
+          border-left-color: #409eff;
+          strong {
+            color: #2174c7;
+          }
+        }
       }
       label {
         flex: 0 0 auto;
@@ -1125,14 +1185,13 @@ export default class extends Vue {
         text-align: left;
       }
       .user-name span,
-      .user-phone span,
-      .user-getTime span {
+      .user-phone span {
         white-space: nowrap;
       }
 
       .user-address {
-        grid-column: 2;
-        grid-row: 2;
+        grid-column: 1 / -1;
+        grid-row: 3;
         white-space: nowrap;
       }
 
@@ -1144,37 +1203,56 @@ export default class extends Vue {
     }
     .user-remark {
       min-height: 43px;
-      line-height: 43px;
+      line-height: 1.4;
       background: #fffbf0;
       border: 1px solid #fbe396;
       border-radius: 4px;
-      margin-top: 10px;
+      margin-top: 0;
       padding: 6px;
       display: flex;
       align-items: center;
       div {
         display: inline-block;
-        min-width: 53px;
-        height: 32px;
+        flex: 0 0 120px;
+        min-width: 120px;
+        min-height: 32px;
         background: #fbe396;
         border-radius: 4px;
         text-align: center;
-        line-height: 32px;
+        line-height: 1.4;
+        padding: 7px 4px;
         color: #333;
-        margin-right: 30px;
+        margin-right: 12px;
         // padding: 12px 6px;
       }
       span {
         color: #f2a402;
-        line-height: 1.15;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        min-width: 0;
       }
+    }
+    .orderCancel > div {
+      flex: 0 0 auto;
+      min-width: 0;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+    }
+    .fulfillment-info {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
     }
     .orderCancel {
       background: #ffffff;
       border: 1px solid #b6b6b6;
 
       div {
-        padding: 0 10px;
+        padding: 7px 10px;
         background-color: #e5e4e4;
       }
       span {
@@ -1239,6 +1317,11 @@ export default class extends Vue {
     }
   }
 }
+
+.scheduled-tag {
+  margin-left: 6px;
+  vertical-align: middle;
+}
 .order-bottom {
   .amount-info {
     // min-height: 180px;
@@ -1279,6 +1362,25 @@ export default class extends Vue {
           color: #f56c6c;
         }
       }
+    }
+  }
+}
+@media (max-width: 760px) {
+  .order-middle .user-info .user-info-box {
+    grid-template-columns: minmax(0, 1fr);
+    .user-name,
+    .user-phone,
+    .user-address {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .delivery-summary {
+      grid-column: 1;
+    }
+    .user-address,
+    .user-address span {
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
   }
 }
