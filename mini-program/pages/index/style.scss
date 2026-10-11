@@ -302,6 +302,7 @@ $desc-font-color: #818693;
         display: flex;
         padding-top: 20rpx;
         padding-bottom: 24rpx;
+        padding-right: 24rpx;
         box-sizing: border-box;
         .dish_img {
           width: 172rpx;
@@ -316,13 +317,14 @@ $desc-font-color: #818693;
         .dish_info {
           position: relative;
           flex: 1;
+          min-width: 0;
           display: flex;
           flex-wrap: wrap;
           align-content: flex-start;
           box-sizing: border-box;
           .dish_name {
-            font-size: 32rpx;
-            line-height: 40rpx;
+            font-size: 30rpx;
+            line-height: 38rpx;
             width: 100%;
             flex: 0 0 100%;
             margin-bottom: 6rpx;
@@ -342,8 +344,8 @@ $desc-font-color: #818693;
           .dish_label,
           .dish_num {
             font-size: 22rpx;
-            line-height: 40rpx;
-            max-height: 80rpx;
+            line-height: 34rpx;
+            max-height: 68rpx;
             width: 100%;
             flex: 0 0 100%;
             font-family: PingFangSC, PingFangSC-Regular;
@@ -385,7 +387,6 @@ $desc-font-color: #818693;
           .dish_action_area {
             flex-shrink: 0;
             margin-left: auto;
-            padding-right: 20rpx;
             box-sizing: border-box;
             display: flex;
             justify-content: flex-end;
