@@ -129,7 +129,7 @@
       </view>
       <!-- end -->
       <!-- 选择多规格弹层 - start -->
-      <view class="pop_mask" v-show="openMoreNormPop">
+      <view class="pop_mask" v-if="openMoreNormPop && moreNormDishdata">
         <popMask :moreNormDishdata="moreNormDishdata" :moreNormdata="moreNormdata" :flavorDataes="flavorDataes"
           @checkMoreNormPop="checkMoreNormPop" @addShop="addShop" @closeMoreNorm="closeMoreNorm"></popMask>
       </view>

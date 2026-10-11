@@ -1,6 +1,6 @@
 <!--选择多规格弹层-->
 <template>
-  <view class="more_norm_pop">
+  <view v-if="moreNormDishdata" class="more_norm_pop">
     <view class="title">{{ $displayText(moreNormDishdata.name, 'name') }}</view>
     <scroll-view class="items_cont" scroll-y="true" scroll-top="0rpx">
       <view class="item_row" v-for="(obj, index) in moreNormdata" :key="index">

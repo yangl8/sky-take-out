@@ -27,6 +27,7 @@ import {
 } from "../api/api.js"
 import { mapState, mapMutations } from "vuex"
 import { baseUrl } from "../../utils/env"
+import prepareMultiFlavorPopup from "../../utils/multiFlavorPopup.js"
 export default {
 	data() {
 		return {
@@ -44,7 +45,7 @@ export default {
 			moreNormDataes: null,
 			tableInfo: null,
 			moreNormDishdata: null,
-			moreNormdata: null,
+			moreNormdata: [],
 			// 套餐中查询到的菜品名称
 			dishMealData: null,
 			openTablePeoPleNumber: 1,
@@ -547,20 +548,12 @@ export default {
 		},
 		// 多规格数据处理
 		moreNormDataesHandle(item) {
-			this.flavorDataes.splice(0)
-			this.moreNormDishdata = item
+			const popupData = prepareMultiFlavorPopup(item, this.isMultiSelectFlavor)
+			this.moreNormDishdata = popupData.dish
+			this.moreNormdata = popupData.moreNormdata
+			this.flavorDataes = popupData.flavorDataes
 			this.openDetailPop = false
 			this.openMoreNormPop = true
-			this.moreNormdata = item.flavors.map((obj) => ({
-				...obj,
-				value: JSON.parse(obj.value),
-			}))
-			// 忌口类默认不选；辣度、温度等单选类默认选第一项
-			this.moreNormdata.forEach((group) => {
-				if (!this.isMultiSelectFlavor(group) && group.value && group.value.length > 0) {
-					this.flavorDataes.push(group.value[0])
-				}
-			})
 		},
 		isMultiSelectFlavor(group) {
 			const name = String(group.name || '')
