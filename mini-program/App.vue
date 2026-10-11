@@ -3,8 +3,10 @@ export default {
   onLaunch: function () {
   },
   onShow: function () {
+    uni.$emit('app:foreground')
   },
   onHide: function () {
+    uni.$emit('app:background')
   }
 }
 </script>

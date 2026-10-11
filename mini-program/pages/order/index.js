@@ -3,6 +3,7 @@ import {
 	getAddressBookDefault,
 	queryAddressBookList,
 	getEstimatedDeliveryTime,
+	getShopStatus,
 	submitOrderSubmit
 } from '../api/api.js'
 import {
@@ -26,6 +27,7 @@ import DishDetail from "./components/dishDetail.vue" //菜品详情
 import DishInfo from "./components/dishInfo.vue" //菜品信息
 import dayjs from "@/utils/lib/dayjs.min.js";
 import getCheckoutAddressState from '@/utils/checkoutAddress.js'
+import getImmediateDeliveryStatusNotice from '@/utils/shopStatusDecision.js'
 export default {
 	data() {
 		return {
@@ -87,7 +89,10 @@ export default {
 			weeks: [],
 			scrollTop: 0,
 			addressList: [],
-			isHandlePy: false
+			isHandlePy: false,
+			shopStatusRequestSequence: 0,
+			shopStatusPageVisible: false,
+			deliveryStatusNoticeKey: ''
 		}
 	},
 	computed: {
@@ -164,6 +169,18 @@ export default {
 		this.setArrivalTime(this.arrivalTime)
 		this.setGender(this.gender)
 	},
+	onShow() {
+		this.shopStatusPageVisible = true
+		this.refreshShopStatus()
+	},
+	onHide() {
+		this.shopStatusPageVisible = false
+		this.shopStatusRequestSequence += 1
+	},
+	onUnload() {
+		this.shopStatusPageVisible = false
+		this.shopStatusRequestSequence += 1
+	},
 	onReady() {
 		uni.getSystemInfo({
 			success: (res) => {
@@ -172,8 +189,25 @@ export default {
 		})
 	},
 	methods: {
-		...mapState(['orderListData', 'remarkData', 'addressData', 'storeInfo', 'shopInfo', 'deliveryFee']),
-		...mapMutations(['setAddressBackUrl', 'setOrderData', 'setArrivalTime', 'setRemark', 'setGender']),
+		...mapState(['orderListData', 'remarkData', 'addressData', 'storeInfo', 'shopInfo', 'deliveryFee', 'shopStatus']),
+		...mapMutations(['setAddressBackUrl', 'setOrderData', 'setArrivalTime', 'setRemark', 'setGender', 'setShopStatus']),
+		async refreshShopStatus() {
+			const requestSequence = ++this.shopStatusRequestSequence
+			try {
+				const result = await getShopStatus({ _refresh: Date.now() })
+				if (!this.shopStatusPageVisible || requestSequence !== this.shopStatusRequestSequence) {
+					return { status: this.shopStatus(), refreshed: false }
+				}
+				const status = result && result.code === 1 && (result.data === 0 || result.data === 1)
+					? result.data
+					: null
+				if (status === null) return { status: this.shopStatus(), refreshed: false }
+				this.setShopStatus(status)
+				return { status, refreshed: status !== null }
+			} catch (error) {
+				return { status: this.shopStatus(), refreshed: false }
+			}
+		},
 		init() {
 			this.computOrderInfo()
 
@@ -277,8 +311,10 @@ export default {
 			this.showDisplay = !this.showDisplay
 		},
 		// 支付下单
-		payOrderHandle() {
+		async payOrderHandle() {
+			if (this.isHandlePy) return false
 			this.isHandlePy = true
+			this.deliveryStatusNoticeKey = ''
 
 			if (!this.address) {
 				this.isHandlePy = false
@@ -287,6 +323,15 @@ export default {
 					icon: 'none',
 				})
 				return false
+			}
+			const currentShopStatus = await this.refreshShopStatus()
+			if (this.isImmediateDelivery) {
+				const statusNoticeKey = getImmediateDeliveryStatusNotice(currentShopStatus)
+				if (statusNoticeKey) {
+					this.isHandlePy = false
+					this.deliveryStatusNoticeKey = statusNoticeKey
+					return false
+				}
 			}
 			const params = {
 				payMethod: 1,
@@ -304,26 +349,42 @@ export default {
 				deliveryFee: this.deliveryFee()
 			}
 
-			submitOrderSubmit(params).then(res => {
-				this.isHandlePy = false
+			try {
+				const res = await submitOrderSubmit(params)
 				if (res.code === 1) {
+					this.isHandlePy = false
 					this.setOrderData(res.data)
 					uni.navigateTo({
 						url: '/pages/pay/index?orderId=' + res.data.id
 					})
 				} else {
-					uni.showToast({
-						title: this.orderErrorMessage(res.msg),
-						icon: 'none',
-					})
+					await this.handleOrderSubmissionError(res.msg)
 				}
-			}).catch(error => {
-				this.isHandlePy = false
-				uni.showToast({
-					title: this.orderErrorMessage(error.msg),
-					icon: 'none',
-				})
-			})
+			} catch (error) {
+				await this.handleOrderSubmissionError(error && (error.msg || (error.data && error.data.msg)))
+			}
+		},
+		async handleOrderSubmissionError(message) {
+			const currentShopStatus = await this.refreshShopStatus()
+			this.isHandlePy = false
+			if (typeof message === 'string' && message.includes('店铺当前未营业')) {
+				const noticeKey = getImmediateDeliveryStatusNotice(currentShopStatus, true)
+				if (this.isImmediateDelivery && noticeKey) {
+					this.deliveryStatusNoticeKey = noticeKey
+				} else {
+					uni.showToast({ title: this.orderErrorMessage(message), icon: 'none' })
+				}
+				return
+			}
+			const localizedMessage = this.orderErrorMessage(message)
+			if (localizedMessage === this.$t('order.shopStatusUnavailable')) {
+				this.deliveryStatusNoticeKey = 'order.shopStatusUnavailable'
+				return
+			}
+			uni.showToast({ title: localizedMessage, icon: 'none' })
+		},
+		dismissDeliveryStatusNotice() {
+			this.deliveryStatusNoticeKey = ''
 		},
 		orderErrorMessage(message) {
 			return userFacingErrorMessage(message, this.$store.state.locale)
@@ -430,6 +491,7 @@ export default {
 		},
 		// 设置时间
 		setTime(val) {
+			this.deliveryStatusNoticeKey = ''
 			if (val === this.$t('order.immediateDelivery')) {
 				this.arrivalTime = dayjs(this.orderTime).format('HH:mm')
 				this.isImmediateDelivery = true

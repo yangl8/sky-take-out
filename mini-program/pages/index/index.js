@@ -29,6 +29,7 @@ import { mapState, mapMutations } from "vuex"
 import { baseUrl } from "../../utils/env"
 import prepareMultiFlavorPopup from "../../utils/multiFlavorPopup.js"
 import aggregateMenuCartQuantities from "../../utils/menuCartQuantities.js"
+import getShopClosedNoticeState from "../../utils/shopClosedNotice.js"
 export default {
 	data() {
 		return {
@@ -70,7 +71,15 @@ export default {
 			rightIdAndType: {},
 			phoneData: "",
 			tablewareNumber: 0,
-			shopStatus: null,
+			shopStatusTimer: null,
+			shopStatusRequestSequence: 0,
+			shopStatusRequestInFlight: false,
+			shopStatusPageVisible: false,
+			shopStatusWasVisibleBeforeBackground: false,
+			lastObservedShopStatus: null,
+			shopClosedNoticeVisible: false,
+			shopClosedNoticeDismissed: false,
+			shopClosedNoticeSpacerRpx: 0,
 			scrollTop: 0,
 			menuHeight: 0, // 左边菜单的高度
 			menuItemHeight: 0, // 左边菜单item的高度
@@ -86,8 +95,32 @@ export default {
 		popCart,
 		dishDetail,
 	},
+	created() {
+		this._handleAppBackground = () => {
+			this.shopStatusWasVisibleBeforeBackground = this.shopStatusPageVisible
+			if (this.shopStatusPageVisible) this.stopShopStatusSync()
+		}
+		this._handleAppForeground = () => {
+			const pages = getCurrentPages()
+			const currentPage = pages[pages.length - 1]
+			const menuIsCurrentPage = currentPage && currentPage.route === 'pages/index/index'
+			if (!this.shopStatusWasVisibleBeforeBackground && !menuIsCurrentPage) return
+			this.shopStatusWasVisibleBeforeBackground = false
+			this.startShopStatusSync()
+		}
+		uni.$on('app:background', this._handleAppBackground)
+		uni.$on('app:foreground', this._handleAppForeground)
+	},
+	beforeDestroy() {
+		uni.$off('app:background', this._handleAppBackground)
+		uni.$off('app:foreground', this._handleAppForeground)
+		this.stopShopStatusSync()
+	},
 	//   计算属性
 	computed: {
+		shopStatus() {
+			return this.$store.state.shopStatus
+		},
 		// 购物车信息列表
 		orderListDataes: function () {
 			return this.orderListData()
@@ -123,6 +156,11 @@ export default {
 			)
 		},
 	},
+	watch: {
+		'$store.state.locale'() {
+			if (this.shopClosedNoticeVisible) this.syncClosedNoticeLayout()
+		}
+	},
 
 	onReady() {
 		this.getMenuItemTop()
@@ -142,9 +180,16 @@ export default {
 		}
 	},
 	onShow() {
+		this.startShopStatusSync()
 		if (this.token()) {
 			this.init()
 		}
+	},
+	onHide() {
+		this.stopShopStatusSync()
+	},
+	onUnload() {
+		this.stopShopStatusSync()
 	},
 	methods: {
 		//   vuex储存信息
@@ -169,6 +214,15 @@ export default {
 			"token", //token
 			"deliveryFee", //配送费
 		]),
+		startShopStatusSync() {
+			this.shopStatusPageVisible = true
+			this.refreshShopStatus()
+			if (this.shopStatusTimer === null) {
+				this.shopStatusTimer = setInterval(() => {
+					this.refreshShopStatus()
+				}, 25000)
+			}
+		},
 		loginSync() {
 			return new Promise((resolve, reject) => {
 				uni.login({
@@ -184,8 +238,6 @@ export default {
 		getData() {
 			let res = wx.getMenuButtonBoundingClientRect()
 			let _this = this
-			// 获取店铺状态
-			this.getShopInfo()
 			// 获取店铺名称、地址、电话和配送费
 			this.getMerchantInfo()
 			this.selectHeight = res.height
@@ -354,14 +406,73 @@ export default {
 			}
 			this.setOrderNum()
 		},
-		// 获取首页店铺信息
-		async getShopInfo() {
-			await getShopStatus()
-				.then((res) => {
-					this.shopStatus = res.data
-					this.setShopStatus(res.data)
-				})
-				.catch((err) => { })
+		// 获取最新营业状态；失败时保留上次成功值，不把未知状态当作营业中
+		async refreshShopStatus() {
+			if (!this.shopStatusPageVisible || this.shopStatusRequestInFlight) return this.shopStatus
+			this.shopStatusRequestInFlight = true
+			const requestSequence = ++this.shopStatusRequestSequence
+			try {
+				const res = await getShopStatus({ _refresh: Date.now() })
+				if (!this.shopStatusPageVisible || requestSequence !== this.shopStatusRequestSequence) {
+					return this.shopStatus
+				}
+				const status = res && res.code === 1 && (res.data === 0 || res.data === 1)
+					? res.data
+					: null
+				if (status === null) return this.shopStatus
+				const noticeState = getShopClosedNoticeState(
+					this.lastObservedShopStatus,
+					status,
+					this.shopClosedNoticeVisible,
+					this.shopClosedNoticeDismissed
+				)
+				const noticeVisibilityChanged = noticeState.visible !== this.shopClosedNoticeVisible
+				this.shopClosedNoticeVisible = noticeState.visible
+				this.shopClosedNoticeDismissed = noticeState.dismissed
+				this.lastObservedShopStatus = status
+				if (noticeVisibilityChanged) this.syncClosedNoticeLayout()
+				this.setShopStatus(status)
+				return status
+			} catch (error) {
+				return this.shopStatus
+			} finally {
+				if (requestSequence === this.shopStatusRequestSequence) {
+					this.shopStatusRequestInFlight = false
+				}
+			}
+		},
+		// 页面隐藏或退出时停止轮询并使未完成的旧请求失效
+		stopShopStatusSync() {
+			this.shopStatusPageVisible = false
+			this.shopStatusRequestSequence += 1
+			this.shopStatusRequestInFlight = false
+			if (this.shopStatusTimer !== null) {
+				clearInterval(this.shopStatusTimer)
+				this.shopStatusTimer = null
+			}
+		},
+		dismissShopClosedNotice() {
+			this.shopClosedNoticeVisible = false
+			this.shopClosedNoticeDismissed = true
+			this.shopClosedNoticeSpacerRpx = 0
+		},
+		syncClosedNoticeLayout() {
+			if (!this.shopClosedNoticeVisible) {
+				this.shopClosedNoticeSpacerRpx = 0
+				return
+			}
+			this.shopClosedNoticeSpacerRpx = 120
+			this.$nextTick(() => {
+				uni.createSelectorQuery().in(this).select('.shop_closed_notice').boundingClientRect((rect) => {
+					if (!rect) {
+						this.shopClosedNoticeSpacerRpx = 0
+						return
+					}
+					const windowWidth = uni.getSystemInfoSync().windowWidth || 375
+					const noticeHeightRpx = rect.height * 750 / windowWidth
+					this.shopClosedNoticeSpacerRpx = Math.ceil(noticeHeightRpx + 14)
+				}).exec()
+			})
 		},
 		// 获取店铺电话
 		async getMerchantInfo() {

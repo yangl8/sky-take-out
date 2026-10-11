@@ -15,6 +15,10 @@
     <!-- end -->
     <view class="order_content" @touchstart="touchstart">
       <view class="order_content_box">
+        <view v-if="deliveryStatusNoticeKey" class="delivery_status_notice">
+          <text>{{ $t(deliveryStatusNoticeKey) }}</text>
+          <text class="notice_close" @click.stop="dismissDeliveryStatusNotice">×</text>
+        </view>
         <!-- 地址 -->
         <address-pop
           :address="address"

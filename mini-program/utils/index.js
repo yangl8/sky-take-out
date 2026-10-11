@@ -15,6 +15,12 @@ export const userFacingErrorMessage = (message, locale = 'zh', fallbackKey = 'or
 	if (typeof message !== 'string' || !message.trim()) {
 		return translate(locale, fallbackKey)
 	}
+	if (message.includes('营业状态暂不可用')) return translate(locale, 'order.shopStatusUnavailable')
+	if (message.includes('店铺当前未营业')) return translate(locale, 'order.shopClosed')
+	if (message.includes('预约送达时间不足')) return translate(locale, 'order.deliveryTimeUnavailable')
+	if (message.includes('请选择有效的预约送达时间')) return translate(locale, 'order.deliveryTimeUnavailable')
+	if (message.includes('不在允许营业时段')) return translate(locale, 'order.deliveryTimeUnavailable')
+	if (message.includes('配送方式无效')) return translate(locale, 'order.deliveryTimeUnavailable')
 	if (message.includes('超出配送范围')) return translate(locale, 'order.outOfRange')
 	if (message.includes('购物车') && (message.includes('空') || message.includes('不能下单'))) {
 		return translate(locale, 'order.emptyCart')

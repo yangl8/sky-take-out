@@ -476,13 +476,33 @@ $desc-font-color: #818693;
       align-items: center;
     }
   }
-  // 打烊
-  .restaurant_close{
-    font-size: 50rpx;
-    color: #333;
-    margin-top: 340rpx;
+  .shop_closed_notice_spacer {
+    flex: 0 0 auto;
+    width: 100%;
   }
-
+  .shop_closed_notice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 14rpx 0 0;
+    padding: 10rpx 14rpx;
+    border-radius: 8rpx;
+    background: #f3f4f7;
+    color: #666666;
+    font-size: 22rpx;
+    line-height: 32rpx;
+    & > text:first-child {
+      flex: 1;
+      margin-right: 16rpx;
+    }
+    .notice_close {
+      flex: 0 0 auto;
+      padding: 0 8rpx;
+      color: #777777;
+      font-size: 32rpx;
+      line-height: 32rpx;
+    }
+  }
   .footer_order_buttom {
     position: fixed;
     display: flex;

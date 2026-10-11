@@ -16,7 +16,7 @@ const store = new Vuex.Store({
 		addressBackUrl: '',
 		dishTypeIndex: 0,
 		shopPhone: '', //店铺电话
-		shopStatus: {}, //店铺状态
+		shopStatus: null, //店铺状态，null 表示尚未成功获取
 		orderData: {},
 		selectedOrder: {}, // 进入详情页前暂存选中的订单
 		token: '',

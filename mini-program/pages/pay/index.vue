@@ -220,6 +220,11 @@ export default {
               icon: "none",
             });
           }
+        }).catch((error) => {
+          uni.showToast({
+            title: userFacingErrorMessage(error && (error.msg || (error.data && error.data.msg)), this.$store.state.locale, "payment.failed"),
+            icon: "none",
+          });
         });
     },
     // // 订单倒计时

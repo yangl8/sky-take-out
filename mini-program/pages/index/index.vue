@@ -42,11 +42,16 @@
               </view>
             </view>
           </view>
+          <view class="shop_closed_notice" v-if="shopClosedNoticeVisible">
+            <text>{{ $t("home.shopClosedNotice") }}</text>
+            <text class="notice_close" @click.stop="dismissShopClosedNotice">×</text>
+          </view>
         </view>
       </view>
       <!-- end -->
+      <view v-if="shopClosedNoticeVisible" class="shop_closed_notice_spacer" :style="{ height: shopClosedNoticeSpacerRpx + 'rpx' }"></view>
       <!-- 菜单列表 -->
-      <view class="restaurant_menu_list" v-if="shopStatus === 1">
+      <view class="restaurant_menu_list">
         <view class="type_list">
           <scroll-view scroll-y scroll-with-animation class="u-tab-view menu-scroll-view" :scroll-top="scrollTop + 100"
             :scroll-into-view="itemId">
@@ -102,12 +107,10 @@
           <view v-if="typeListData.length > 0">{{ $t("home.emptyCategory") }}</view>
         </view>
       </view>
-      <view class="restaurant_close" v-if="shopStatus === 0">{{ $t("home.shopClosed") }}</view>
-      <!-- end -->
       <view class="mask-box"></view>
       <!-- 底部去结算 -->
       <!-- 购物车里没有订单的状态 -->
-      <view class="footer_order_buttom" v-if="orderListData().length === 0 || shopStatus !== 1">
+      <view class="footer_order_buttom" v-if="orderListData().length === 0">
         <view class="order_number">
           <image src="../../static/btn_waiter_nor.png" class="order_number_icon" mode=""></image>
         </view>
@@ -160,11 +163,6 @@
       </view>
       <!-- 电话弹层 -->
       <phone ref="phone" :phoneData="phoneData" @closePopup="closePopup"></phone>
-      <!-- end -->
-      <!-- 店面打烊弹层 -->
-      <view class="colseShop" v-if="shopStatus === 0">
-        <view class="shop">{{ $t("home.shopClosed") }}</view>
-      </view>
       <!-- end -->
     </view>
   </view>

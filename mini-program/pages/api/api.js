@@ -299,7 +299,8 @@ export const querySetmealDishById = (params) => {
 export const getShopStatus = (params) => {
 	return request({
 		url: `/user/shop/status`,
-		method: 'GET'
+		method: 'GET',
+		params: params || {}
 	})
 }
 // 获取店铺信息
