@@ -60,5 +60,10 @@ sky:
     address: 北京市朝阳区新街大道1号
     phone: 15200000001
     delivery-fee: 0
+    delivery-time:
+      opening-time: "10:00:00"
+      closing-time: "22:00:00"
+      time-zone: Asia/Shanghai
+      minimum-preparation-minutes: 30
   amap:
     key: ${AMAP_KEY:}
