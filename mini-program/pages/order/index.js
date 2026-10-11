@@ -402,6 +402,16 @@ export default {
 			return normalizeOrderDateTime(value, Date.now() + 30 * 60 * 1000)
 		},
 		async handleOrderSubmissionError(message) {
+			if (typeof message === 'string' && message.includes('超出配送范围')) {
+				this.isHandlePy = false
+				this.deliveryStatusNoticeKey = 'order.outOfRange'
+				return
+			}
+			if (typeof message === 'string' && message.includes('地址')) {
+				this.isHandlePy = false
+				this.deliveryStatusNoticeKey = 'order.addressUnavailable'
+				return
+			}
 			const currentShopStatus = await this.refreshShopStatus()
 			this.isHandlePy = false
 			if (typeof message === 'string' && message.includes('店铺当前未营业')) {

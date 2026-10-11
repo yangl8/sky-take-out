@@ -231,7 +231,7 @@ export default {
     overflow-y: auto;
     .address_liests {
       width: 100%;
-      height: 256rpx;
+      min-height: 256rpx;
       opacity: 1;
       background: #ffffff;
       border-radius: 12rpx;
@@ -244,32 +244,53 @@ export default {
       // 上部
       .list_item_top {
         flex: 1;
+        min-height: 176rpx;
         width: 100%;
-        height: 100%;
+        box-sizing: border-box;
         display: flex;
         // 左边
         .item_left {
           flex: 1;
-          overflow: hidden;
+          min-width: 0;
+          overflow: visible;
           margin-left: 12rpx;
           // 地址
           .details {
             margin-top: 42rpx;
             display: flex;
-            height: 40rpx;
+            align-items: flex-start;
+            gap: 8rpx;
+            min-width: 0;
+            min-height: 40rpx;
             line-height: 40rpx;
+
+            .tag {
+              flex: 0 1 auto;
+              width: auto;
+              max-width: 38%;
+              min-height: 40rpx;
+              height: auto;
+              padding: 0 10rpx;
+              box-sizing: border-box;
+              white-space: normal;
+              overflow-wrap: anywhere;
+              word-break: normal;
+              margin-right: 0;
+            }
 
             // 地址描述
             .address_word {
-              flex: 1;
+              flex: 1 1 0;
+              min-width: 0;
               font-size: 28rpx;
               font-family: PingFangSC, PingFangSC-Regular;
               font-weight: 400;
               text-align: left;
               color: #333333;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
+              white-space: normal;
+              word-break: normal;
+              overflow-wrap: anywhere;
+              word-wrap: break-word;
             }
             // 不同标签展示不同背景色
             .active {
