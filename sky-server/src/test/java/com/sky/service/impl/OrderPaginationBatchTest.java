@@ -171,6 +171,37 @@ class OrderPaginationBatchTest {
     }
 
     /**
+     * 验证管理端第2页待配送查询在 Mapper 执行前启用分页并保留筛选条件
+     */
+    @Test
+    void adminDeliverySearchShouldApplyEtaQueryBeforeSecondPageFetch() {
+        OrdersPageQueryDTO query = new OrdersPageQueryDTO();
+        query.setPage(2);
+        query.setPageSize(2);
+        query.setStatus(3);
+        query.setNumber("ETA-");
+        query.setPhone("123");
+        when(orderMapper.pageQuery(any(OrdersPageQueryDTO.class))).thenAnswer(invocation -> {
+            Page<?> pageRequest = PageHelper.getLocalPage();
+            assertNotNull(pageRequest);
+            assertEquals(2, pageRequest.getPageNum());
+            assertEquals(2, pageRequest.getPageSize());
+            OrdersPageQueryDTO mapperQuery = invocation.getArgument(0);
+            assertEquals(3, mapperQuery.getStatus());
+            assertEquals("ETA-", mapperQuery.getNumber());
+            assertEquals("123", mapperQuery.getPhone());
+            PageHelper.clearPage();
+            return page(2, 2, 5);
+        });
+
+        PageResult result = orderService.conditionSearch(query);
+
+        assertEquals(5L, result.getTotal());
+        assertTrue(result.getRecords().isEmpty());
+        verify(orderMapper).pageQuery(query);
+    }
+
+    /**
      * 创建包含指定订单的分页结果
      *
      * @param pageNum 当前页码

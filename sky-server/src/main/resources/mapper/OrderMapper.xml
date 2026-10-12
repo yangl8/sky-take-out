@@ -41,7 +41,17 @@
                 and order_time &lt;= #{endTime}
             </if>
         </where>
-        order by order_time desc
+        <choose>
+            <when test="status != null and status == 3">
+                order by (estimated_delivery_time is null) asc,
+                         estimated_delivery_time asc,
+                         order_time asc,
+                         id asc
+            </when>
+            <otherwise>
+                order by order_time desc
+            </otherwise>
+        </choose>
     </select>
 
     <update id="updateStatusIfCurrent">

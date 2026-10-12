@@ -53,7 +53,7 @@
             <el-table-column
               prop="estimatedDeliveryTime"
               :label="String($t('orders.estimatedDeliveryTime'))"
-              sortable
+              :sortable="status !== 3"
               class-name="orderTime"
               label-class-name="workbench-time-header"
               align="center"
