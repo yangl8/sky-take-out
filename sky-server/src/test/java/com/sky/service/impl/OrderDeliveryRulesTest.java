@@ -90,7 +90,7 @@ class OrderDeliveryRulesTest {
         when(addressBookMapper.getByIdAndUserId(ADDRESS_ID, USER_ID)).thenReturn(AddressBook.builder()
                 .id(ADDRESS_ID).userId(USER_ID).cityName("City").districtName("District")
                 .detail("Street 1").phone("0600000000").consignee("Test User").build());
-        lenient().doNothing().when(orderService).checkOutOfRange(anyString());
+        lenient().doNothing().when(orderService).checkOutOfRange(any(AddressBook.class));
     }
 
     @AfterEach

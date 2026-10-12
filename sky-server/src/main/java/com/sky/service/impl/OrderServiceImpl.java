@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -175,7 +174,7 @@ public class OrderServiceImpl implements OrderService{
         validateDeliveryRules(ordersSubmitDTO);
 
         //检查用户的收货地址是否超出配送范围
-        checkOutOfRange(addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
+        checkOutOfRange(addressBook);
 
         //查询当前用户的购物车数据
         ShoppingCart shoppingCart = new ShoppingCart();
@@ -1025,62 +1024,64 @@ public class OrderServiceImpl implements OrderService{
     /**
      * 检查收货地址是否在配送范围内
      *
-     * @param deliveryAddress 收货地址
+     * @param addressBook 用户保存的结构化收货地址
      */
-    void checkOutOfRange(String deliveryAddress) {
-        Map map = new HashMap();
-        map.put("address",shopAddress);
-        map.put("output","json");
-        map.put("key",amapKey);
+    void checkOutOfRange(AddressBook addressBook) {
+        String deliveryAddress = DeliveryLocationValidator.buildGeocodingAddress(addressBook);
+        String shopCoordinate = geocodeAddress(shopAddress, shopAddress, null, "店铺地址");
+        String userCoordinate = geocodeAddress(
+                deliveryAddress, addressBook.getDetail(), addressBook.getDistrictCode(), "收货地址");
 
-        //获取店铺的经纬度坐标
-        String shopCoordinate = HttpClientUtil.doGet("https://restapi.amap.com/v3/geocode/geo", map);
-
-        JSONObject jsonObject = JSON.parseObject(shopCoordinate);
-        if(!jsonObject.getString("status").equals("1")){
-            throw new OrderBusinessException("店铺地址解析失败");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("key", amapKey);
+        parameters.put("origin", shopCoordinate);
+        parameters.put("destination", userCoordinate);
+        String response;
+        try {
+            response = requestAmap("https://restapi.amap.com/v5/direction/driving", parameters);
+        } catch (RuntimeException exception) {
+            log.error("高德驾车路线请求失败", exception);
+            throw new OrderBusinessException("配送路线服务暂不可用");
         }
+        BigDecimal distance = DeliveryLocationValidator.resolveDrivingDistance(response, shopCoordinate, userCoordinate);
+        DeliveryLocationValidator.requireWithinDeliveryRange(distance);
+    }
 
-        //数据解析
-        JSONArray geocodes = jsonObject.getJSONArray("geocodes");
-        //店铺经纬度坐标
-        String shopLngLat = geocodes.getJSONObject(0).getString("location");
-
-        map.put("address",deliveryAddress);
-        //获取用户收货地址的经纬度坐标
-        String userCoordinate = HttpClientUtil.doGet("https://restapi.amap.com/v3/geocode/geo", map);
-
-        jsonObject = JSON.parseObject(userCoordinate);
-        if(!jsonObject.getString("status").equals("1")){
-            throw new OrderBusinessException("收货地址解析失败");
+    /**
+     * 将地址交给高德地理编码并校验行政区划和匹配精度
+     *
+     * @param address 发送给高德的完整地址
+     * @param requestedDetail 地址中必须被高德结果匹配的详细部分
+     * @param expectedDistrictCode 预期区县代码，店铺配置地址不传
+     * @param addressLabel 地址用途名称
+     * @return 已验证的经度、纬度
+     * @throws OrderBusinessException 高德服务异常或地址无法精确匹配
+     */
+    private String geocodeAddress(String address, String requestedDetail, String expectedDistrictCode, String addressLabel) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("key", amapKey);
+        parameters.put("output", "json");
+        parameters.put("address", address);
+        String response;
+        try {
+            response = requestAmap("https://restapi.amap.com/v3/geocode/geo", parameters);
+        } catch (RuntimeException exception) {
+            log.error("{}高德地理编码请求失败", addressLabel, exception);
+            throw new OrderBusinessException(addressLabel + "定位服务暂不可用");
         }
+        return DeliveryLocationValidator.resolveGeocodeCoordinate(
+                response, requestedDetail, expectedDistrictCode, addressLabel);
+    }
 
-        //数据解析
-        geocodes = jsonObject.getJSONArray("geocodes");
-        //用户收货地址经纬度坐标
-        String userLngLat = geocodes.getJSONObject(0).getString("location");
-
-        map.remove("address");
-        map.put("origin",shopLngLat);
-        map.put("destination",userLngLat);
-
-        //路线规划
-        String json = HttpClientUtil.doGet("https://restapi.amap.com/v5/direction/driving", map);
-
-        jsonObject = JSON.parseObject(json);
-        if(!jsonObject.getString("status").equals("1")){
-            throw new OrderBusinessException("配送路线规划失败");
-        }
-
-        //数据解析
-        JSONObject route = jsonObject.getJSONObject("route");
-        JSONArray paths = route.getJSONArray("paths");
-        Integer distance = paths.getJSONObject(0).getInteger("distance");
-
-        if(distance > 5000){
-            //配送距离超过5000米
-            throw new OrderBusinessException("超出配送范围");
-        }
+    /**
+     * 请求高德 Web 服务
+     *
+     * @param url 高德服务地址
+     * @param parameters HTTP 查询参数
+     * @return HTTP 响应正文
+     */
+    String requestAmap(String url, Map<String, String> parameters) {
+        return HttpClientUtil.doGet(url, parameters);
     }
 
     /**    (non-Javadoc)

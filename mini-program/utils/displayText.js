@@ -35,6 +35,7 @@ const descriptions = {
 };
 
 const shopAddresses = {
+  "北京市朝阳区工人体育场北路8号": ["No. 8 Workers' Stadium North Road, Chaoyang District, Beijing", "N° 8, route nord du Stade des Ouvriers, district de Chaoyang, Pékin"],
   "北京市朝阳区新街大道1号": ["No. 1 Xinjie Avenue, Chaoyang District, Beijing", "N° 1, avenue Xinjie, district de Chaoyang, Pékin"],
   "北京市朝阳区新街大道一号楼8层": ["8th floor, Building 1, Xinjie Avenue, Chaoyang District, Beijing", "8e étage, bâtiment 1, avenue Xinjie, district de Chaoyang, Pékin"]
 };

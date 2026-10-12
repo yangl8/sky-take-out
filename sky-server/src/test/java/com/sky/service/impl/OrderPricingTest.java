@@ -100,7 +100,7 @@ class OrderPricingTest {
                 new DeliveryTimeValidationService(properties, clock));
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         lenient().when(valueOperations.get(ShopStatusConstant.KEY)).thenReturn(1);
-        doNothing().when(orderService).checkOutOfRange(anyString());
+        doNothing().when(orderService).checkOutOfRange(any(AddressBook.class));
         when(addressBookMapper.getByIdAndUserId(ADDRESS_ID, USER_ID)).thenReturn(AddressBook.builder()
                 .id(ADDRESS_ID)
                 .userId(USER_ID)
