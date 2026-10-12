@@ -9,7 +9,7 @@ export default {
   address: { title: "地址管理", defaultAddress: "设为默认地址", empty: "一个地址都没有哦", add: "新增收货地址", edit: "编辑收货地址", contact: "联系人:", contactPlaceholder: "请填写收货人的姓名", phone: "手机号:", phonePlaceholder: "请填写收货人手机号码", deliveryAddress: "收货地址:", region: "省/市/区", detailPlaceholder: "详细地址（精确到门牌号）", label: "标签:", save: "保存地址", delete: "删除地址", company: "公司", home: "家", school: "学校", other: "其他", defaultSuccess: "默认地址设置成功", contactRequired: "联系人不能为空", phoneRequired: "手机号不能为空", labelRequired: "所属标签不能为空", regionRequired: "所在地区不能为空", detailRequired: "详细地址不能为空", phoneInvalid: "手机号输入有误", nameInvalid: "请输入合法的2-12个字符", deleteSuccess: "地址删除成功" },
   remark: { title: "订单备注", placeholder: "无接触配送，将商品挂家门口或放前台，地址封闭管理时请电话联系", done: "完成" },
   payment: { title: "支付订单", timedOut: "订单已超时", remaining: "支付剩余时间", confirm: "确认支付", confirmTitle: "确认付款", confirmMessage: "确定要支付这笔订单吗？", wechat: "微信支付", failed: "支付失败", successful: "支付成功" },
-  success: { title: "下单成功", arrival: "预计{time}送达", preparing: "后厨已开始备餐，请耐心等待", home: "返回首页", order: "查看订单" },
+  success: { title: "下单成功", immediateArrival: "预计送达：{time}", scheduledArrival: "预约送达：{time}", unknownArrival: "配送时间：{time}", immediatePreparing: "订单支付成功，商家将尽快安排备餐，请耐心等待。", scheduledPreparing: "预约成功！商家将根据预约时间安排备餐。", unknownPreparing: "支付已成功，配送信息正在确认。", home: "返回首页", order: "查看订单" },
   network: { title: "无网络", unavailable: "网络无法连接", refresh: "点击刷新" },
   popup: { contactMerchant: "请联系商家进行取消！", contactMerchantCancel: "订单已由商家处理，请联系商家取消或退款。商家电话：{phone}", simulatedCall: "拨打 {phone}？【仅为模拟】", callFailed: "无法拨打电话，请稍后重试", reminderSent: "您的催单信息已发出！", orderCancelled: "您的订单已取消！", cancelOrderTitle: "取消订单", cancelOrderConfirm: "确定要取消这个订单吗？" },
 };

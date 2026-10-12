@@ -9,10 +9,10 @@
       <view class="success_title">{{ $t("payment.successful") }}</view>
       <view class="word-box">
         <text class="word_bottom"
-          ><text class="word_date">{{ $t("success.arrival", { time: arrivalTime }) }}</text></text
+          ><text class="word_date">{{ $t(presentation.arrivalKey, { time: arrivalTime }) }}</text></text
         >
       </view>
-      <view class="success_desc">{{ $t("success.preparing") }}</view>
+      <view class="success_desc">{{ $t(presentation.messageKey) }}</view>
       <!-- 新添加 -->
       <view class="btns">
         <view class="go_dish defaultBtn" @click="goIndex()">{{ $t("success.home") }}</view>
@@ -25,14 +25,19 @@
 import { mapState } from "vuex";
 import { getOrderDetail } from "@/pages/api/api.js";
 import { formatDeliveryDateTime } from "@/utils/scheduledDeliveryTime.js";
+import { getPaymentSuccessPresentation } from "@/utils/paymentSuccessPresentation.js";
 export default {
   data() {
     return {
       arrivalTime: "",
       orderId: null,
+      deliveryStatus: null,
     };
   },
   computed: {
+    presentation() {
+      return getPaymentSuccessPresentation(this.deliveryStatus);
+    },
     tableInfo: function () {
       return this.shopInfo();
     },
@@ -44,6 +49,7 @@ export default {
         const result = await getOrderDetail(this.orderId);
         if (result && result.code === 1 && result.data && Number(result.data.payStatus) === 1) {
           this.arrivalTime = formatDeliveryDateTime(result.data.estimatedDeliveryTime);
+          this.deliveryStatus = result.data.deliveryStatus;
           return;
         }
       } catch (error) {
@@ -94,21 +100,24 @@ export default {
     }
     .success_desc {
       font-size: 32rpx;
-      margin-bottom: 40rpx;
+      margin-top: 24rpx;
       font-family: PingFangSC, PingFangSC-Regular;
       font-weight: 400;
       text-align: center;
       color: #666666;
-      height: 44rpx;
-      line-height: 44rp;
-      margin-top: 24rpx;
+      line-height: 1.4;
+      padding: 0 36rpx;
+      box-sizing: border-box;
     }
     .word-box {
       margin-top: 38rpx;
-      height: 44rpx;
-      line-height: 44rpx;
+      min-height: 44rpx;
+      line-height: 1.4;
+      padding: 0 36rpx;
+      box-sizing: border-box;
     }
     .word_bottom {
+      display: block;
       font-family: PingFangSC, PingFangSC-Regular;
       font-weight: 400;
       text-align: center;
@@ -116,10 +125,12 @@ export default {
       color: #666666;
       .word_date {
         color: #ffc200;
+        overflow-wrap: break-word;
       }
     }
 
     .btns {
+      margin-top: 32rpx;
       width: 100%;
       box-sizing: border-box;
       padding: 0 24rpx;
@@ -139,7 +150,7 @@ export default {
         font-size: 28rpx;
         height: 72rpx;
         line-height: 72rpx;
-        margin-top: 20rpx;
+        margin-top: 0;
         background: #ffc200;
         border-radius: 8rpx;
       }
