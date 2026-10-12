@@ -30,10 +30,10 @@
             style="width: 100%"
             @row-click="handleTable"
           >
-            <el-table-column prop="number" :label="String($t('orders.orderNumber'))" min-width="190" align="center" header-align="center">
+            <el-table-column prop="number" :label="String($t('orders.orderNumber'))" min-width="220" align="center" header-align="center" class-name="order-number-column">
               <template slot-scope="{ row }">
-                <span>{{ row.number }}</span>
-                <el-tag v-if="isScheduledDelivery(row)" size="mini" type="warning" class="scheduled-tag">{{ $t('orders.scheduledDelivery') }}</el-tag>
+                <span class="order-number-text">{{ row.number }}</span>
+                <el-tag v-if="isScheduledDelivery(row)" size="mini" class="scheduled-tag" :title="String($t('orders.scheduledDelivery'))" :aria-label="String($t('orders.scheduledDelivery'))">{{ String($t('orders.scheduledDelivery')).slice(0, 1) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column :label="String($t('orders.customerName'))" prop="consignee" min-width="140" align="center" header-align="center">

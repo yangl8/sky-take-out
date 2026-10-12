@@ -3320,6 +3320,31 @@ input[type="number"] {
   word-break: keep-all;
 }
 
+.order-number-column .cell {
+  position: relative;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  text-align: center;
+}
+
+.order-number-column .order-number-text {
+  display: block;
+  text-align: center;
+}
+
+.el-tag.scheduled-tag {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  margin: 0;
+  transform: translateY(-50%);
+  color: #2174c7;
+  background-color: #eef5ff;
+  border-color: #c6e2ff;
+}
+
 .workbench-order-table .orderTime .cell {
   padding-left: 0;
   white-space: nowrap;
