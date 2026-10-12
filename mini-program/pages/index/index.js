@@ -79,7 +79,6 @@ export default {
 			lastObservedShopStatus: null,
 			shopClosedNoticeVisible: false,
 			shopClosedNoticeDismissed: false,
-			shopClosedNoticeSpacerRpx: 0,
 			scrollTop: 0,
 			menuHeight: 0, // 左边菜单的高度
 			menuItemHeight: 0, // 左边菜单item的高度
@@ -156,12 +155,6 @@ export default {
 			)
 		},
 	},
-	watch: {
-		'$store.state.locale'() {
-			if (this.shopClosedNoticeVisible) this.syncClosedNoticeLayout()
-		}
-	},
-
 	onReady() {
 		this.getMenuItemTop()
 	},
@@ -426,11 +419,9 @@ export default {
 					this.shopClosedNoticeVisible,
 					this.shopClosedNoticeDismissed
 				)
-				const noticeVisibilityChanged = noticeState.visible !== this.shopClosedNoticeVisible
 				this.shopClosedNoticeVisible = noticeState.visible
 				this.shopClosedNoticeDismissed = noticeState.dismissed
 				this.lastObservedShopStatus = status
-				if (noticeVisibilityChanged) this.syncClosedNoticeLayout()
 				this.setShopStatus(status)
 				return status
 			} catch (error) {
@@ -454,25 +445,6 @@ export default {
 		dismissShopClosedNotice() {
 			this.shopClosedNoticeVisible = false
 			this.shopClosedNoticeDismissed = true
-			this.shopClosedNoticeSpacerRpx = 0
-		},
-		syncClosedNoticeLayout() {
-			if (!this.shopClosedNoticeVisible) {
-				this.shopClosedNoticeSpacerRpx = 0
-				return
-			}
-			this.shopClosedNoticeSpacerRpx = 120
-			this.$nextTick(() => {
-				uni.createSelectorQuery().in(this).select('.shop_closed_notice').boundingClientRect((rect) => {
-					if (!rect) {
-						this.shopClosedNoticeSpacerRpx = 0
-						return
-					}
-					const windowWidth = uni.getSystemInfoSync().windowWidth || 375
-					const noticeHeightRpx = rect.height * 750 / windowWidth
-					this.shopClosedNoticeSpacerRpx = Math.ceil(noticeHeightRpx + 14)
-				}).exec()
-			})
 		},
 		// 获取店铺电话
 		async getMerchantInfo() {
@@ -722,9 +694,6 @@ export default {
 		// 关闭电话弹层
 		closePopup(type) {
 			this.$refs.phone.$refs.popup.close(type)
-		},
-		disabledScroll() {
-			return false
 		},
 	},
 }

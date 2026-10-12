@@ -4,10 +4,13 @@ $desc-font-color: #818693;
 .home_content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-top: 160rpx;
+  align-items: stretch;
+  justify-content: flex-start;
+  height: 100vh;
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: 160rpx;
   /* #ifdef H5 */
   // padding-top: 100rpx;
   /* #endif */
@@ -75,9 +78,12 @@ $desc-font-color: #818693;
   // }
   // 展示悬浮盒子样式
   .restaurant_info_box {
+    flex: 0 0 auto;
     position: relative;
     color: $min-font-color;
     width: 100%;
+    padding-top: 10rpx;
+    box-sizing: border-box;
     // height: 236rpx;
     // // height: 160rpx;
     background: linear-gradient(
@@ -86,9 +92,8 @@ $desc-font-color: #818693;
       rgba(51, 51, 51, 0) 96%
     );
     .restaurant_info {
-      position: absolute;
+      position: relative;
       z-index: 9;
-      top: 10rpx;
       left: 30rpx;
       display: flex;
       flex-direction: column;
@@ -195,17 +200,23 @@ $desc-font-color: #818693;
         }
         .address {
           display: flex;
-          align-items: center;
-          text-align: center;
+          align-items: flex-start;
+          text-align: left;
           icon {
+            flex: 0 0 20rpx;
             background: url(../../image/address.png) no-repeat 0 0;
             background-size: contain;
             display: inline-block;
             width: 20rpx;
             height: 34rpx;
             margin-right: 10rpx;
-            // vertical-align:text-bottom;
-            margin-top: -8rpx;
+          }
+          .address_text {
+            flex: 1;
+            min-width: 0;
+            text-align: left;
+            word-break: normal;
+            overflow-wrap: anywhere;
           }
         }
         .phone {
@@ -224,19 +235,28 @@ $desc-font-color: #818693;
   .restaurant_menu_list {
     display: flex;
     width: 100%;
-    height: calc(100vh - 260rpx);
-    margin-top: 150rpx;
+    flex: 1 1 0;
+    min-height: 0;
+    margin-top: 24rpx;
+    // 为固定在视口底部（bottom 48rpx）的 88rpx 购物车栏留出实际空间
+    margin-bottom: calc(88rpx + 48rpx);
+    box-sizing: border-box;
     .type_list {
       display: flex;
       overflow: hidden;
       background-color: #f3f4f7;
       flex: 0 0 176rpx;
       width: 176rpx;
-      padding-top: 160rpx;
+      height: 100%;
+      min-height: 0;
       box-sizing: border-box;
-      padding-bottom: 60rpx;
       position: relative;
       font-size: 26rpx;
+      .menu-scroll-view {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+      }
       .type_item {
         min-height: 100rpx;
         height: 100rpx;
@@ -286,17 +306,13 @@ $desc-font-color: #818693;
           border-radius: 0 15rpx 0 0;
         }
       }
-      .seize_seat {
-        width: 100%;
-        height: 160rpx;
-      }
     }
     .vegetable_order_list {
       background-color: #fff;
-      padding-top: 160rpx;
       box-sizing: border-box;
-      height: calc(100% - 0rpx);
+      height: 100%;
       flex: 1;
+      min-height: 0;
       position: relative;
       .type_item {
         display: flex;
@@ -460,10 +476,6 @@ $desc-font-color: #818693;
         // bottom: 0px;
         // left: 0px;
       }
-      .seize_seat {
-        width: 100%;
-        height: 136rpx;
-      }
     }
     .no_dish {
       flex: 1;
@@ -476,10 +488,6 @@ $desc-font-color: #818693;
       justify-content: center;
       align-items: center;
     }
-  }
-  .shop_closed_notice_spacer {
-    flex: 0 0 auto;
-    width: 100%;
   }
   .shop_closed_notice {
     display: flex;

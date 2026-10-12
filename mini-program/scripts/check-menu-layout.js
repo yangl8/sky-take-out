@@ -32,7 +32,7 @@ assert.match(categoryStyles[1], /max-height: 72rpx;/)
 assert.match(categoryStyles[1], /word-break: normal;/)
 assert.doesNotMatch(categoryStyles[1], /-webkit-line-clamp|text-overflow/)
 
-const menuStyles = styles.match(/\.dish_info\s*\{([\s\S]*?)\n\s*\}\n\s*\.seize_seat/)
+const menuStyles = styles.match(/\.dish_info\s*\{([\s\S]*?)\n\s*\}\n\s*\.no_dish/)
 assert.ok(menuStyles, 'Menu card layout styles must be present')
 const dishRows = styles.match(/\.vegetable_order_list\s*\{([\s\S]*?)\.no_dish\s*\{/)
 assert.ok(dishRows, 'Dish list row styles must be present')

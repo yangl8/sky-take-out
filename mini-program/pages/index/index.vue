@@ -3,7 +3,7 @@
     <!-- 导航 -->
     <navBar></navBar>
     <!-- end -->
-    <view class="home_content" :style="{ paddingTop: ht + 'px' }" @touchmove.stop.prevent="disabledScroll">
+    <view class="home_content" :style="{ paddingTop: ht + 'px' }">
       <!-- 店铺基本信息 -->
       <view class="restaurant_info_box">
         <view class="restaurant_info">
@@ -33,7 +33,7 @@
               <view class="word">{{ $t("home.description") }}</view>
               <view class="address">
                 <icon></icon>
-                {{ shopInfo().shopAddress ? $displayText(shopInfo().shopAddress, 'address') : $t("home.loadingAddress") }}
+                <text class="address_text">{{ shopInfo().shopAddress ? $displayText(shopInfo().shopAddress, 'address') : $t("home.loadingAddress") }}</text>
               </view>
             </view>
             <view>
@@ -49,7 +49,6 @@
         </view>
       </view>
       <!-- end -->
-      <view v-if="shopClosedNoticeVisible" class="shop_closed_notice_spacer" :style="{ height: shopClosedNoticeSpacerRpx + 'rpx' }"></view>
       <!-- 菜单列表 -->
       <view class="restaurant_menu_list">
         <view class="type_list">
@@ -59,7 +58,6 @@
               v-for="(item, index) in typeListData" :key="index" @tap.stop="swichMenu(item, index)">
               <view class="item" :class="item.name.length > 5 ? 'allLine' : ''">{{ $displayText(item.name, 'category') }}</view>
             </view>
-            <view class="seize_seat"></view>
           </scroll-view>
         </view>
         <scroll-view class="vegetable_order_list" scroll-y="true" scroll-top="0rpx"
@@ -101,7 +99,6 @@
               </view>
             </view>
           </view>
-          <view class="seize_seat"></view>
         </scroll-view>
         <view class="no_dish" v-else>
           <view v-if="typeListData.length > 0">{{ $t("home.emptyCategory") }}</view>
