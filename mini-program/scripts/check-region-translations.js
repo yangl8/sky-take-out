@@ -4,6 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const dataRoot = path.join(root, 'pages/common/simple-address/city-data');
 const translations = require('../utils/regionTranslations.json');
+const { getDemoDeliveryAddress } = require('../utils/demoDeliveryAddress.js');
 
 function readData(fileName, variableName) {
   const source = fs.readFileSync(path.join(dataRoot, fileName), 'utf8')
@@ -16,12 +17,21 @@ const cityData = readData('city.js', 'cityData');
 const areaData = readData('area.js', 'areaData');
 const source = fs.readFileSync(path.join(root, 'utils/displayText.js'), 'utf8')
   .replace(/^import regionTranslations from .*;\s*$/m, '')
+  .replace(/^const \{ getDemoDeliveryAddress \} = require\(.*;\s*$/m, '')
   .replace('export function displayText', 'function displayText');
-const displayText = new Function('regionTranslations', `${source}\nreturn displayText;`)(translations);
+const displayText = new Function('regionTranslations', 'getDemoDeliveryAddress', `${source}\nreturn displayText;`)(translations, getDemoDeliveryAddress);
 const codes = new Map();
 const labels = new Set();
 const errors = [];
 let duplicateCodes = 0;
+
+const demoAddress = '北京市市辖区朝阳区三里屯路19号';
+if (displayText(demoAddress, 'zh', 'address') !== demoAddress) errors.push('demo address changed in Chinese');
+if (displayText(demoAddress, 'en', 'address') !== '19 Sanlitun Road, Chaoyang District, Beijing') errors.push('demo address English translation mismatch');
+if (displayText(demoAddress, 'fr', 'address') !== '19 rue Sanlitun, district de Chaoyang, Pékin') errors.push('demo address French translation mismatch');
+if (displayText('北京市 / 市辖区 / 朝阳区 / 三里屯路19号', 'en', 'address') !== '19 Sanlitun Road, Chaoyang District, Beijing') errors.push('demo address separator normalization mismatch');
+if (displayText('北京市市辖区朝阳区三里屯路20号', 'en', 'address') !== 'Beijing, Chaoyang District, 三里屯路20号') errors.push('different door number or user-entered detail was modified');
+if (displayText('北京市市辖区朝阳区新街大道1号', 'fr', 'address') !== 'Pékin, district de Chaoyang, 新街大道1号') errors.push('non-demo user detail was modified');
 
 function checkEntry(code, item) {
   if (!/^\d{6}$/.test(code)) errors.push(`invalid code ${code}`);

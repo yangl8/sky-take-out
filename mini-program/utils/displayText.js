@@ -1,4 +1,5 @@
 import regionTranslations from './regionTranslations.json';
+const { getDemoDeliveryAddress } = require('./demoDeliveryAddress.js');
 
 const menuNames = {
   "王老吉": ["Wanglaoji herbal tea", "Thé aux plantes Wanglaoji"], "北冰洋": ["Beibingyang soft drink", "Soda Beibingyang"], "雪花啤酒": ["Snow beer", "Bière Snow"],
@@ -79,7 +80,9 @@ function translateRegionName(value, locale) {
 export function displayText(value, locale = "zh", kind = "name", regionCode) {
   if (typeof value !== "string" || locale === "zh") return value;
   if (kind === "address") {
-    const compactAddress = value.replace(/\//g, "");
+    const demoAddress = getDemoDeliveryAddress(value, locale);
+    if (demoAddress) return demoAddress;
+    const compactAddress = value.replace(/[\/\s,，、]/g, "");
     if (shopAddresses[compactAddress]) return shopAddresses[compactAddress][locale === "fr" ? 1 : 0];
     let remainingAddress = compactAddress;
     const addressParts = [];
@@ -90,18 +93,10 @@ export function displayText(value, locale = "zh", kind = "name", regionCode) {
       remainingAddress = remainingAddress.slice(regionName.length);
     }
     if (addressParts.length) {
-      const detail = remainingAddress
-        .replace(/新街大道/g, locale === "fr" ? "avenue Xinjie" : "Xinjie Avenue")
-        .replace(/([0-9]+)号楼/g, locale === "fr" ? "bâtiment $1" : "Building $1")
-        .replace(/([0-9]+)号/g, locale === "fr" ? "n° $1" : "No. $1")
-        .replace(/([0-9]+)层/g, locale === "fr" ? "$1e étage" : "Floor $1");
-      if (detail) addressParts.push(detail);
+      if (remainingAddress) addressParts.push(remainingAddress);
       return addressParts.join(", ");
     }
-    const replacements = locale === "fr"
-      ? [["北京市", "Pékin, "], ["市辖区", ""], ["朝阳区", "district de Chaoyang, "], ["丰台区", "district de Fengtai, "], ["海淀区", "district de Haidian, "], ["东城区", "district de Dongcheng, "], ["西城区", "district de Xicheng, "], ["新街大道", "avenue Xinjie"], [/([0-9]+)号楼/g, "bâtiment $1"], [/([0-9]+)号/g, "n° $1"], [/([0-9]+)层/g, "$1e étage"]]
-      : [["北京市", "Beijing, "], ["市辖区", ""], ["朝阳区", "Chaoyang District, "], ["丰台区", "Fengtai District, "], ["海淀区", "Haidian District, "], ["东城区", "Dongcheng District, "], ["西城区", "Xicheng District, "], ["新街大道", "Xinjie Avenue"], [/([0-9]+)号楼/g, "Building $1"], [/([0-9]+)号/g, "No. $1"], [/([0-9]+)层/g, "Floor $1"]];
-    return replacements.reduce((address, [source, target]) => address.replace(source, target), compactAddress).replace(/,\s*,/g, ", ").trim();
+    return value;
   }
   if (kind === "region") {
     const knownName = translateRegionName(value, locale);

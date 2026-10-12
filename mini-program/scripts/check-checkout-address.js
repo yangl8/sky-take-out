@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const getCheckoutAddressState = require('../utils/checkoutAddress.js')
+const { getDemoDeliveryAddress } = require('../utils/demoDeliveryAddress.js')
 
 const addressTemplate = fs.readFileSync(path.join(__dirname, '../pages/order/components/address.vue'), 'utf8')
 const addressPage = fs.readFileSync(path.join(__dirname, '../pages/address/address.vue'), 'utf8')
@@ -24,6 +25,33 @@ const makeAddress = (label) => ({
 	sex: 0,
 	label
 })
+
+const demoAddressBookEntry = {
+	provinceName: '北京市',
+	cityName: '市辖区',
+	districtName: '朝阳区',
+	detail: '三里屯路19号'
+}
+const rawDemoAddress = `${demoAddressBookEntry.provinceName}${demoAddressBookEntry.cityName}${demoAddressBookEntry.districtName}${demoAddressBookEntry.detail}`
+assert.equal(rawDemoAddress, '北京市市辖区朝阳区三里屯路19号')
+assert.equal(getDemoDeliveryAddress(rawDemoAddress, 'zh'), null)
+assert.equal(getDemoDeliveryAddress(rawDemoAddress, 'en'), '19 Sanlitun Road, Chaoyang District, Beijing')
+assert.equal(getDemoDeliveryAddress(rawDemoAddress, 'fr'), '19 rue Sanlitun, district de Chaoyang, Pékin')
+assert.equal(getDemoDeliveryAddress('北京市 / 市辖区 / 朝阳区 / 三里屯路19号', 'fr'), '19 rue Sanlitun, district de Chaoyang, Pékin')
+assert.equal(getDemoDeliveryAddress('北京市市辖区朝阳区三里屯路20号', 'en'), null)
+assert.equal(getDemoDeliveryAddress('北京市市辖区朝阳区新街大道1号', 'fr'), null)
+assert.deepEqual(demoAddressBookEntry, {
+	provinceName: '北京市',
+	cityName: '市辖区',
+	districtName: '朝阳区',
+	detail: '三里屯路19号'
+})
+const demoCheckoutAddress = getCheckoutAddressState({ ...demoAddressBookEntry, id: 19 }, 'fr', labelFor)
+assert.equal(demoCheckoutAddress.address, rawDemoAddress)
+assert.match(addressPage, /\$displayText\(item\.provinceName \+ item\.cityName \+ item\.districtName \+ item\.detail, 'address'\)/)
+assert.match(addressTemplate, /\$displayText\(address, 'address'\)/)
+assert.match(fs.readFileSync(path.join(__dirname, '../pages/details/components/deliveryInfo.vue'), 'utf8'), /\$displayText\(orderDetailsData\.address, 'address'\)/)
+assert.match(fs.readFileSync(path.join(__dirname, '../utils/displayText.js'), 'utf8'), /getDemoDeliveryAddress\(value, locale\)/)
 
 const defaultAddress = getCheckoutAddressState(makeAddress('1'), 'en', labelFor)
 assert.equal(defaultAddress.tagLabel, '1')

@@ -8,6 +8,9 @@ interface AddressPrefix {
 
 const areaData = require('area-data/pcaa') as Record<string, Record<string, string>>
 const regionTranslations = require('../../../mini-program/utils/regionTranslations.json') as Record<string, RegionTranslation>
+const { getDemoDeliveryAddress } = require('../../../mini-program/utils/demoDeliveryAddress.js') as {
+  getDemoDeliveryAddress: (address: string, locale: string) => string | null
+}
 
 function translationFor(code: string, sourceName: string, localeIndex: 1 | 2): string | null {
   const entry = regionTranslations[code]
@@ -61,6 +64,9 @@ export function orderAddressLabel(address: string, locale: string): string {
   if (typeof address !== 'string' || !address || locale === 'zh') return address
   const localeField = locale === 'fr' ? 'french' : locale === 'en' ? 'english' : null
   if (!localeField) return address
+
+  const demoAddress = getDemoDeliveryAddress(address, locale)
+  if (demoAddress) return demoAddress
 
   const matches = addressPrefixes.filter((prefix) => address.startsWith(prefix.source))
   if (!matches.length) return address

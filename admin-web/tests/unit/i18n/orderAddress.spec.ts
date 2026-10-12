@@ -1,6 +1,8 @@
 import { orderAddressLabel } from '@/i18n/orderAddress'
 import { orderReasonLabel } from '@/i18n/orders'
 import { localizeAdminMessage } from '@/i18n/adminMessages'
+import fs from 'fs'
+import path from 'path'
 import i18n from '@/i18n'
 import en from '@/i18n/locales/en'
 import fr from '@/i18n/locales/fr'
@@ -16,6 +18,26 @@ describe('order address presentation localization', () => {
     const address = '北京市市辖区朝阳区新街大道1号'
     expect(orderAddressLabel(address, 'en')).toBe('Beijing Municipality, Chaoyang District, 新街大道1号')
     expect(orderAddressLabel(address, 'fr')).toBe('municipalité de Beijing, district de Chaoyang, 新街大道1号')
+  })
+
+  it('localizes only the exact demo delivery address and supported separators', () => {
+    const address = '北京市市辖区朝阳区三里屯路19号'
+    expect(orderAddressLabel(address, 'zh')).toBe(address)
+    expect(orderAddressLabel(address, 'en')).toBe('19 Sanlitun Road, Chaoyang District, Beijing')
+    expect(orderAddressLabel(address, 'fr')).toBe('19 rue Sanlitun, district de Chaoyang, Pékin')
+    expect(orderAddressLabel('北京市 / 市辖区 / 朝阳区 / 三里屯路19号', 'en'))
+      .toBe('19 Sanlitun Road, Chaoyang District, Beijing')
+    expect(orderAddressLabel('北京市市辖区朝阳区三里屯路20号', 'en'))
+      .toBe('Beijing Municipality, Chaoyang District, 三里屯路20号')
+    expect(orderAddressLabel('北京市市辖区朝阳区新街大道1号', 'fr'))
+      .toBe('municipalité de Beijing, district de Chaoyang, 新街大道1号')
+  })
+
+  it('uses the shared formatter in both admin order detail entry points', () => {
+    const dashboardOrder = fs.readFileSync(path.resolve(__dirname, '../../../src/views/dashboard/components/orderList.vue'), 'utf8')
+    const orderDetails = fs.readFileSync(path.resolve(__dirname, '../../../src/views/orderDetails/index.vue'), 'utf8')
+    expect(dashboardOrder).toContain('orderAddressLabel(diaForm.address, $i18n.locale)')
+    expect(orderDetails).toContain('orderAddressLabel(diaForm.address, $i18n.locale)')
   })
 
   it('returns unmatched address text unchanged', () => {
