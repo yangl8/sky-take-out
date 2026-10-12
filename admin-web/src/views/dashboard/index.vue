@@ -110,7 +110,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
 }

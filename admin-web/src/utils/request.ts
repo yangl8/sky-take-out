@@ -8,6 +8,8 @@ import {
   removePending
 } from './requestOptimize'
 import router from '@/router'
+import { localizeAdminMessage } from '@/i18n/adminMessages'
+import i18n from '@/i18n'
 const CancelToken = axios.CancelToken;
 
 const service = axios.create({
@@ -59,7 +61,7 @@ service.interceptors.request.use(
       // 重复请求则取消当前请求
       const source = CancelToken.source();
       config.cancelToken = source.token;
-      source.cancel('重复请求');
+      source.cancel(String(i18n.t('apiErrors.duplicateRequest')));
     } else {
       // 加入请求字典
       pending[key] = true;
@@ -82,6 +84,13 @@ service.interceptors.response.use(
     }
     //请求响应中的config的url会带上代理的api需要去掉
     response.config.url = response.config.url.replace('/api', '')
+    if (response.data && typeof response.data === 'object') {
+      ;['msg', 'desc'].forEach((field) => {
+        if (typeof response.data[field] === 'string') {
+          response.data[field] = localizeAdminMessage(response.data[field])
+        }
+      })
+    }
     // 请求完成，删除请求中状态
     const key = getRequestKey(response.config);
     removePending(key);
@@ -103,13 +112,20 @@ service.interceptors.response.use(
   (error: any) => {
     // console.log(error.config, pending, 'error')
     if (error && error.response) {
+      const responseData = error.response.data
+      const serverMessage = responseData && (responseData.msg || responseData.desc)
+      if (serverMessage) {
+        error.message = localizeAdminMessage(serverMessage)
+      }
       switch (error.response.status) {
         case 401:
           router.push('/login')
           break;
         case 405:
-          error.message = '请求错误'
+          error.message = String(i18n.t('apiErrors.methodNotAllowed'))
       }
+    } else if (error) {
+      error.message = String(i18n.t('apiErrors.requestFailed'))
     }
     //请求响应中的config的url会带上代理的api需要去掉
     error.config.url = error.config.url.replace('/api', '')

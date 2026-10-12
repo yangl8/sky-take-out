@@ -2,11 +2,11 @@
   <el-dialog
     :title="String($t('nav.password'))"
     :visible.sync="dialogFormVisible"
-    width="568px"
+    width="620px"
     class="pwdCon"
     @close="handlePwdClose()"
   >
-    <el-form :model="form" label-width="170px" :rules="rules" ref="form">
+    <el-form :model="form" label-width="220px" :rules="rules" ref="form">
       <el-form-item :label="String($t('password.old'))" prop="oldPassword">
         <el-input
           v-model="form.oldPassword"
@@ -104,6 +104,8 @@ export default class extends Vue {
     .el-dialog__body {
       padding-top: 60px;
       padding: 30px 24px 0;
+      word-break: normal;
+      overflow-wrap: normal;
     }
     .el-input__inner {
       padding: 0 12px;
@@ -113,9 +115,32 @@ export default class extends Vue {
     }
     .el-form-item__label {
       text-align: left;
+      line-height: 40px;
+      word-break: normal;
+      overflow-wrap: normal;
     }
     .el-dialog__footer {
       padding-top: 14px;
+    }
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .navbar {
+    .pwdCon {
+      .el-form-item__label {
+        display: block;
+        float: none;
+        width: 100% !important;
+        line-height: 20px;
+        padding: 0 0 6px;
+      }
+      .el-form-item__content {
+        margin-left: 0 !important;
+      }
+      .el-form-item {
+        margin-bottom: 20px;
+      }
     }
   }
 }

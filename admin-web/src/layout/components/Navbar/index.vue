@@ -88,6 +88,7 @@ import { getStatus, setStatus } from '@/api/users'
 import Cookies from 'js-cookie'
 import { debounce, throttle } from '@/utils/common'
 import { setNewData, getNewData } from '@/utils/cookies'
+import { adminDisplayName } from '@/i18n/adminDisplayName'
 
 // 接口
 import { getCountUnread } from '@/api/inform'
@@ -139,14 +140,18 @@ export default class extends Vue {
   get name() {
     const user = UserModule.userInfo as any
     let name = user && user.name
+    let userName = user && user.userName
     if (!name) {
       try {
-        name = JSON.parse(Cookies.get('user_info') || '{}').name
+        const cachedUser = JSON.parse(Cookies.get('user_info') || '{}')
+        name = cachedUser.name
+        userName = cachedUser.userName
       } catch (_) {
         name = ''
+        userName = ''
       }
     }
-    return name === '管理员' ? String(this.$t('nav.administrator')) : name
+    return adminDisplayName(name, userName, (key) => String(this.$t(key)))
   }
 
   get getStoreId() {

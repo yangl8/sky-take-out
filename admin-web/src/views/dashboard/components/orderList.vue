@@ -179,7 +179,7 @@
               </div>
               <div class="user-address">
                 <label>{{ $t('orders.address') }}：</label>
-                <span :title="diaForm.address || '—'">{{ diaForm.address || '—' }}</span>
+                <span :title="diaForm.address ? orderAddressLabel(diaForm.address, $i18n.locale) : '—'">{{ diaForm.address ? orderAddressLabel(diaForm.address, $i18n.locale) : '—' }}</span>
               </div>
             </div>
             <div class="fulfillment-info">
@@ -352,6 +352,7 @@
 <script lang="ts">
 import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
 import { orderReasonLabel } from '@/i18n/orders'
+import { orderAddressLabel } from '@/i18n/orderAddress'
 import { isScheduledDelivery as isScheduledDeliveryStatus, resolveTablewareDisplay } from '@/utils/orderFulfillment'
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import Empty from '@/components/Empty/index.vue'
@@ -376,6 +377,7 @@ export default class extends Vue {
   menuName = menuName
   menuDescription = menuDescription
   orderReasonLabel = orderReasonLabel
+  orderAddressLabel = orderAddressLabel
   @Prop({ default: '' }) orderStatics!: any
 
   private orderId = '' //订单号
@@ -627,7 +629,7 @@ export default class extends Vue {
       })
       .catch((err) => {
         if (err === 'cancel' || err === 'close') return
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
   //打开取消订单弹窗
@@ -680,7 +682,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
 
@@ -706,7 +708,7 @@ export default class extends Vue {
       })
       .catch((err) => {
         if (err === 'cancel' || err === 'close') return
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
   // 查看详情
@@ -915,13 +917,12 @@ export default class extends Vue {
       .user-address {
         grid-column: 1 / -1;
         grid-row: 3;
-        white-space: nowrap;
+        white-space: normal;
       }
 
       .user-address span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        white-space: normal;
       }
     }
     .user-remark {

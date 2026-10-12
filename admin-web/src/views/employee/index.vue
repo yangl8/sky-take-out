@@ -29,7 +29,7 @@
       >
         <el-table-column prop="name" :label="String($t('catalog.employeeName'))" min-width="170" align="center" header-align="center">
           <template slot-scope="scope">
-            {{ scope.row.name === '管理员' ? $t('nav.administrator') : scope.row.name }}
+            {{ scope.row.name }}
           </template>
         </el-table-column>
         <el-table-column prop="username" :label="String($t('catalog.username'))" min-width="170" align="center" header-align="center" />

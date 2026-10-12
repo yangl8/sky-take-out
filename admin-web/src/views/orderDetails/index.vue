@@ -234,7 +234,7 @@
               </div>
               <div class="user-address">
                 <label>{{ $t('orders.address') }}：</label>
-                <span :title="diaForm.address || '—'">{{ diaForm.address || '—' }}</span>
+                <span :title="diaForm.address ? orderAddressLabel(diaForm.address, $i18n.locale) : '—'">{{ diaForm.address ? orderAddressLabel(diaForm.address, $i18n.locale) : '—' }}</span>
               </div>
             </div>
             <div class="fulfillment-info">
@@ -415,6 +415,7 @@
 <script lang="ts">
 import { menuName, menuDescription, orderMenuSummary } from '@/i18n/menu'
 import { orderReasonLabel } from '@/i18n/orders'
+import { orderAddressLabel } from '@/i18n/orderAddress'
 import { isScheduledDelivery as isScheduledDeliveryStatus, resolveTablewareDisplay } from '@/utils/orderFulfillment'
 import { Component, Vue } from 'vue-property-decorator'
 import HeadLable from '@/components/HeadLable/index.vue'
@@ -445,6 +446,7 @@ export default class extends Vue {
   menuName = menuName
   menuDescription = menuDescription
   orderReasonLabel = orderReasonLabel
+  orderAddressLabel = orderAddressLabel
   private defaultActivity: any = 0
   private orderStatics = {}
   private row = {}
@@ -655,7 +657,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
 
@@ -709,7 +711,7 @@ export default class extends Vue {
       .catch((err) => {
         this.tableData = []
         this.counts = 0
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
       .finally(() => {
         this.listLoading = false
@@ -823,7 +825,7 @@ export default class extends Vue {
       })
       .catch((err) => {
         if (err === 'cancel' || err === 'close') return
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
 
@@ -867,7 +869,7 @@ export default class extends Vue {
         }
       })
       .catch((err) => {
-        this.$message.error(String(this.$t('orders.requestError')) + err.message)
+        this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
 
@@ -1192,13 +1194,12 @@ export default class extends Vue {
       .user-address {
         grid-column: 1 / -1;
         grid-row: 3;
-        white-space: nowrap;
+        white-space: normal;
       }
 
       .user-address span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        white-space: normal;
       }
     }
     .user-remark {
