@@ -37,7 +37,7 @@ class MenuCacheServiceTest {
     private MenuCacheService menuCacheService;
 
     /**
-     * 初始化菜单缓存服务及其 Redis 依赖
+     * Initializes the menu cache service and its Redis dependency
      */
     @BeforeEach
     void setUp() {
@@ -49,7 +49,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证菜品和套餐缓存读取失败后删除成功时返回缓存未命中
+     * Verifies read failures return a cache miss after successful eviction
      */
     @Test
     void shouldReturnCacheMissWhenReadFailsAndBrokenEntriesAreDeleted() {
@@ -64,7 +64,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证菜品和套餐缓存命中时直接返回缓存对象
+     * Verifies cache hits return the cached dish or set-meal data
      */
     @Test
     void shouldReturnCachedMenusWithoutDeletingKeys() {
@@ -80,7 +80,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证 Redis 连接故障时不再执行无效的旧键删除请求
+     * Verifies Redis connection failures do not trigger futile stale-key deletion requests
      */
     @Test
     void shouldSkipBrokenKeyDeletionWhenRedisConnectionFails() {
@@ -96,7 +96,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证非连接型缓存读取异常的删除失败只尝试一次且不阻断回源
+     * Verifies non-connection read failures attempt eviction once and still allow a database fallback
      */
     @Test
     void shouldAttemptBrokenKeyDeletionOnlyOnce() {
@@ -112,7 +112,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证缓存写入失败不影响调用方且主动失效执行有限重试
+     * Verifies cache write failures do not affect callers and explicit eviction uses bounded retries
      */
     @Test
     void shouldNotPropagateWriteFailureAndBoundEvictionRetries() {
@@ -132,7 +132,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证事务中的缓存失效延迟到提交后并对删除进行有限重试
+     * Verifies transactional eviction waits for commit and retries deletion a bounded number of times
      */
     @Test
     void shouldEvictOnlyAfterCommitAndRetryTransientFailure() {
@@ -158,7 +158,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证事务回滚后不执行菜品或套餐缓存失效
+     * Verifies rollback does not evict dish or set-meal caches
      */
     @Test
     void shouldNotEvictWhenTransactionRollsBack() {
@@ -178,7 +178,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证事务提交后删除持续失败不会向已提交操作的调用方传播
+     * Verifies persistent post-commit eviction failures are not propagated to callers of the committed operation
      */
     @Test
     void shouldNotPropagatePersistentEvictionFailureAfterCommit() {
@@ -198,7 +198,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证没有活动事务时立即执行缓存失效
+     * Verifies eviction runs immediately when no transaction is active
      */
     @Test
     void shouldEvictImmediatelyWithoutTransaction() {
@@ -210,7 +210,7 @@ class MenuCacheServiceTest {
     }
 
     /**
-     * 验证普通菜单缓存和空结果缓存的有效期均有明确上限
+     * Verifies regular and empty-result menu caches both have bounded lifetimes
      */
     @Test
     void shouldKeepCacheExpiryWithinConfiguredBounds() {

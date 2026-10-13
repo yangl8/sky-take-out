@@ -22,53 +22,37 @@ import lombok.extern.slf4j.Slf4j;
 @RestController 
 @RequestMapping("/user/shoppingCart")
 @Slf4j 
-@Api(tags = "C端购物车相关接口")
+@Api(tags = "Customer cart endpoints")
 public class ShoppingCartController {
     
     @Autowired 
     private ShoppingCartService shoppingCartService;
 
-    /**
-     * 添加购物车
-     * @return
-     */
     @PostMapping("/add")
-    @ApiOperation("添加购物车")
+    @ApiOperation("Add item to cart")
     public Result add(@RequestBody ShoppingCartDTO shoppingCartDTO){
-        log.info("添加购物车，商品信息为: {}",shoppingCartDTO);
+        log.info("Added cart item: {}",shoppingCartDTO);
         shoppingCartService.addShoppingCart(shoppingCartDTO);
         return Result.success();
     }
 
-    /**
-     * 减少购物车商品数量
-     * @return
-     */
     @PostMapping("/sub")
-    @ApiOperation("减少购物车商品数量")
+    @ApiOperation("Decrease cart item quantity")
     public Result sub(@RequestBody ShoppingCartDTO shoppingCartDTO){
-        log.info("减少购物车商品数量，商品信息为: {}", shoppingCartDTO);
+        log.info("Decreased cart item quantity: {}", shoppingCartDTO);
         shoppingCartService.subtractShoppingCart(shoppingCartDTO);
         return Result.success();
     }
 
-    /**
-     * 查看购物车
-     * @return
-     */
     @GetMapping("/list")
-    @ApiOperation("查看购物车")
+    @ApiOperation("View cart")
     public Result<List<ShoppingCart>> list(){
         List<ShoppingCart> list = shoppingCartService.showShoppingCart();
         return Result.success(list);
     }
 
-    /**
-     * 清空购物车
-     * @return
-     */
     @DeleteMapping("/clean")
-    @ApiOperation("清空购物车")
+    @ApiOperation("Clear cart")
     public Result clean(){
         shoppingCartService.cleanShoppingCart();
         return Result.success();

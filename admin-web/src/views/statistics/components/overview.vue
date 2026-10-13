@@ -82,20 +82,20 @@
         <li>
           <p class="tit">{{ $t('statistics.totalUsers') }}</p>
           <p class="num">{{ overviewData.totalUsers }}</p>
-          <!-- <p class="tip">
-            同比增长：<span v-if="overviewData.newUsersGrowth">
-              <span
-                class="red"
-                :class="overviewData.newUsersGrowth > 0 ? '' : 'green'"
-                >{{
-                  overviewData.newUsersGrowth > 0
-                    ? '+' + overviewData.newUsersGrowth
-                    : overviewData.newUsersGrowth
-                }}</span
-              ></span
-            >
-            <span v-else>-</span>
-          </p> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </li>
         <li>
           <p class="tit">{{ $t('dashboard.newUsers') }}</p>

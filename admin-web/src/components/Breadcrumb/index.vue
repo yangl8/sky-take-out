@@ -53,7 +53,6 @@ export default class extends Vue {
     const first = matched[0]
     // if (!this.isDashboard(first)) {
     //   matched = [
-    //     { path: '/', meta: { title: '集团管理' } } as RouteRecord
     //   ].concat(matched)
     // }
     this.breadcrumbs = matched.filter(item => {

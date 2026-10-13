@@ -1,4 +1,3 @@
-<!-- 菜品列表 -->
 <template>
   <view class="box order_list_cont" v-if="Object.keys(orderDetailsData).length">
     <view class="order_list">
@@ -58,19 +57,15 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
-    // 菜品数据
     orderDataes: {
       type: Array,
       default: () => [],
     },
-    // 订单信息
     orderDetailsData: {
       type: Object,
       default: () => ({}),
     },
-    // 是否显示展开收起
     showDisplay: {
       type: Boolean,
       default: false,

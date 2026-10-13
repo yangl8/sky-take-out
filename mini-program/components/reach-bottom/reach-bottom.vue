@@ -1,4 +1,3 @@
-<!--底部数据加载中-->
 <template>
   <view class="bottom-box">
     <view class="bottom-item">
@@ -8,9 +7,7 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
-    // 数据加载提示
     loadingText:{
       type: String,
       default: ''

@@ -38,7 +38,6 @@
     <div class="container newBox" :class="{ hContainer: baseData.length }">
       <div class="informList" v-if="baseData.length > 0">
         <div v-for="(item, index) in baseData" :key="index">
-          <!-- 待接单 -->
           <div class="item" v-if="item.type === 1">
             <div class="tit">
               <span>【待接单】</span>{{ item.arrNew[0]
@@ -62,7 +61,6 @@
             </div>
           </div>
           <!-- end -->
-          <!-- 待派送 -->
           <div class="item" v-if="item.type === 3">
             <div class="tit">
               <span>【待派送】</span>{{ item.arrNew[0]
@@ -75,7 +73,6 @@
             </div>
           </div>
           <!-- end -->
-          <!-- 催单 -->
           <div
             class="item"
             v-if="item.type === 4"
@@ -85,10 +82,10 @@
             <div :class="isActive ? 'titAlready' : ''">
               <div class="tit">
                 <span>【催单】</span>{{ item.arrNew[0] }}
-                <!-- <span
-                  class="fontOrderTip"
-                  >去处理</span
-                > -->
+
+
+
+
                 <span class="time">{{ item.createTime }}</span>
               </div>
               <div v-if="shopShow && showIndex === index" class="orderInfo">
@@ -114,25 +111,24 @@
             </div>
           </div>
           <!-- end -->
-          <!-- <div class="item" v-if="item.type === 4 && isActive && status === 1">
-            <div class="titAlready">
-              <div class="tit">
-                <span>【催单】</span>{{ item.arrNew[0] }}
-                <span class="time">{{ item.createTime }}</span>
-              </div>
-            </div>
-          </div> -->
-          <!-- 闭店 -->
-          <!-- <div class="item" v-if="item.type === 5 && isActive && status === 1">
-            <div class="titAlready">
-              <div class="tit">
-                <span>【今日数据】</span>认真工作的同时也要好好生活。<span
-                  class="time"
-                  >{{ item.createTime }}</span
-                >
-              </div>
-            </div>
-          </div> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           <div
             class="item"
             v-if="item.type === 5"
@@ -201,7 +197,6 @@ import { Component, Vue, Inject } from 'vue-property-decorator'
 import Empty from '@/components/Empty/index.vue'
 import { getNewData, setNewData } from '@/utils/cookies'
 import { AppModule } from '@/store/modules/app'
-// 接口
 import {
   getInformData,
   batchMsg,
@@ -248,7 +243,6 @@ export default class extends Vue {
   created() {
     this.getData()
   }
-  // 获取列表数据
   async getData() {
     const parent = {
       pageNum: this.page,
@@ -262,9 +256,7 @@ export default class extends Vue {
       let objNew = {} as any
       let arrDetails = []
       this.baseData.forEach((val) => {
-        // 处理后端返回的状订单字符串转义
         const arrContent = val.content.split(' ')
-        // 处理催单、闭店详情数据
         val.arrNew = arrContent
         objNew = { ...val }
         objNew.details = eval('(' + objNew.details + ')')
@@ -272,13 +264,11 @@ export default class extends Vue {
       })
 
       this.baseData = arrDetails
-      // this.$message.success('操作成功！')
     } else {
       this.$message.error(data.msg)
     }
   }
 
-  // 全部已读
   async handleBatch() {
     const ids = []
     this.baseData.forEach((val) => {
@@ -290,12 +280,10 @@ export default class extends Vue {
       // this.activeIndex = 1
       this.getCountUnread()
       this.getData()
-      // this.$message.success('操作成功！')
     } else {
       this.$message.error(data.msg)
     }
   }
-  // 设置单个订单已读
   async handleSetStatus(id) {
     const { data } = await setStatus(id)
     if (data.code === 1) {
@@ -307,22 +295,18 @@ export default class extends Vue {
       }
 
       // this.reload()
-      // this.$message.success('操作成功！')
     } else {
       this.$message.error(data.msg)
     }
   }
-  // 获取未读消息
   async getCountUnread() {
     const { data } = await getCountUnread()
     if (data.code === 1) {
       AppModule.StatusNumber(data.data)
-      // this.$message.success('操作成功！')
     } else {
       this.$message.error(data.msg)
     }
   }
-  // 触发已读未读按钮
   handleClass(index) {
     this.activeIndex = index
     if (index === 0) {
@@ -332,7 +316,6 @@ export default class extends Vue {
     }
     this.getData()
   }
-  // 下拉菜单显示
   toggleShow(id, index) {
     this.shopShow = true
     this.showIndex = index
@@ -349,7 +332,6 @@ export default class extends Vue {
       }
     }, 1000)
   }
-  // 下拉菜单隐藏
   mouseLeaves(index) {
     this.shopShow = false
     this.showIndex = index

@@ -10,10 +10,10 @@ import {
 import { mapState, mapMutations } from 'vuex'
 import { baseUrl } from '../../utils/env'
 import { call, userFacingErrorMessage } from '@/utils/index.js'
-import Status from './components/status.vue'//订单状态
-import OrderDetail from "./components/orderDetail.vue" //菜品详情
-import DeliveryInfo from "./components/deliveryInfo.vue" //配送信息
-import OrderInfo from "./components/orderInfo.vue" //订单信息
+import Status from './components/status.vue'
+import OrderDetail from "./components/orderDetail.vue"
+import DeliveryInfo from "./components/deliveryInfo.vue"
+import OrderInfo from "./components/orderInfo.vue"
 
 export default {
 	data() {
@@ -42,7 +42,6 @@ export default {
 			return this.orderListData()
 		},
 
-		// // 处理订单详情列表
 		orderDataes: function () {
 			let testList = []
 			if (this.showDisplay === false) {
@@ -59,7 +58,6 @@ export default {
 			}
 		}
 	},
-	//   组件
 	components: { Status, OrderDetail, DeliveryInfo, OrderInfo },
 	onLoad(options) {
 		this.orderId = options.orderId
@@ -86,7 +84,6 @@ export default {
 	methods: {
 		...mapMutations(['setOrderData', 'initdishListMut']),
 		...mapState(['shopInfo', 'orderListData', 'shopPhone', 'orderData', 'selectedOrder']),
-		// 获取订单详情
 		async getBaseData(id) {
 			uni.showLoading({ title: this.$t('common.loading'), mask: true })
 			let failed = false
@@ -129,7 +126,6 @@ export default {
 			}
 		},
 
-		// 催单
 		handleReminder(val) {
 			reminderOrder(val.id).then(res => {
 				if (res.code === 1) {
@@ -140,7 +136,6 @@ export default {
 				}
 			})
 		},
-		// 取消订单接口
 		cancel(type, obj) {
 			cancelOrder(obj.id).then(res => {
 				if (res.code === 1) {
@@ -157,7 +152,6 @@ export default {
 				uni.showToast({ title: userFacingErrorMessage(error && error.msg, this.$store.state.locale), icon: 'none' })
 			})
 		},
-		// 取消订单
 		handleCancel(val) {
 			if (val.obj.status === 1 || val.obj.status === 2) {
 				uni.showModal({
@@ -177,9 +171,7 @@ export default {
 				this.textTip = this.$t('popup.contactMerchantCancel', { phone: this.phone || '-' })
 			}
 		},
-		// 再来一单
 		async oneMoreOrder(id) {
-			// 先清空购物车
 			await delShoppingCart()
 			repetitionOrder(id).then(res => {
 				if (res.code === 1) {
@@ -189,7 +181,6 @@ export default {
 				}
 			})
 		},
-		// 处理状态
 		statusWord(status) {
 			if (this.timeout && status === 1 || this.orderDetailsData.status === 6) {
 				return this.$t('status.cancelled')
@@ -205,7 +196,6 @@ export default {
 					return this.$t('status.completed')
 			}
 		},
-		// 订单倒计时
 		runTimeBack(time) {
 			const end = Date.parse(time.replace(/-/g, "/"))
 
@@ -215,7 +205,7 @@ export default {
 			if (msec < 0) {
 				this.timeout = true
 				clearTimeout(this.times)
-				this.cancel('center', this.orderDetailsData) //超时的时候取消订单
+				this.cancel('center', this.orderDetailsData)
 			} else {
 				let min = parseInt(msec / 1000 / 60 % 60)
 				let sec = parseInt(msec / 1000 % 60)
@@ -235,7 +225,7 @@ export default {
 					if (min === 0 && sec === 0) {
 						this.timeout = true
 						clearTimeout(this.times)
-						this.cancel('center', this.orderDetailsData) //超时的时候取消订单
+						this.cancel('center', this.orderDetailsData)
 						return
 					}
 					this.times = setTimeout(function () {
@@ -245,15 +235,12 @@ export default {
 			}
 		},
 
-		// 重新拼装image
 		getNewImage(image) {
 			return `${baseUrl}/common/download?name=${image}`
 		},
-		// 展开或收起订单中的全部商品
 		toggleDisplay() {
 			this.showDisplay = !this.showDisplay
 		},
-		// 返回上一级
 		goBack() {
 			if (this.returnHomeAfterDetail) {
 				uni.reLaunch({ url: '/pages/index/index' })
@@ -264,14 +251,12 @@ export default {
 		openPopuos(type) {
 			this.$refs.commonPopup.open(type)
 		},
-		// 联系商家进行退款弹层
 		handleRefund(type) {
 			this.showConfirm = false
 			this.showContactPrompt = true
 			this.openPopuos(type)
 			this.textTip = this.$t('order.contactRefund')
 		},
-		// 拨打电话弹层
 		handlePhone(type, phone) {
 			if (phone) this.phone = phone
 			if (!this.phone) {
@@ -286,7 +271,6 @@ export default {
 				this.$refs.phone.open(type)
 			}
 		},
-		// 关闭弹层
 		closePopup(type) {
 			this.$refs.phone.close(type)
 		},
@@ -296,7 +280,6 @@ export default {
 			this.$refs.commonPopup.close(type)
 			this.getBaseData(this.orderId)
 		},
-		// 立即支付
 		handlePay(id) {
 			const obj = {
 				orderNumber: this.orderDetailsData.number,

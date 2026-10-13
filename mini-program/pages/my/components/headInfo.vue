@@ -1,13 +1,9 @@
-<!--我的头部-->
 <template>
     <view class="my_info">
-        <!-- 头像部分 -->
         <view class="head">
           <image class="head_image" :src="psersonUrl"></image>
         </view>
-        <!-- 姓名及手机号 -->
         <view class="phone_name">
-          <!-- 姓名 -->
           <view class="name">
             <text class="name_text">{{ nickName }}</text>
             <image
@@ -21,7 +17,6 @@
               src="../../../static/boy.png"
             ></image>
           </view>
-          <!-- 电话号 -->
           <view class="phone">
             <text class="phone_text">{{ phoneNumber | getPhoneNum }}</text>
           </view>
@@ -30,29 +25,23 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
-    // 头像
     psersonUrl: {
       type: String,
       default: '',
     },
-    // 姓名
     nickName: {
       type: String,
       default: '',
     },
-    // 性别
     gender: {
       type: String,
       default: '',
     },
-    // 电话
     phoneNumber: {
       type: String,
       default: '',
     },
-    // 电话
     getPhoneNum: {
       type: String,
       default: '',
@@ -66,7 +55,6 @@ export default {
     width: 750rpx;
     background-color: #ffc200;
     display: flex;
-    // 头像
     .head {
       width: 172rpx;
       height: 172rpx;
@@ -82,7 +70,6 @@ export default {
         background-color: #fff;
       }
     }
-    // 姓名电话号
     .phone_name {
       flex: 1;
       margin: auto;

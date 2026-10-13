@@ -36,7 +36,6 @@ export default class extends Vue {
     var option: any
     option = {
       // title: {
-      //   text: '营业额(元)',
       //   top: 'bottom',
       //   left: 'center',
       //   textAlign: 'center',
@@ -59,20 +58,18 @@ export default class extends Vue {
         type: 'category',
         boundaryGap: false,
         axisLabel: {
-          //X轴字体颜色
           textStyle: {
             color: '#666',
             fontSize: '12px',
           },
         },
         axisLine: {
-          //X轴线颜色
           lineStyle: {
             color: '#E5E4E4',
-            width: 1, //x轴线的宽度
+            width: 1,
           },
         },
-        data: this.turnoverdata.dateList, //后端传来的动态数据
+        data: this.turnoverdata.dateList,
       },
       yAxis: [
         {
@@ -85,7 +82,6 @@ export default class extends Vue {
               color: '#666',
               fontSize: '12px',
             }
-            // formatter: "{value} ml",//单位
           }
         }
       ],
@@ -94,10 +90,9 @@ export default class extends Vue {
           name: String(this.$t('dashboard.turnover')),
           type: 'line',
           // stack: 'Total',
-          smooth: false, //否平滑曲线
-          showSymbol: false, //未显示鼠标上移的圆点
+          smooth: false,
+          showSymbol: false,
           symbolSize: 10,
-          // symbol:"circle", //设置折线点定位实心点
           itemStyle: {
             normal: {
               color: '#F29C1B',

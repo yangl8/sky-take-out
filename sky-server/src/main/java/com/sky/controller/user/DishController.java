@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RestController("userDishController")
 @RequestMapping("/user/dish")
 @Slf4j
-@Api(tags = "C端-菜品浏览接口")
+@Api(tags = "Customer-facing dish endpoints")
 public class DishController {
     @Autowired
     private DishService dishService;
@@ -33,27 +33,19 @@ public class DishController {
     @Autowired
     private OrderService orderService;
 
-    /**
-     * 根据分类id查询菜品
-     *
-     * @param categoryId
-     * @return
-     */
     @GetMapping("/list")
-    @ApiOperation("根据分类id查询菜品")
+    @ApiOperation("List dishes by category ID")
     public Result<List<DishVO>> list(Long categoryId) {
 
         List<DishVO> list = menuCacheService.getDishes(categoryId);
         if(list != null){
-            //如果存在，直接返回，无需查询数据库
             return Result.success(addMonthlySales(list));
         }
 
         Dish dish = new Dish();
         dish.setCategoryId(categoryId);
-        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+        dish.setStatus(StatusConstant.ENABLE);
 
-        //如果不存在，查询数据库，将查询到的数据放入redis中
         list = dishService.listWithFlavor(dish);
         menuCacheService.cacheDishes(categoryId, list);
 

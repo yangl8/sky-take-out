@@ -12,7 +12,6 @@
     ></uni-nav-bar>
 
     <view class="my-center">
-      <!-- 头像展示部分 -->
       <head
         :psersonUrl="psersonUrl"
         :nickName="nickName"
@@ -26,10 +25,7 @@
           <text>{{ $t("common.language") }}</text>
           <view class="language-value" @click="openLanguagePicker">{{ languageNames[languageIndex] }}</view>
         </view>
-        <!-- 地址和历史订单 -->
         <order-info @goAddress="goAddress" @goOrder="goOrder"></order-info>
-        <!-- 最近订单 -->
-        <!-- 最近订单title -->
         <view
           class="recent"
           v-if="recentOrdersList && recentOrdersList.length > 0"
@@ -75,9 +71,9 @@ import { mapMutations } from "vuex";
 import { statusWord, getOvertime, userFacingErrorMessage } from "@/utils/index.js";
 import { supportedLocales } from "@/locales";
 
-import HeadInfo from "./components/headInfo.vue"; //头部
-import OrderInfo from "./components/orderInfo.vue"; //地址
-import OrderList from "./components/orderList.vue"; //最近订单
+import HeadInfo from "./components/headInfo.vue";
+import OrderInfo from "./components/orderInfo.vue";
+import OrderList from "./components/orderList.vue";
 import Phone from "@/components/uni-phone/index.vue";
 export default {
   data() {
@@ -178,7 +174,6 @@ export default {
     getOvertime(time) {
       return getOvertime(time);
     },
-    // 获取列表数据
     getList() {
       const params = {
         pageSize: 10,
@@ -195,7 +190,6 @@ export default {
         }
       });
     },
-    // 去地址页面
     goAddress() {
       this.setAddressBackUrl("/pages/my/my");
       // TODO
@@ -203,7 +197,6 @@ export default {
         url: "/pages/address/address?form=" + "my",
       });
     },
-    // 去历史订单页面
     goOrder() {
       // TODO
       uni.navigateTo({
@@ -215,7 +208,6 @@ export default {
       let routeIndex = pages.findIndex(
         (item) => item.route === "pages/index/index"
       );
-      // 先清空购物车
       await delShoppingCart();
       repetitionOrder(id).then((res) => {
         if (res.code === 1) {
@@ -225,7 +217,6 @@ export default {
         }
       });
     },
-    // 催单
     handleReminder(id) {
       reminderOrder(id).then((res) => {
         if (res.code === 1) {
@@ -233,7 +224,6 @@ export default {
         }
       });
     },
-    // 取消订单
     handleCancel(order) {
       if ([3, 4].includes(order.status)) {
         this.showMerchantPhone();
@@ -277,7 +267,6 @@ export default {
       this.$refs.phone.$refs.popup.close(type);
     },
     quitClick() {},
-    // 去详情页面
     goDetail(order) {
       this.setAddressBackUrl("/pages/my/my");
       this.setSelectedOrder(order);
@@ -286,7 +275,7 @@ export default {
       });
     },
     dataAdd() {
-      const pages = Math.ceil(this.pageInfo.total / 10); //计算总页数
+      const pages = Math.ceil(this.pageInfo.total / 10);
       if (this.pageInfo.page === pages) {
         this.loadingText = this.$t("common.noMore");
         this.loading = true;

@@ -45,7 +45,6 @@
                    class="flavor">
                 <div class="title">
                   <span>{{ $t('catalog.flavorName') }}</span>
-                  <!-- <span class="des-box">口味标签（输入标签回车添加）</span> -->
                 </div>
                 <div class="cont">
                   <div v-for="(item, index) in dishFlavors"
@@ -120,7 +119,6 @@ import { flavorLabel } from '@/i18n/flavors'
 import HeadLable from '@/components/HeadLable/index.vue'
 import SelectInput from './components/SelectInput.vue'
 import ImageUpload from '@/components/ImgUpload/index.vue'
-// getFlavorList口味列表暂时不做 getDishTypeList
 import {
   queryDishById,
   addDish,
@@ -157,9 +155,9 @@ export default class extends Vue {
   private imageUrl: string = ''
   private actionType: string = ''
   private dishList: string[] = []
-  private dishFlavorsData: any[] = [] //原始口味数据
-  private dishFlavors: any[] = [] //待上传口味的数据
-  private leftDishFlavors: any[] = [] //下拉框剩余可选择的口味数据
+  private dishFlavorsData: any[] = []
+  private dishFlavors: any[] = []
+  private leftDishFlavors: any[] = []
   private vueRest = '1'
   private index = 0
   private inputStyle = { flex: 1 }
@@ -208,7 +206,6 @@ export default class extends Vue {
       price: [
         {
           required: true,
-          // 'message': '请填写菜品价格',
           validator: (rules: any, value: string, callback: Function) => {
             const reg = /^([1-9]\d{0,5}|0)(\.\d{1,2})?$/
             if (!reg.test(value) || Number(value) <= 0) {
@@ -230,7 +227,6 @@ export default class extends Vue {
 
   created() {
     this.getDishList()
-    // 口味临时数据
     this.getFlavorListHand()
     this.actionType = this.$route.query.id ? 'edit' : 'add'
     if (this.$route.query.id) {
@@ -244,7 +240,6 @@ export default class extends Vue {
     this.getLeftDishFlavors()
   }
 
-  //过滤已选择的口味下拉框无法再次选择
   getLeftDishFlavors() {
     let arr = []
     this.dishFlavorsData.map(item => {
@@ -285,28 +280,23 @@ export default class extends Vue {
     })
   }
 
-  // 按钮 - 添加口味
   private addFlavore() {
     this.dishFlavors.push({ name: '', value: [] }) // JSON.parse(JSON.stringify(this.dishFlavorsData))
   }
 
-  // 按钮 - 删除口味
   private delFlavor(name: string) {
     let ind = this.dishFlavors.findIndex(item => item.name === name)
     this.dishFlavors.splice(ind, 1)
   }
 
-  // 按钮 - 删除口味标签
   private delFlavorLabel(index: number, ind: number) {
     this.dishFlavors[index].value.splice(ind, 1)
   }
 
-  //口味位置记录
   private flavorPosition(index: number) {
     this.index = index
   }
 
-  // 添加口味标签
   private keyDownHandle(val: any) {
     if (event) {
       event.cancelBubble = true
@@ -320,7 +310,6 @@ export default class extends Vue {
     }
   }
 
-  // 获取菜品分类
   private getDishList() {
     getCategoryList({ type: 1 }).then(res => {
       if (res.data.code === 1) {
@@ -337,7 +326,6 @@ export default class extends Vue {
     })
   }
 
-  // 获取口味列表
   private getFlavorListHand() {
     // flavor flavorData
     this.dishFlavorsData = [

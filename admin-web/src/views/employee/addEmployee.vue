@@ -9,12 +9,7 @@
                :inline="false"
                label-width="180px"
                class="demo-ruleForm">
-        <!--          <el-form-item label="员工职级" prop="region">-->
-        <!--            <el-select v-model="ruleForm.region" placeholder="请选择品牌名称">-->
-        <!--              <el-option label="区域一" value="shanghai"></el-option>-->
-        <!--              <el-option label="区域二" value="beijing"></el-option>-->
         <!--            </el-select>-->
-        <!--            <el-button @click="submitForm('ruleForm')" type="primary" class="continue" style="margin-left: 10px;" >+新增职级</el-button>-->
         <!--          </el-form-item>-->
         <el-form-item :label="String($t('catalog.username'))"
                       prop="username">
@@ -28,28 +23,28 @@
                     :placeholder="String($t('catalog.employeeNameRequired'))"
                     maxlength="12" />
         </el-form-item>
-        <!-- <el-form-item
-          label="密码:"
-          prop="password"
-        >
-          <el-input
-            v-model="ruleForm.password"
-            type="password"
-            autocomplete="off"
-            placeholder="请输入密码"
-          />
-        </el-form-item> -->
-        <!-- <el-form-item
-          label="确认密码:"
-          prop="rePassword"
-        >
-          <el-input
-            v-model="ruleForm.rePassword"
-            type="password"
-            autocomplete="off"
-            placeholder="请输入确认密码"
-          />
-        </el-form-item> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <el-form-item :label="String($t('catalog.phone'))"
                       prop="phone">
           <el-input v-model="ruleForm.phone"
@@ -120,9 +115,7 @@ export default class extends Vue {
 
   // private validateRepassword (rule:any, value:any, callback:any) {
   //   if (value === '') {
-  //     callback(new Error('请再次输入密码'))
   //   } else if (value !== this.ruleForm.password) {
-  //     callback(new Error('两次输入密码不一致!'))
   //   } else {
   //     callback()
   //   }
@@ -141,7 +134,6 @@ export default class extends Vue {
     if (value == '') {
       callback(new Error(String(this.$t('catalog.phoneRequired'))))
     } else if (!this.isCellPhone(value)) {
-      //引入methods中封装的检查手机格式的方法
       callback(new Error(String(this.$t('catalog.phoneInvalid'))))
     } else {
       callback()
@@ -149,7 +141,6 @@ export default class extends Vue {
   }
 
   private validID(rule: any, value: any, callback: any) {
-    // 身份证号码为15位或者18位，15位时全为数字，18位前17位为数字，最后一位是校验位，可能为数字或字符X
     let reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/
     if (value == '') {
       callback(new Error(String(this.$t('catalog.idRequired'))))
@@ -172,7 +163,6 @@ export default class extends Vue {
             } else {
               // const reg = /^[\u4e00-\u9fa5_a-zA-Z]{1,12}$/
               // if (!reg.test(value)) {
-              //   callback(new Error('姓名输入不符，请输入1-12个字符'))
               // } else {
               //   callback()
               // }

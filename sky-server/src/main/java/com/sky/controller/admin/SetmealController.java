@@ -21,88 +21,52 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 套餐管理
- */
 @RestController
 @RequestMapping("/admin/setmeal")
-@Api(tags = "套餐相关接口")
+@Api(tags = "Set meal endpoints")
 @Slf4j
 public class SetmealController {
 
     @Autowired
     private SetmealService setmealService;
 
-    /**
-     * 新增套餐
-     * @param setmealDTO
-     * @return
-     */
     @PostMapping
-    @ApiOperation("新增套餐")
+    @ApiOperation("Create set meal")
     public Result save(@RequestBody SetmealDTO setmealDTO) {
         setmealService.saveWithDish(setmealDTO);
         return Result.success();
     }
 
-    /**
-         * 分页查询
-         * @param setmealPageQueryDTO
-         * @return
-    */
     @GetMapping("/page")
-    @ApiOperation("分页查询")
+    @ApiOperation("Paginated search")
     public Result<PageResult> page(SetmealPageQueryDTO setmealPageQueryDTO) {
         PageResult pageResult = setmealService.pageQuery(setmealPageQueryDTO);
         return Result.success(pageResult);
     }
 
-    /**
-         * 批量删除套餐
-         * @param ids
-         * @return
-    */
     @DeleteMapping
-    @ApiOperation("批量删除套餐")
+    @ApiOperation("Delete set meals in bulk")
     public Result delete(@RequestParam List<Long> ids){
         setmealService.deleteBatch(ids);
         return Result.success();
     }
 
-    /**
-         * 根据id查询套餐，用于修改页面回显数据
-         *
-         * @param id
-         * @return
-    */
     @GetMapping("/{id}")
-    @ApiOperation("根据id查询套餐")
+    @ApiOperation("Get set meal by ID")
     public Result<SetmealVO> getById(@PathVariable Long id) {
         SetmealVO setmealVO = setmealService.getByIdWithDish(id);
         return Result.success(setmealVO);
     }
 
-    /**
-         * 修改套餐
-         *
-         * @param setmealDTO
-         * @return
-    */
     @PutMapping
-    @ApiOperation("修改套餐")
+    @ApiOperation("Update set meal")
     public Result update(@RequestBody SetmealDTO setmealDTO) {
         setmealService.update(setmealDTO);
         return Result.success();
     }
 
-    /**
-         * 套餐起售停售
-         * @param status
-         * @param id
-         * @return
-    */
     @PostMapping("/status/{status}")
-    @ApiOperation("套餐起售停售")
+    @ApiOperation("Change set meal availability")
     public Result startOrStop(@PathVariable Integer status, Long id) {
         setmealService.startOrStop(status, id);
         return Result.success();

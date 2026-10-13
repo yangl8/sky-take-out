@@ -1,4 +1,3 @@
-<!--空数据展示-->
 <template>
   <view class="empty-box">
     <image class="empty-img" src="./../../static/no_adress.png" mode="" />
@@ -7,9 +6,7 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props:{
-    // 空页面提示
     'textLabel':{
       type: String,
       default: ''

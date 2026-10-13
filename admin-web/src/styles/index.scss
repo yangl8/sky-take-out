@@ -94,7 +94,6 @@ a:hover {
 }
 
 
-//列表中的状态启用禁用以及小圆点统一样式
 .tableColumn-status {
   display: flex;
   align-items: center;
@@ -16293,7 +16292,6 @@ input[type="number"] {
   animation: el-drawer-fade-in 225ms cubic-bezier(0, 0, 0.2, 1) 0s reverse;
 }
 
-/* 弹框样式处理 */
 .el-dialog {
   min-width: 568px !important;
   border-radius: 8px !important;
@@ -16351,7 +16349,6 @@ input[type="number"] {
       }
     }
 
-    //查询黑色按钮样式
     .normal-btn {
       background: #333333;
       color: white;

@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 
 /**
- * 验证订单支付期限、配送条件及首次支付时间更新
+ * Verifies payment deadlines, delivery constraints, and first-payment timestamp updates
  */
 @ExtendWith(MockitoExtension.class)
 class OrderPaymentRulesTest {

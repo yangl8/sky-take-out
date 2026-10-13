@@ -55,10 +55,10 @@ function buildAddressPrefixes(): AddressPrefix[] {
 const addressPrefixes = buildAddressPrefixes()
 
 /**
- * 仅翻译能通过行政区划代码表唯一匹配的订单地址省市区，并原样保留详细地址
- * @param address 订单中保存的原始拼接地址
- * @param locale 当前管理端语言
- * @return 转换行政区划后的展示文本；不能可靠识别时返回原文
+ * Translates province, city, and district only when administrative codes match uniquely; preserves address details verbatim
+ * @param address Original concatenated address stored with the order
+ * @param locale Active admin locale
+ * @return Address with localized administrative areas, or the original when matching is ambiguous
  */
 export function orderAddressLabel(address: string, locale: string): string {
   if (typeof address !== 'string' || !address || locale === 'zh') return address

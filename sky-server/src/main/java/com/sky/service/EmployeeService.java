@@ -9,42 +9,48 @@ import com.sky.result.PageResult;
 public interface EmployeeService {
 
     /**
-     * 员工登录
-     * @param employeeLoginDTO
-     * @return
+     * Authenticates an employee using the supplied credentials
+     *
+     * @param employeeLoginDTO Login credentials
+     * @return The authenticated employee
      */
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
     /**
-     * 新增员工
-     * @param employeeDTO
+     * Creates an employee account
+     *
+     * @param employeeDTO Employee data to save
      */
     void save(EmployeeDTO employeeDTO);
 
     /**
-     * 员工分页查询
-     * @param employeePageQueryDTO
-     * @return
+     * Returns a page of employees matching the supplied filters
+     *
+     * @param employeePageQueryDTO Pagination and employee filters
+     * @return The matching page
      */
     PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
 
     /**
-     * 启用禁用员工账号
-     * @param status
-     * @param id
+     * Changes whether an employee account is enabled
+     *
+     * @param status New account status
+     * @param id Employee ID
      */
     void startOrstop(Integer status, Long id);
 
     /**
-     * 根据id查询员工信息
-     * @param id
-     * @return 
+     * Retrieves an employee by ID with the password masked
+     *
+     * @param id Employee ID
+     * @return Employee details
      */
     public Employee getById(Long id);
 
     /**
-     * 编辑员工信息
-     * @param employeeDTO
+     * Updates employee account details
+     *
+     * @param employeeDTO Updated employee data
      */
     void update(EmployeeDTO employeeDTO);
 }

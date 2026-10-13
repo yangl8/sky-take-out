@@ -59,9 +59,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * 订单服务端商品计价测试
- */
 @ExtendWith(MockitoExtension.class)
 class OrderPricingTest {
 
@@ -85,9 +82,6 @@ class OrderPricingTest {
     @InjectMocks
     private OrderServiceImpl orderService;
 
-    /**
-     * 初始化可控的下单依赖
-     */
     @BeforeEach
     void setUp() {
         BaseContext.setCurrentId(USER_ID);
@@ -113,17 +107,11 @@ class OrderPricingTest {
                 .build());
     }
 
-    /**
-     * 清理测试线程中的登录身份
-     */
     @AfterEach
     void clearContext() {
         BaseContext.removeCurrentId();
     }
 
-    /**
-     * 按当前菜品和套餐价格计价并保存订单商品快照
-     */
     @Test
     void submitOrderShouldIgnoreClientAmountAndUseCurrentCatalogPrices() {
         ShoppingCart dishCartItem = cartItem(100L, null, 2, "1.00");
@@ -196,11 +184,6 @@ class OrderPricingTest {
         }
     }
 
-    /**
-     * 商品数量为空、零或负数时拒绝下单
-     *
-     * @param quantity 购物车中的商品数量
-     */
     @ParameterizedTest
     @NullSource
     @ValueSource(ints = {0, -1})
@@ -213,9 +196,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 购物车商品对应的菜品不存在时拒绝下单
-     */
     @Test
     void submitOrderShouldRejectMissingDish() {
         when(shoppingCartMapper.list(any(ShoppingCart.class)))
@@ -227,9 +207,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 菜品停售后拒绝使用购物车中的旧商品下单
-     */
     @Test
     void submitOrderShouldRejectDisabledDish() {
         when(shoppingCartMapper.list(any(ShoppingCart.class)))
@@ -242,9 +219,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 套餐停售后拒绝使用购物车中的旧套餐下单
-     */
     @Test
     void submitOrderShouldRejectDisabledSetmeal() {
         when(shoppingCartMapper.list(any(ShoppingCart.class)))
@@ -257,11 +231,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 当前商品价格为空或负数时拒绝下单
-     *
-     * @param currentPrice 商品当前价格
-     */
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"-0.01"})
@@ -277,9 +246,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 购物车行未且仅未关联一种商品时拒绝下单
-     */
     @Test
     void submitOrderShouldRejectCartRowWithoutProductReference() {
         when(shoppingCartMapper.list(any(ShoppingCart.class))).thenReturn(Arrays.asList(
@@ -290,15 +256,6 @@ class OrderPricingTest {
         verifyNoOrderWasCreated();
     }
 
-    /**
-     * 构造用于测试的购物车商品
-     *
-     * @param dishId 菜品ID
-     * @param setmealId 套餐ID
-     * @param quantity 商品数量
-     * @param staleAmount 购物车中可能过期的单价
-     * @return 购物车商品
-     */
     private ShoppingCart cartItem(Long dishId, Long setmealId, Integer quantity, String staleAmount) {
         return ShoppingCart.builder()
                 .dishId(dishId)
@@ -322,11 +279,6 @@ class OrderPricingTest {
         }).when(orderMapper).insert(any(Orders.class));
     }
 
-    /**
-     * 构造测试使用的订单请求
-     *
-     * @return 订单请求
-     */
     private OrdersSubmitDTO request() {
         OrdersSubmitDTO request = new OrdersSubmitDTO();
         request.setAddressBookId(ADDRESS_ID);
@@ -337,9 +289,6 @@ class OrderPricingTest {
         return request;
     }
 
-    /**
-     * 确认失败下单没有写入订单、订单明细或清空购物车
-     */
     private void verifyNoOrderWasCreated() {
         verify(orderMapper, never()).insert(any(Orders.class));
         verify(orderDetailMapper, never()).insertBatch(any());

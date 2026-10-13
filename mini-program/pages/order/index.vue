@@ -1,7 +1,5 @@
-<!--提交订单-->
 <template>
   <view>
-    <!-- 导航 -->
     <uni-nav-bar
       @clickLeft="goBack"
       left-icon="back"
@@ -19,7 +17,6 @@
           <text>{{ $t(deliveryStatusNoticeKey) }}</text>
           <text class="notice_close" @click.stop="dismissDeliveryStatusNotice">×</text>
         </view>
-        <!-- 地址 -->
         <address-pop
           :address="address"
           :tagLabel="tagLabel"
@@ -39,9 +36,7 @@
           @timeClick="timeClick"
         ></address-pop>
         <!-- end -->
-        <!-- 订单明细 -->
         <view class="order_list_cont">
-          <!-- 菜品详情 -->
           <dish-detail
             :orderDataes="orderDataes"
             :showDisplay="showDisplay"
@@ -52,7 +47,6 @@
           ></dish-detail>
           <!-- end -->
           <view class="boxPad">
-            <!-- 备注、餐数数量、发票 -->
             <dish-info
               ref="dishinfo"
               :remark="remark"
@@ -73,7 +67,6 @@
         </view>
         <!-- end -->
       </view>
-      <!-- 底部购物车、去支付 -->
       <view class="footer_order_buttom order_form">
         <view class="order_number">
           <image

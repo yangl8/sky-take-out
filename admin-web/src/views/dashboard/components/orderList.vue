@@ -133,7 +133,6 @@
         />
       </div>
     </div>
-    <!-- 查看弹框部分 -->
     <el-dialog
       :title="String($t('orders.orderInformation'))"
       :visible.sync="dialogVisible"
@@ -305,7 +304,6 @@
       </span>
     </el-dialog>
     <!-- end -->
-    <!-- 拒单，取消弹窗 -->
     <el-dialog
       :title="String($t(cancelDialogTitle === '取消' ? 'orders.confirmCancel' : 'orders.confirmReject'))"
       :visible.sync="cancelDialogVisible"
@@ -380,15 +378,15 @@ export default class extends Vue {
   orderAddressLabel = orderAddressLabel
   @Prop({ default: '' }) orderStatics!: any
 
-  private orderId = '' //订单号
-  private dialogOrderStatus = 0 //弹窗所需订单状态，用于详情展示字段
+  private orderId = ''
+  private dialogOrderStatus = 0
   private activeIndex = 0
 
-  private dialogVisible = false //详情弹窗
-  private cancelDialogVisible = false //取消，拒单弹窗
-  private cancelDialogTitle = '' //取消，拒绝弹窗标题
+  private dialogVisible = false
+  private cancelDialogVisible = false
+  private cancelDialogTitle = ''
   private cancelReason = ''
-  private remark = '' //自定义原因
+  private remark = ''
   private diaForm: any = {}
   private detailLoading = false
   private listLoading = false
@@ -572,7 +570,6 @@ export default class extends Vue {
   created() {
     this.getOrderListData(this.status)
   }
-  // // 获取订单数据
   async getOrderListData(status) {
     const params = {
       page: this.page,
@@ -606,7 +603,6 @@ export default class extends Vue {
     }
   }
 
-  //接单
   orderAccept(row: any, event) {
     event.stopPropagation()
     const fromDetail = !this.isTableOperateBtn
@@ -632,7 +628,6 @@ export default class extends Vue {
         this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
-  //打开取消订单弹窗
   cancelOrder(row: any, event) {
     event.stopPropagation()
     this.cancelDialogVisible = true
@@ -642,7 +637,6 @@ export default class extends Vue {
     this.dialogVisible = false
     this.cancelReason = ''
   }
-  //打开拒单弹窗
   orderReject(row: any, event) {
     event.stopPropagation()
     this.cancelDialogVisible = true
@@ -652,7 +646,6 @@ export default class extends Vue {
     this.dialogVisible = false
     this.cancelReason = ''
   }
-  //确认取消或拒绝订单并填写原因
   confirmCancel(type) {
     if (!this.cancelReason) {
       return this.$message.error(String(this.$t('orders.selectReason')))
@@ -686,7 +679,6 @@ export default class extends Vue {
       })
   }
 
-  // 派送，完成
   cancelOrDeliveryOrComplete(status: number, id: string, event) {
     event.stopPropagation()
     const params = {
@@ -711,7 +703,6 @@ export default class extends Vue {
         this.$message.error(err && err.message ? err.message : String(this.$t('apiErrors.requestFailed')))
       })
   }
-  // 查看详情
   async goDetail(id: any, status: number, row: any, event?: any) {
     if (event && typeof event.stopPropagation === 'function') event.stopPropagation()
     const requestSequence = ++this.detailRequestSequence
@@ -742,7 +733,6 @@ export default class extends Vue {
       if (requestSequence === this.detailRequestSequence) this.detailLoading = false
     }
   }
-  // 关闭弹层
   handleClose(done?: () => void) {
     this.detailRequestSequence++
     this.dialogVisible = false
@@ -750,7 +740,6 @@ export default class extends Vue {
     this.diaForm = {}
     if (done) done()
   }
-  // tab切换
   handleClass(index) {
     this.activeIndex = index
     if (index === 0) {
@@ -761,12 +750,10 @@ export default class extends Vue {
       this.getOrderListData(3)
     }
   }
-  // 触发table某一行
   handleTable(row, column, event) {
     event.stopPropagation()
     this.goDetail(row.id, row.status, row, event)
   }
-  // 分页
   private handleSizeChange(val: any) {
     this.pageSize = val
     this.getOrderListData(this.status)

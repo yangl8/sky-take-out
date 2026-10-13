@@ -11,55 +11,63 @@ import java.util.List;
 public interface SetmealService {
 
     /**
-     * 新增套餐，同时需要保存套餐和菜品的关联关系
-     * @param setmealDTO
+     * Saves a set meal and its dish associations in one transaction, then invalidates the category cache
+     *
+     * @param setmealDTO Set meal data and associated dishes
      */
     void saveWithDish(SetmealDTO setmealDTO);
 
     /**
-         * 分页查询
-         * @param setmealPageQueryDTO
-         * @return
-    */
+     * Returns a page of set meals matching the supplied filters
+     *
+     * @param setmealPageQueryDTO Pagination and set-meal filters
+     * @return The matching page
+     */
     PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO);
 
     /**
-         * 批量删除套餐
-         * @param ids
-    */
+     * Deletes set meals that are not currently on sale and invalidates affected category caches
+     *
+     * @param ids Set-meal IDs to delete
+     */
     void deleteBatch(List<Long> ids);
 
     /**
-         * 根据id查询套餐和关联的菜品数据
-         * @param id
-         * @return
-    */
+     * Retrieves a set meal with its associated dishes
+     *
+     * @param id Set-meal ID
+     * @return Set-meal details and associated dishes
+     */
     SetmealVO getByIdWithDish(Long id);
 
     /**
-         * 修改套餐
-         * @param setmealDTO
-    */
+     * Replaces a set meal's dish associations and invalidates the old and new category caches
+     *
+     * @param setmealDTO Updated set meal data and associated dishes
+     */
     void update(SetmealDTO setmealDTO);
 
     /**
-         * 套餐起售、停售
-         * @param status
-         * @param id
-    */
+     * Changes whether a set meal is available for sale
+     *
+     * @param status New sale status
+     * @param id Set-meal ID
+     */
     void startOrStop(Integer status, Long id);
 
     /**
-     * 条件查询
-     * @param setmeal
-     * @return
+     * Lists set meals matching the supplied criteria
+     *
+     * @param setmeal Set-meal filters
+     * @return Matching set meals
      */
     List<Setmeal> list(Setmeal setmeal);
 
     /**
-     * 根据id查询菜品选项
-     * @param id
-     * @return
+     * Lists dish options associated with a set meal
+     *
+     * @param id Set-meal ID
+     * @return Associated dish options
      */
     List<DishItemVO> getDishItemById(Long id);
 }

@@ -230,15 +230,15 @@ export default class extends Vue {
   private stateTime = moment().format('YYYY-MM-DD')
   private endTime = moment().format('YYYY-MM-DD')
   private act = 'day'
-  private dataType = 1 //类型(1:金额;2:数量)
+  private dataType = 1
   private typeA = 1
   private typeB = 1
-  private chartDataA = {} // 销售趋势
-  private chartDataB = {} // 销售排行
+  private chartDataA = {}
+  private chartDataB = {}
 
-  private chartDataC = {} //分类占比
-  private chartDataD = {} // 收款构成
-  private discount = [] // 优惠指标
+  private chartDataC = {}
+  private chartDataD = {}
+  private discount = []
   private discountTotal = 0
   private discountPercentTotal = 0
 
@@ -257,7 +257,6 @@ export default class extends Vue {
   private checkaffterDate(val: any, st: any) {
     const date = moment(this.dataTime).valueOf()
     if (st == 'before') {
-      // 前一天、周、月
       if (val === 'day') {
         this.dataTime = moment(date - 86400000).format('YYYY-MM-DD')
       } else if (val === 'week') {
@@ -272,7 +271,6 @@ export default class extends Vue {
       }
       this.changeDate(val)
     } else if (st == 'after') {
-      // 后一天、周、月
       if (moment(date + 86400000).isBefore(moment())) {
         if (val === 'day') {
           this.dataTime = moment(date + 86400000).format('YYYY-MM-DD')
@@ -304,7 +302,6 @@ export default class extends Vue {
     }
   }
 
-  // 日期选择
   private changeDate(val: string) {
     if (this.stateTime == '' || this.endTime == '' || this.dataTime == null) {
       this.$message.error('检索日期不能为空！')
@@ -346,7 +343,6 @@ export default class extends Vue {
     }
   }
 
-  // 日 周 月 切换
   private dateAct(val: string) {
     this.restKey++
     this.act = val
@@ -388,7 +384,6 @@ export default class extends Vue {
     }
   }
 
-  // 获取当天数据
   private getData() {
     this.getDayData()
     this.getSalesRankData()
@@ -398,7 +393,6 @@ export default class extends Vue {
     this.getprivilegeData()
   }
 
-  // 获取当日销售趋势信息 - 销售趋势图
   private getDayData() {
     getDayDataes({ type: this.typeA, date: this.dataTime })
       .then((res) => {
@@ -423,7 +417,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取菜品分类销售排行 - 菜品分类占比 -当日
   private getSalesRankData() {
     getSalesRanking({ type: this.typeB, date: this.dataTime })
       .then((res) => {
@@ -458,7 +451,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 支付类型数据汇总 - 店内收款构成 - 当日
   private getDayPayTypeData() {
     getDayPayType({ date: this.dataTime })
       .then((res) => {
@@ -493,7 +485,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取当日菜品销售排行 - 销售排行图
   private getDayRankingData() {
     getDayRanking({ type: this.dataType, date: this.dataTime })
       .then((res) => {
@@ -509,9 +500,7 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取一天的销售数量 - 顶部数据
   private getDaySalesVolumeData() {
-    // 获取当日销售数据
     getChartsDataes({ start: this.dataTime, end: this.dataTime })
       .then((res) => {
         if (res.data.code == 200) {
@@ -525,7 +514,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取当日各种优惠类型数据汇总
   private getprivilegeData() {
     getprivilege({ date: this.dataTime })
       .then((res) => {
@@ -549,7 +537,6 @@ export default class extends Vue {
       })
   }
 
-  // 查看时间段接口调用
   private getTimeWuantumData() {
     this.getTimeQuantumData()
     this.getReceivables()
@@ -559,8 +546,6 @@ export default class extends Vue {
     this.getDiscount()
   }
 
-  // 时间段数据获取
-  // 获取时间范围之内的优惠指标汇总数据 - 优惠指标
   private getDiscount() {
     getTimeQuantumDiscount({ start: this.stateTime, end: this.endTime })
       .then((res) => {
@@ -583,7 +568,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取一定日期之内的销售趋势
   private getTimeQuantumData() {
     getTimeQuantumDataes({
       type: this.typeA,
@@ -608,7 +592,6 @@ export default class extends Vue {
       }
     })
   }
-  // 获取时间范围之内的各种支付类型数据汇总 - 店内收款构成 - 时间段
   private getReceivables() {
     getTimeQuantumReceivables({ start: this.stateTime, end: this.endTime })
       .then((res) => {
@@ -644,7 +627,6 @@ export default class extends Vue {
       })
   }
 
-  // 获取时间范围之内的菜品类别销售汇总 -  菜品分类占比 - 时间段
   private getTimeQuantumTypeData() {
     getTimeQuantumType({
       type: this.typeB,
@@ -682,7 +664,6 @@ export default class extends Vue {
         this.$message.error('请求出错了：' + err.message)
       })
   }
-  // 获取时间范围之内的菜品销售排行
   private getTimeQuantumDishesDataes() {
     getTimeQuantumDishes({ start: this.stateTime, end: this.endTime })
       .then((res) => {

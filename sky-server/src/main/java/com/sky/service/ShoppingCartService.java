@@ -8,25 +8,28 @@ import com.sky.entity.ShoppingCart;
 public interface ShoppingCartService {
     
     /**
-     * 添加购物车
-     * @param shoppingCartDTO
+     * Adds an item to the current user's cart or increments its existing quantity
+     *
+     * @param shoppingCartDTO Dish or set-meal details to add
      */
     void addShoppingCart(ShoppingCartDTO shoppingCartDTO);
 
     /**
-     * 减少购物车商品数量
-     * @param shoppingCartDTO
+     * Decrements an item in the current user's cart and removes it when its quantity reaches zero
+     *
+     * @param shoppingCartDTO Cart item to decrement
      */
     void subtractShoppingCart(ShoppingCartDTO shoppingCartDTO);
 
     /**
-     * 查看购物车
-     * @return
+     * Lists cart items belonging to the current user
+     *
+     * @return Current user's cart items
      */
     List<ShoppingCart> showShoppingCart();
 
     /**
-     * 清理购物车
+     * Removes all cart items belonging to the current user
      */
     void cleanShoppingCart();
 }

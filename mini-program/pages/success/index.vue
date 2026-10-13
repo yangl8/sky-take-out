@@ -13,7 +13,6 @@
         >
       </view>
       <view class="success_desc">{{ $t(presentation.messageKey) }}</view>
-      <!-- 新添加 -->
       <view class="btns">
         <view class="go_dish defaultBtn" @click="goIndex()">{{ $t("success.home") }}</view>
         <view class="go_dish" @click="goOrder">{{ $t("success.order") }}</view>
@@ -53,7 +52,7 @@ export default {
           return;
         }
       } catch (error) {
-        // 支付已成功；短暂重试，等待服务端支付记录完成。
+        // Payment has succeeded; retry briefly while the server finalizes the payment record
       }
       if (attempt < 9) await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -63,13 +62,11 @@ export default {
   },
   methods: {
     ...mapState(["shopInfo"]),
-    // 回首页
     goIndex() {
       uni.reLaunch({
         url: "/pages/index/index",
       });
     },
-    // 查看订单
     goOrder() {
       uni.redirectTo({
         url: "/pages/details/index?orderId=" + this.orderId + "&fromSuccess=1&sex=" + this.$store.state.gender,

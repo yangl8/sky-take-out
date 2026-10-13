@@ -36,19 +36,19 @@
                       :item="route"
                       :base-path="route.path"
                       :is-collapse="isCollapse" />
-        <!-- <div class="sub-menu">
-          <div class="avatarName">
-            {{ name }}
-          </div>
-          <div class="img">
-            <img
-              src="./../../../assets/icons/btn_close@2x.png"
-              class="outLogin"
-              alt="退出"
-              @click="logout"
-            />
-          </div>
-        </div> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
       </el-menu>
     </el-scrollbar>
   </div>

@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 验证订单状态变更必须匹配数据库中的预期状态
+ * Verifies order transitions require the expected persisted state
  */
 @ExtendWith(MockitoExtension.class)
 class OrderStatusTransitionTest {
@@ -77,7 +77,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 清理测试线程中的当前用户身份
+     * Clears the current user identity from the test thread
      */
     @AfterEach
     void clearContext() {
@@ -85,7 +85,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证待付款订单支付成功后原子变为待接单并发送一次通知
+     * Verifies successful payment atomically advances the order and sends one notification
      */
     @Test
     void paymentSuccessShouldMovePendingUnpaidOrderAndNotifyOnce() {
@@ -106,7 +106,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证迟到的支付通知不能恢复已经取消的订单
+     * Verifies a late payment notification cannot restore a cancelled order
      */
     @Test
     void latePaymentNotificationMustNotRestoreCancelledOrder() {
@@ -120,7 +120,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证支付成功与超时取消竞争时超时任务会再次检查未支付状态
+     * Verifies timeout cancellation rechecks the unpaid state when racing with payment
      */
     @Test
     void timeoutTaskMustNotCancelOrderAfterPaymentWinsTheRace() {
@@ -145,7 +145,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证没有超时待付款订单时不会执行条件取消更新
+     * Verifies no conditional cancellation update runs when no unpaid order has timed out
      */
     @Test
     void timeoutTaskMustNotUpdateWhenNoEligibleOrdersAreFound() {
@@ -158,7 +158,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证重复支付回调在条件更新失败后不重复发送来单通知
+     * Verifies a duplicate payment callback does not send another notification after its conditional update fails
      */
     @Test
     void repeatedPaymentNotificationMustNotSendDuplicateNoticeWhenUpdateAffectsNoRows() {
@@ -177,7 +177,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证管理端重复接单或接收已取消订单时影响行数为零并拒绝操作
+     * Verifies duplicate acceptance and acceptance of cancelled orders are rejected when no row is updated
      */
     @Test
     void adminMustNotAcceptCancelledOrderWhenConditionalUpdateAffectsNoRows() {
@@ -196,7 +196,7 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 验证不合法的派送状态转换在数据库条件更新失败时被拒绝
+     * Verifies invalid delivery transitions are rejected when the conditional update fails
      */
     @Test
     void invalidDeliveryTransitionMustBeRejectedWhenUpdateAffectsNoRows() {
@@ -209,11 +209,6 @@ class OrderStatusTransitionTest {
                 isNull(), any(Orders.class));
     }
 
-    /**
-     * 验证支付回调先赢得竞争时用户取消不会退款或覆盖已支付状态
-     *
-     * @throws Exception 取消操作异常
-     */
     @Test
     void userCancellationMustNotOverrideConcurrentPaymentSuccess() throws Exception {
         BaseContext.setCurrentId(1L);
@@ -228,11 +223,6 @@ class OrderStatusTransitionTest {
         verify(webSocketServer, never()).sendToAllClient(any());
     }
 
-    /**
-     * 验证支付竞争中条件更新失败时服务层不执行退款等后续操作
-     *
-     * @throws Exception 取消操作异常
-     */
     @Test
     void failedPaidCancellationUpdateMustNotCallRefundProvider() throws Exception {
         BaseContext.setCurrentId(1L);
@@ -246,11 +236,6 @@ class OrderStatusTransitionTest {
         verify(weChatPayUtil, never()).refund(any(), any(), any(), any());
     }
 
-    /**
-     * 验证订单条件更新 XML 可以解析参数并包含订单状态、支付状态和超时时间条件
-     *
-     * @throws Exception Mapper XML 解析异常
-     */
     @Test
     void mapperSqlMustBindExpectedStatesAndOptionalTimeout() throws Exception {
         Configuration configuration = new Configuration();
@@ -295,13 +280,13 @@ class OrderStatusTransitionTest {
     }
 
     /**
-     * 构造订单状态测试所需的订单对象
+     * Creates an order fixture for transition tests
      *
-     * @param id 订单ID
-     * @param number 订单编号
-     * @param status 订单业务状态
-     * @param payStatus 订单支付状态
-     * @return 构造完成的订单
+     * @param id Order ID
+     * @param number Order number
+     * @param status Business status
+     * @param payStatus Payment status
+     * @return Constructed order
      */
     private Orders order(Long id, String number, Integer status, Integer payStatus) {
         return Orders.builder().id(id).number(number).status(status).payStatus(payStatus).build();

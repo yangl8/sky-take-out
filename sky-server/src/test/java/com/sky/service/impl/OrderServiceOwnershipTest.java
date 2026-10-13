@@ -101,9 +101,6 @@ class OrderServiceOwnershipTest {
         verify(orderDetailMapper).getByOrderId(10L);
     }
 
-    /**
-     * 验证其他用户的订单不能进入状态条件更新
-     */
     @Test
     void cancellationShouldRejectAnotherUsersOrderWithoutUpdatingIt() {
         BaseContext.setCurrentId(1L);
@@ -114,11 +111,6 @@ class OrderServiceOwnershipTest {
         verify(orderMapper, never()).updateStatusIfCurrent(anyLong(), anyInt(), anyInt(), any(), any(Orders.class));
     }
 
-    /**
-     * 验证当前用户的待付款订单可以按原状态和支付状态取消
-     *
-     * @throws Exception 取消操作异常
-     */
     @Test
     void cancellationShouldAllowCurrentUsersUnpaidOrder() throws Exception {
         BaseContext.setCurrentId(1L);
@@ -173,9 +165,6 @@ class OrderServiceOwnershipTest {
         verify(weChatPayUtil, never()).pay(any(), any(), any(), any());
     }
 
-    /**
-     * 验证其他用户的订单不能经模拟支付改变状态或触发通知
-     */
     @Test
     void mockPaymentShouldRejectAnotherUsersOrderWithoutChangingIt() {
         BaseContext.setCurrentId(1L);
@@ -188,9 +177,6 @@ class OrderServiceOwnershipTest {
         verify(webSocketServer, never()).sendToAllClient(any());
     }
 
-    /**
-     * 验证当前用户待付款订单模拟支付后执行条件更新并通知管理端
-     */
     @Test
     void mockPaymentShouldProcessCurrentUsersMatchingOrder() {
         BaseContext.setCurrentId(1L);

@@ -34,9 +34,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * 用户端订单分页批量查询明细回归测试
- */
 @ExtendWith(MockitoExtension.class)
 class OrderPaginationBatchTest {
 
@@ -49,27 +46,18 @@ class OrderPaginationBatchTest {
     @InjectMocks
     private OrderServiceImpl orderService;
 
-    /**
-     * 设置用户身份和配送费
-     */
     @BeforeEach
     void setUp() {
         BaseContext.setCurrentId(USER_ID);
         ReflectionTestUtils.setField(orderService, "deliveryFee", new BigDecimal("2.50"));
     }
 
-    /**
-     * 清理分页状态和当前用户身份
-     */
     @AfterEach
     void tearDown() {
         PageHelper.clearPage();
         BaseContext.removeCurrentId();
     }
 
-    /**
-     * 按订单关联批量明细并保持订单及明细顺序和分页总数
-     */
     @Test
     void shouldGroupDetailsByOrderAndPreservePageAndDetailOrder() {
         Page<Orders> page = page(1, 4, 28, order(2L), order(1L), order(3L), order(4L));
@@ -101,9 +89,6 @@ class OrderPaginationBatchTest {
         verify(orderDetailMapper, never()).getByOrderId(any());
     }
 
-    /**
-     * 第2页只批量查询当前页订单并在分页上下文清理后读取明细
-     */
     @Test
     void shouldBatchOnlySecondPageOrdersAfterPageHelperClearsPagination() {
         Page<Orders> secondPage = page(2, 2, 5, order(103L), order(104L));
@@ -137,9 +122,6 @@ class OrderPaginationBatchTest {
         verify(orderDetailMapper, never()).getByOrderId(any());
     }
 
-    /**
-     * 单条订单没有明细时返回独立的空集合
-     */
     @Test
     void shouldReturnSingleOrderWithEmptyDetails() {
         when(orderMapper.pageQuery(any(OrdersPageQueryDTO.class))).thenReturn(page(1, 10, 1, order(8L)));
@@ -155,9 +137,6 @@ class OrderPaginationBatchTest {
         verify(orderDetailMapper, never()).getByOrderId(any());
     }
 
-    /**
-     * 空页保留 COUNT 总数且不发起明细查询
-     */
     @Test
     void shouldPreserveTotalAndSkipDetailQueryForEmptyPage() {
         when(orderMapper.pageQuery(any(OrdersPageQueryDTO.class))).thenReturn(page(4, 10, 12));
@@ -170,9 +149,6 @@ class OrderPaginationBatchTest {
         verify(orderDetailMapper, never()).getByOrderId(any());
     }
 
-    /**
-     * 验证管理端第2页待配送查询在 Mapper 执行前启用分页并保留筛选条件
-     */
     @Test
     void adminDeliverySearchShouldApplyEtaQueryBeforeSecondPageFetch() {
         OrdersPageQueryDTO query = new OrdersPageQueryDTO();
@@ -201,15 +177,6 @@ class OrderPaginationBatchTest {
         verify(orderMapper).pageQuery(query);
     }
 
-    /**
-     * 创建包含指定订单的分页结果
-     *
-     * @param pageNum 当前页码
-     * @param pageSize 每页订单数
-     * @param total 符合条件的订单总数
-     * @param orders 当前页订单
-     * @return PageHelper 分页对象
-     */
     private Page<Orders> page(int pageNum, int pageSize, long total, Orders... orders) {
         Page<Orders> page = new Page<>(pageNum, pageSize);
         page.setTotal(total);
@@ -217,23 +184,10 @@ class OrderPaginationBatchTest {
         return page;
     }
 
-    /**
-     * 创建指定订单编号的订单
-     *
-     * @param id 订单编号
-     * @return 测试订单
-     */
     private Orders order(Long id) {
         return Orders.builder().id(id).number("ORDER-" + id).build();
     }
 
-    /**
-     * 创建关联指定订单的明细
-     *
-     * @param id 明细编号
-     * @param orderId 所属订单编号
-     * @return 测试明细
-     */
     private OrderDetail detail(Long id, Long orderId) {
         return OrderDetail.builder().id(id).orderId(orderId).name("Dish " + id).build();
     }

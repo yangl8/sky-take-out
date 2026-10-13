@@ -17,14 +17,14 @@ module.exports = {
       ]
     }
   },
-  // 开启代理
+
   devServer: {
     host:'0.0.0.0',
-    public: '0.0.0.0:8888', // 本地的ip:端口号
+    public: '0.0.0.0:8888',
     port: 8888,
     open: true,
     disableHostCheck:true,
-    hot:true,//自动保存
+    hot:true,
     overlay: {
       warnings: false,
       errors: true
@@ -42,21 +42,21 @@ module.exports = {
     }
   },
   chainWebpack: (config) => {
-    config.resolve.symlinks(true) // 修复热更新失效
+    config.resolve.symlinks(true) // Resolve symlinks so hot reload works with linked dependencies
   },
   configureWebpack: {
     devtool: 'source-map'
   },
 
   css: {
-    // 是否使用css分离插件 ExtractTextPlugin
+
     extract: IS_PROD,
-    // 开启 CSS source maps?
+
     sourceMap: false,
-    // css预设器配置项
+
     loaderOptions: {
     },
-    // 启用 CSS modules for all css / pre-processor files.
+
     modules: false,
 },
 };

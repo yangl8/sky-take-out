@@ -1,4 +1,4 @@
--- 仅供 sky_take_out_perf_test 使用；脚本运行器会拒绝其他数据库名
+-- Use only sky_take_out_perf_test; the script runner rejects every other database name
 CREATE DATABASE IF NOT EXISTS sky_take_out_perf_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE sky_take_out_perf_test;
 

@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController("adminShopController")
 @RequestMapping("/admin/shop")
-@Api(tags = "店铺相关接口")
+@Api(tags = "Shop endpoints")
 @Slf4j 
 public class ShopController {
     
@@ -26,30 +26,22 @@ public class ShopController {
     @Autowired 
     private RedisTemplate redisTemplate;
 
-    /**
-     * 设置店铺的营业状态
-     * @param status
-     * @return
-     */
     @PutMapping("/{status}")
-    @ApiOperation("设置店铺的营业状态")
+    @ApiOperation("Set shop operating status")
     public Result setStatus(@PathVariable Integer status){
-        log.info("设置店铺的营业状态为: {}", status == 1 ? "营业中" : "打烊中");
+        log.info("Set shop operating status to: {}", status == 1 ? "open" : "closed");
         redisTemplate.opsForValue().set(KEY, status);
         return Result.success();
     }
 
-    /**
-     * 获取店铺的营业状态
-     */
     @GetMapping("/status")
-    @ApiOperation("获取店铺的营业状态")
+    @ApiOperation("Get shop operating status")
     public Result<Integer> getStatus(){
         Integer status = (Integer)redisTemplate.opsForValue().get(KEY);
         if (status == null) {
             status = ShopStatusConstant.DEFAULT_STATUS;
         }
-        log.info("获取到店铺的营业状态为: {}", status == 1 ? "营业中" : "打烊中");
+        log.info("Shop operating status: {}", status == 1 ? "open" : "closed");
         return Result.success(status);
     }
 }

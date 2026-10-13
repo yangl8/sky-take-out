@@ -23,12 +23,10 @@
   font-family: PingFangSC, PingFangSC-Regular;
   font-weight: 400;
 }
-// 订单列表
 .recent_orders {
   // width: 710rpx;
   margin: 20rpx auto;
 
-  // 最近订单列表
   .order_lists {
     padding: 28rpx 20rpx 0;
     .date_type {
@@ -124,7 +122,6 @@
     }
   }
 }
-// 按钮部分
 .againBtn {
   // margin: right;
   padding-bottom: 20rpx;
@@ -181,7 +178,6 @@
   height: 50px;
   background-color: #fff;
 }
-// 弹窗
 .popupBox {
   .popupTitle {
     background: #fef6e9;
@@ -279,7 +275,6 @@
     font-weight: 600;
   }
 }
-// 拨打电话
 .phoneCon {
   .popupBox {
     text-align: center;
@@ -346,7 +341,6 @@
     }
   }
 }
-// 标签
 .tag {
   width: 68rpx;
   height: 40rpx;
@@ -367,7 +361,6 @@
 .tag3 {
   background: #e7fef8;
 }
-// 单选颜色设置
 .payBox {
   .wx-checkbox-input-checked,
   .wx-radio-input-checked,
@@ -379,14 +372,14 @@
   }
 }
 radio .wx-radio-input.wx-radio-input-checked::before {
-  border-radius: 50%; /* 圆角 */
-  width: 36rpx; /* 选中后对勾大小，不要超过背景的尺寸 */
-  height: 36rpx; /* 选中后对勾大小，不要超过背景的尺寸 */
+  border-radius: 50%;
+  width: 36rpx;
+  height: 36rpx;
   line-height: 36rpx;
   text-align: center;
-  font-size: 40rpx; /* 对勾大小 30rpx */
+  font-size: 40rpx;
   font-weight: 600;
-  color: #000; /* 对勾颜色 白色 */
+  color: #000;
   border: 1rpx solid #ffc200;
   background: #ffc200;
   // transform:scale(1);

@@ -1,4 +1,3 @@
-<!--新增收获地址-->
 <template>
   <view class="customer-box">
     <uni-nav-bar
@@ -60,7 +59,6 @@
         </view>
         <view class="uni-form-item uni-column form_item pad">
           <view class="title">{{ $t("address.deliveryAddress") }}</view>
-          <!-- 联动省市县 -->
           <view class="update-input">
             <view class="update-adress" @click="openAddres">
               <text
@@ -74,7 +72,6 @@
               </text>
             </view>
 
-            <!-- 详细地址 -->
             <textarea
               class="detail"
               :class="{ 'detail-ios': platform == 'ios' }"
@@ -190,13 +187,9 @@ export default {
         districtName: "",
         detail: "",
       },
-      // 联动省市县
-      // 弹框的初始值
       cityPickerValueDefault: [0, 0, 1],
       pickerText: "",
-      // 初始值
       address: "",
-      // 保存将要删除的
       delId: "",
     }
   },
@@ -208,9 +201,7 @@ export default {
       uni.setNavigationBarTitle({
         title: this.$t("address.edit"),
       })
-      // 保存将要删除的id
       this.delId = options.id
-      // 查询详情的接口
       this.queryAddressBookById(options.id)
     } else {
       this.showDel = false
@@ -237,7 +228,6 @@ export default {
         url: "/pages/address/address",
       })
     },
-    // 查询地址详情接口
     queryAddressBookById (id) {
       queryAddressBookById({ id }).then((res) => {
         if (res.code === 1) {
@@ -289,7 +279,6 @@ export default {
       this.form.provinceCode = e.provinceCode
       this.form.cityCode = e.cityCode
       this.form.districtCode = e.areaCode
-      // 把选择的地址回显到input框中
       this.address = e.label
     },
     bindTextAreaBlur: function (e) {
@@ -304,7 +293,6 @@ export default {
     sexChangeHandle (val) {
       this.form.sex = val
     },
-    // 保存地址
     addAddressFun () {
       if (this.form.name === "") {
         return uni.showToast({
@@ -361,7 +349,6 @@ export default {
         cityName: this.address.split("/")[1],
         districtName: this.address.split("/")[2],
       }
-      // 编辑
       if (this.showDel) {
         editAddressBook(params).then((res) => {
           if (res.code === 1) {
@@ -381,7 +368,6 @@ export default {
         })
       }
     },
-    // 删除地址
     deleteAddressFun () {
       delAddressBook(this.delId).then((res) => {
         if (res.code === 1) {
@@ -404,7 +390,6 @@ export default {
         }
       })
     },
-    // 标签的事件
     getTextOption (item) {
       this.form.type = this.form.type === item.type ? "" : item.type
     },
@@ -499,7 +484,6 @@ export default {
         }
       }
 
-      // 标签
       .tag_text {
         width: auto;
         min-width: 68rpx;
@@ -566,7 +550,6 @@ export default {
         padding-bottom: 18rpx;
       }
     }
-    // 详细地址
     .detail {
       width: 100%;
       height: 50rpx;

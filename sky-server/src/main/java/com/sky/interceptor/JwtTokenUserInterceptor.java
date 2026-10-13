@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * jwt令牌校验的拦截器
+ * Authenticates user requests with JWTs and clears request identity after completion
  */
 @Component
 @Slf4j
@@ -24,39 +24,33 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
     private JwtProperties jwtProperties;
 
     /**
-     * 校验jwt
+     * Authenticates the request and binds the user ID for the duration of the request
      *
-     * @param request
-     * @param response
-     * @param handler
-     * @return
-     * @throws Exception
+     * @param request Incoming HTTP request
+     * @param response HTTP response used to reject unauthenticated requests
+     * @param handler Selected MVC handler
+     * @return {@code true} when processing may continue
+     * @throws Exception If interceptor processing fails
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         BaseContext.removeCurrentId();
 
-        System.out.println("当前线程的ID：" + Thread.currentThread().getId());
+        System.out.println("Current thread ID: " + Thread.currentThread().getId());
 
-        //判断当前拦截到的是Controller的方法还是其他资源
         if (!(handler instanceof HandlerMethod)) {
-            //当前拦截到的不是动态方法，直接放行
             return true;
         }
 
-        //1、从请求头中获取令牌
         String token = request.getHeader(jwtProperties.getUserTokenName());
 
-        //2、校验令牌
         try {
             Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
             Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
-            log.info("当前用户的id：{}", userId);
+            log.info("Current user ID: {}", userId);
             BaseContext.setCurrentId(userId);
-            //3、通过，放行
             return true;
         } catch (Exception ex) {
-            //4、不通过，响应401状态码
             response.setStatus(401);
             return false;
         }

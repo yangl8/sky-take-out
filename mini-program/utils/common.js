@@ -14,7 +14,6 @@ export default {
 	// created(){
 	// },
 	methods: {
-		// 催单
 		handleReminder(type,id){
 			reminderOrder(id).then(res => {
 				if(res.code===1){
@@ -24,7 +23,6 @@ export default {
 				}
 			})
 		},
-		// 取消订单
 		handleCancel(type,obj){
 			if(obj===1){
 				cancelOrder(obj.id).then(res => {
@@ -40,9 +38,7 @@ export default {
 				this.textTip=this.$t('popup.contactMerchant')
 			}	
 		},
-		// 再来一单
 		async oneMoreOrder(id){
-			// 先清空购物车
 			await delShoppingCart()
 			repetitionOrder(id).then(res => {
 				if (res.code === 1) {
@@ -52,12 +48,9 @@ export default {
 				}
 			})
 		},
-		// 拨打电话弹层
 		handlePhone(type) {
-			// 暂时关闭打电话
 			// this.$refs.phone.open(type)
 		},
-		// 关闭弹层
 		closePopup(type){
 			this.$refs.commonPopup.close(type)
 		},

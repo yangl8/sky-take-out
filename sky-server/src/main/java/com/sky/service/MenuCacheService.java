@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * 菜单缓存服务，统一管理缓存键、过期时间和Redis操作
+ * Centralizes menu cache keys, expiration, and Redis operations
  */
 @Service
 @Slf4j
@@ -36,7 +36,7 @@ public class MenuCacheService {
         try {
             return (List<DishVO>) redisTemplate.opsForValue().get(key);
         } catch (RuntimeException exception) {
-            log.warn("菜品缓存读取失败，按未命中处理：{}", key, exception);
+            log.warn("Failed to read dish cache; treating it as a cache miss: {}", key, exception);
             deleteAfterReadFailure(key, exception);
             return null;
         }
@@ -52,7 +52,7 @@ public class MenuCacheService {
         try {
             return (List<Setmeal>) redisTemplate.opsForValue().get(key);
         } catch (RuntimeException exception) {
-            log.warn("套餐缓存读取失败，按未命中处理：{}", key, exception);
+            log.warn("Failed to read set meal cache; treating it as a cache miss: {}", key, exception);
             deleteAfterReadFailure(key, exception);
             return null;
         }
@@ -74,14 +74,14 @@ public class MenuCacheService {
         try {
             redisTemplate.opsForValue().set(key, values, expiration(values == null || values.isEmpty()));
         } catch (RuntimeException exception) {
-            log.warn("菜单缓存写入失败，不影响数据库查询结果：{}", key, exception);
+            log.warn("Failed to write menu cache; database results remain available: {}", key, exception);
         }
     }
 
     /**
-     * 在当前事务提交后失效缓存，避免提交前的并发回源重新写入旧数据
+     * Evicts the cache after commit so a concurrent database read cannot repopulate stale data before commit
      *
-     * @param key 菜品或套餐缓存键
+     * @param key Dish or set-meal cache key
      */
     private void evictAfterCommit(String key) {
         if (TransactionSynchronizationManager.isActualTransactionActive()
@@ -98,10 +98,10 @@ public class MenuCacheService {
     }
 
     /**
-     * 读取异常时仅清理非连接故障导致的旧值，避免 Redis 宕机期间重复请求
+     * Clears stale values after non-connection read failures; connection outages should not trigger repeated delete attempts
      *
-     * @param key 待读取的缓存键
-     * @param failure 缓存读取异常
+     * @param key Cache key that failed to read
+     * @param failure Cache read failure
      */
     private void deleteAfterReadFailure(String key, RuntimeException failure) {
         if (isConnectionFailure(failure)) {
@@ -110,15 +110,15 @@ public class MenuCacheService {
         try {
             redisTemplate.delete(key);
         } catch (RuntimeException exception) {
-            log.warn("读取失败后的菜单缓存清理失败，继续按未命中处理：{}", key, exception);
+            log.warn("Failed to clear menu cache after a read error; continuing with a cache miss: {}", key, exception);
         }
     }
 
     /**
-     * 判断缓存异常链中是否包含 Redis 连接故障
+     * Checks whether the exception chain contains a Redis connection failure
      *
-     * @param failure 缓存操作异常
-     * @return 异常链包含 Redis 连接故障时返回 true
+     * @param failure Cache operation failure
+     * @return {@code true} when the cause chain contains a Redis connection failure
      */
     private boolean isConnectionFailure(RuntimeException failure) {
         Throwable cause = failure;
@@ -132,9 +132,9 @@ public class MenuCacheService {
     }
 
     /**
-     * 有限重试删除缓存，持续失败时记录错误并依靠短 TTL 限制旧数据存活时间
+     * Retries eviction a bounded number of times; short TTLs limit stale data if Redis remains unavailable
      *
-     * @param key 待删除的缓存键
+     * @param key Cache key to evict
      */
     private void deleteWithRetry(String key) {
         RuntimeException lastFailure = null;
@@ -146,7 +146,7 @@ public class MenuCacheService {
                 lastFailure = exception;
             }
         }
-        log.error("菜单缓存失效在 {} 次尝试后仍失败，旧数据最多保留至 TTL 到期：{}",
+        log.error("Menu cache eviction failed after {} attempts; stale data may remain until its TTL expires: {}",
             EVICTION_ATTEMPTS, key, lastFailure);
     }
 

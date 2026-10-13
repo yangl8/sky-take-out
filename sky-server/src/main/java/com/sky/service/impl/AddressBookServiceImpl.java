@@ -17,41 +17,24 @@ public class AddressBookServiceImpl implements AddressBookService {
     @Autowired
     private AddressBookMapper addressBookMapper;
 
-    /**
-     * 条件查询
-     *
-     * @param addressBook
-     * @return
-     */
     public List<AddressBook> list(AddressBook addressBook) {
         return addressBookMapper.list(addressBook);
     }
 
-    /**
-     * 新增地址
-     *
-     * @param addressBook
-     */
     public void save(AddressBook addressBook) {
         addressBook.setUserId(BaseContext.getCurrentId());
         addressBook.setIsDefault(0);
         addressBookMapper.insert(addressBook);
     }
 
-    /**
-     * 根据id查询
-     *
-     * @param id
-     * @return
-     */
     public AddressBook getById(Long id) {
         return addressBookMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
     }
 
     /**
-     * 根据id修改地址
+     * Rechecks ownership when MySQL reports no changed rows for an idempotent update
      *
-     * @param addressBook
+     * @param addressBook Updated address details
      */
     public void update(AddressBook addressBook) {
         Long userId = BaseContext.getCurrentId();
@@ -65,21 +48,19 @@ public class AddressBookServiceImpl implements AddressBookService {
     }
 
     /**
-     * 设置默认地址
+     * Keeps the user's default address unique within one transaction
      *
-     * @param addressBook
+     * @param addressBook Address to set as the user's default
      */
     @Transactional
     public void setDefault(AddressBook addressBook) {
         Long userId = BaseContext.getCurrentId();
         requireOwnedAddress(addressBook.getId(), userId);
 
-        //1、将当前用户的所有地址修改为非默认地址 update address_book set is_default = ? where user_id = ?
         addressBook.setIsDefault(0);
         addressBook.setUserId(userId);
         addressBookMapper.updateIsDefaultByUserId(addressBook);
 
-        //2、将当前地址改为默认地址 update address_book set is_default = ? where id = ?
         addressBook.setIsDefault(1);
         int updated = addressBookMapper.update(addressBook);
         if (updated == 0) {
@@ -90,11 +71,6 @@ public class AddressBookServiceImpl implements AddressBookService {
         }
     }
 
-    /**
-     * 根据id删除地址
-     *
-     * @param id
-     */
     public void deleteById(Long id) {
         Long userId = BaseContext.getCurrentId();
         if (addressBookMapper.deleteById(id, userId) == 0) {

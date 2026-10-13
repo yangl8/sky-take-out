@@ -14,33 +14,25 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 通用接口
- */
 @RestController
 @RequestMapping("/admin/common")
-@Api(tags = "通用接口")
+@Api(tags = "General endpoints")
 @Slf4j
 public class CommonController {
     
     @Autowired
     private CloudinaryUtil cloudinaryUtil;
 
-    /**
-     * 文件上传
-     * @param file
-     * @return
-     */
     @PostMapping("/upload")
-    @ApiOperation("文件上传")
+    @ApiOperation("Upload file")
     public Result<String> upload(MultipartFile file){
-        log.info("文件上传: {}", file);
+        log.info("Uploading file: {}", file);
         
         try {
             String filePath = cloudinaryUtil.upload(file.getBytes());
             return Result.success(filePath);
         } catch (Exception e) {
-            log.error("文件上传失败", e);
+            log.error("File upload failed", e);
         }
         
         return Result.error(MessageConstant.UPLOAD_FAILED);

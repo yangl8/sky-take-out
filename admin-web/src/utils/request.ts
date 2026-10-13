@@ -32,7 +32,6 @@ service.interceptors.request.use(
 
     // config.headers['Access-Control-Allow-Origin'] = '*'
     // config.headers['Content-Type'] = 'application/json;'
-    // get请求映射params参数
     if (config.method === 'get' && config.params) {
       let url = config.url + '?';
       for (const propName of Object.keys(config.params)) {
@@ -54,16 +53,13 @@ service.interceptors.request.use(
       config.params = {};
       config.url = url;
     }
-    // 计算当前请求key值
     const key = getRequestKey(config);
     // console.log(pending,key,checkPending(key),'checkPending(key)')
     if (checkPending(key)) {
-      // 重复请求则取消当前请求
       const source = CancelToken.source();
       config.cancelToken = source.token;
       source.cancel(String(i18n.t('apiErrors.duplicateRequest')));
     } else {
-      // 加入请求字典
       pending[key] = true;
     }
     return config
@@ -82,7 +78,6 @@ service.interceptors.response.use(
       // const res = response.data
       // return response
     }
-    //请求响应中的config的url会带上代理的api需要去掉
     response.config.url = response.config.url.replace('/api', '')
     if (response.data && typeof response.data === 'object') {
       ;['msg', 'desc'].forEach((field) => {
@@ -91,12 +86,10 @@ service.interceptors.response.use(
         }
       })
     }
-    // 请求完成，删除请求中状态
     const key = getRequestKey(response.config);
     removePending(key);
     // if (response.data.code === 0) {
     //   Message.error(response.data.msg)
-    //   // if(response.data.msg === 'NOTLOGIN' || response.data.msg === '未登录'){
     //   //   router.push('/login')
     //   // }
     //   // return window.location.href = '/login'
@@ -127,9 +120,7 @@ service.interceptors.response.use(
     } else if (error) {
       error.message = String(i18n.t('apiErrors.requestFailed'))
     }
-    //请求响应中的config的url会带上代理的api需要去掉
     error.config.url = error.config.url.replace('/api', '')
-    // 请求完成，删除请求中状态
     const key = getRequestKey(error.config);
     removePending(key);
     // console.log(error, pending, 'error11')

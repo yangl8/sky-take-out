@@ -101,15 +101,7 @@
                           @imageChange="imageChange">{{ $t('catalog.imageSize') }}<br>{{ $t('catalog.imageTypes') }}<br>{{ $t('catalog.imageDimensions') }}</image-upload>
           </el-form-item>
         </div>
-        <!-- <el-form-item
-          label="商品码:"
-          prop="code"
-        >
-          <el-input
-            v-model="ruleForm.code"
-            placeholder="请输入商品码"
-          />
-        </el-form-item> -->
+
         <div class="address">
           <el-form-item :label="String($t('catalog.setmealDescription'))">
             <el-input v-model="ruleForm.description"
@@ -247,7 +239,6 @@ export default class extends Vue {
       },
       price: {
         required: true,
-        // 'message': '请输入套餐价格',
         validator: (rules: any, value: string, callback: Function) => {
           const reg = /^([1-9]\d{0,5}|0)(\.\d{1,2})?$/
           if (!reg.test(value) || Number(value) <= 0) {
@@ -293,7 +284,6 @@ export default class extends Vue {
   private seachHandle() {
     this.seachKey = this.value
   }
-  // 获取套餐分类
   private getDishTypeList() {
     getCategoryList({ type: 2, page: 1, pageSize: 1000 }).then(res => {
       if (res && res.data && res.data.code === 1) {
@@ -307,7 +297,6 @@ export default class extends Vue {
     })
   }
 
-  // 通过套餐ID获取菜品列表分类
   // private getDishList (id:number) {
   //   getDishListType({id}).then(res => {
   //     if (res.data.code == 200) {
@@ -319,24 +308,20 @@ export default class extends Vue {
   //   })
   // }
 
-  // 删除套餐菜品
   delDishHandle(index: any) {
     this.dishTable.splice(index, 1)
     this.checkList = this.dishTable
     // this.checkList.splice(index, 1)
   }
 
-  // 获取添加菜品数据 - 确定加菜倒序展示
   private getCheckList(value: any) {
     this.checkList = [...value].reverse()
   }
 
-  // 添加菜品
   openAddDish(st: string) {
     this.seachKey = ''
     this.dialogVisible = true
   }
-  // 取消添加菜品
   handleClose(done: any) {
     // this.$refs.adddish.close()
     this.dialogVisible = false
@@ -344,7 +329,6 @@ export default class extends Vue {
     // this.dialogVisible = false
   }
 
-  // 保存添加菜品列表
   public addTableList() {
     this.dishTable = JSON.parse(JSON.stringify(this.checkList))
     this.dishTable.forEach((n: any) => {

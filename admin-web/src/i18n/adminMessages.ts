@@ -46,9 +46,9 @@ const messageKeys: Record<string, string> = {
 }
 
 /**
- * 将后端固定中文错误映射为当前管理端语言，未知内容保持原样
- * @param message 后端返回的错误信息
- * @return 当前语言的固定错误文案
+ * Maps known backend error messages to the selected admin locale; unknown messages remain unchanged
+ * @param message Error message returned by the backend
+ * @return Localized message for a known error
  */
 export function localizeAdminMessage(message: unknown): string {
   if (typeof message !== 'string' || !message.trim()) return String(i18n.t('apiErrors.requestFailed'))

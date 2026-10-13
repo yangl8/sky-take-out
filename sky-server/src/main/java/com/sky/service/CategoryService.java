@@ -9,41 +9,47 @@ import java.util.List;
 public interface CategoryService {
 
     /**
-     * 新增分类
-     * @param categoryDTO
+     * Creates a category
+     *
+     * @param categoryDTO Category data to save
      */
     void save(CategoryDTO categoryDTO);
 
     /**
-     * 分页查询
-     * @param categoryPageQueryDTO
-     * @return
+     * Returns a page of categories matching the supplied filters
+     *
+     * @param categoryPageQueryDTO Pagination and category filters
+     * @return The matching page
      */
     PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
 
     /**
-     * 根据id删除分类
-     * @param id
+     * Deletes a category that is not associated with dishes or set meals
+     *
+     * @param id Category ID
      */
     void deleteById(Long id);
 
     /**
-     * 修改分类
-     * @param categoryDTO
+     * Updates a category
+     *
+     * @param categoryDTO Updated category data
      */
     void update(CategoryDTO categoryDTO);
 
     /**
-     * 启用、禁用分类
-     * @param status
-     * @param id
+     * Changes whether a category is enabled
+     *
+     * @param status New category status
+     * @param id Category ID
      */
     void startOrStop(Integer status, Long id);
 
     /**
-     * 根据类型查询分类
-     * @param type
-     * @return
+     * Lists categories, optionally filtered by type
+     *
+     * @param type Optional category type
+     * @return Matching categories
      */
     List<Category> list(Integer type);
 }

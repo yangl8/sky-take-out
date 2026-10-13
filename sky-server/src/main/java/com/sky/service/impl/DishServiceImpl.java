@@ -44,9 +44,6 @@ public class DishServiceImpl implements DishService{
     @Autowired
     private MenuCacheService menuCacheService;
 
-    /**
-     * 新增菜品和对应的口味
-     */
     @Transactional
     public void saveWithFlavor(DishDTO dishDTO){
 
@@ -54,10 +51,8 @@ public class DishServiceImpl implements DishService{
 
         BeanUtils.copyProperties(dishDTO, dish);
 
-        //向菜品表插入1条数据
         dishMapper.insert(dish);
 
-        //获取insert语句生成的主键值
         Long dishId = dish.getId();
 
         List<DishFlavor> flavors = dishDTO.getFlavors();
@@ -65,58 +60,42 @@ public class DishServiceImpl implements DishService{
             flavors.forEach(flavor -> {
                 flavor.setDishId(dishId);
             });
-            //向口味表插入n条数据
             dishflavorMapper.insertBatch(flavors);
         }
 
         menuCacheService.evictDishes(dishDTO.getCategoryId());
     }
 
-    /**
-     * 菜品分页查询
-     */
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO){
         PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
         Page<DishVO> page = dishMapper.pageQuery(dishPageQueryDTO);
         return new PageResult(page.getTotal(), page.getResult());
     }
 
-    /**
-     * 菜品批量删除
-     * @param ids
-     */
     @Transactional
     public void deleteBatch(List<Long> ids){
         List<Long> categoryIds = dishMapper.getCategoryIdsByIds(ids);
 
-        //判断当前菜品是否能够删除——是否存在启售中的菜品？
         for(Long id : ids){
             Dish dish = dishMapper.getById(id);
             if(dish.getStatus() == StatusConstant.ENABLE){
-                //当前菜品处于启售中，不能删除
                 throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
             }
         }
 
-        //判断当前菜品是否能够删除——是否被套餐关联了？
         List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(ids);
         if(setmealIds != null && setmealIds.size() > 0){
-            //当前菜品被套餐关联了，不能删除
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
 
-        //删除菜品表中的菜品数据
         // for(Long id : ids){
         //     dishMapper.deleteById(id);
-        //     //删除菜品关联的口味数据
         //     dishflavorMapper.deleteByDishId(id);
         // }
 
-        //根据菜品id集合批量删除菜品数据
         //sql : delete from dish where id in (?,?,?)
         dishMapper.deleteByIds(ids);
 
-        //根据菜品id集合批量删除关联的口味数据
         //sql : delete from dish_flavor where dish_id in (?,?,?)
         dishflavorMapper.deleteByDishIds(ids);
 
@@ -125,19 +104,11 @@ public class DishServiceImpl implements DishService{
     }
 
 
-    /**
-     * 根据id查询菜品和对应的口味数据
-     * @param id
-     * @return
-     */
     public DishVO getByIdWithFlavor(Long id){
-        //根据id查询菜品数据
         Dish dish = dishMapper.getById(id);
 
-        //根据菜品id查询口味数据
         List<DishFlavor> dishFlavors = dishflavorMapper.getByDishId(id);
 
-        //将查询到的数据封装到VO
         DishVO dishVO = new DishVO();
         BeanUtils.copyProperties(dish, dishVO);
         dishVO.setFlavors(dishFlavors);
@@ -145,29 +116,21 @@ public class DishServiceImpl implements DishService{
         return dishVO;
     }
     
-    /**
-     * 根据id修改菜品基本信息和对应的口味信息
-     * @param dishDTO
-     */
     @Transactional
     public void updateWithFlavor(DishDTO dishDTO){
         Dish existingDish = dishMapper.getById(dishDTO.getId());
 
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO,dish);
-        //修改菜品表基本信息
         dishMapper.update(dish);
 
-        //删除原有的口味数据
         dishflavorMapper.deleteByDishId(dishDTO.getId());
 
-        //重新插入口味数据
         List<DishFlavor> flavors = dishDTO.getFlavors();
         if(flavors != null && flavors.size() > 0){
             flavors.forEach(flavor -> {
                 flavor.setDishId(dishDTO.getId());
             });
-            //向口味表插入n条数据
             dishflavorMapper.insertBatch(flavors);
         }
 
@@ -178,11 +141,11 @@ public class DishServiceImpl implements DishService{
     }
 
     /**
-     * 菜品起售停售
+     * Disabling a dish also disables associated set meals so unavailable items cannot remain on sale
      *
-     * @param status
-     * @param id
-    */
+     * @param status New sale status
+     * @param id Dish ID
+     */
     @Transactional
     public void startOrStop(Integer status, Long id) {
         Dish existingDish = dishMapper.getById(id);
@@ -197,7 +160,6 @@ public class DishServiceImpl implements DishService{
         dishMapper.update(dish);
 
         if (status == StatusConstant.DISABLE) {
-            // 如果是停售操作，还需要将包含当前菜品的套餐也停售
             List<Long> dishIds = new ArrayList<>();
             dishIds.add(id);
             // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
@@ -217,11 +179,6 @@ public class DishServiceImpl implements DishService{
         evictSetmealCategories(affectedSetmealCategoryIds);
     }
 
-    /**
-     * 根据分类id查询菜品
-     * @param categoryId
-     * @return
-    */
     public List<Dish> list(Long categoryId) {
         Dish dish = Dish.builder()
             .categoryId(categoryId)
@@ -230,11 +187,6 @@ public class DishServiceImpl implements DishService{
         return dishMapper.list(dish);
     }
 
-    /**
-     * 条件查询菜品和口味
-     * @param dish
-     * @return
-     */
     public List<DishVO> listWithFlavor(Dish dish) {
         List<Dish> dishList = dishMapper.list(dish);
 
@@ -244,7 +196,6 @@ public class DishServiceImpl implements DishService{
             DishVO dishVO = new DishVO();
             BeanUtils.copyProperties(d,dishVO);
 
-            //根据菜品id查询对应的口味
             List<DishFlavor> flavors = dishflavorMapper.getByDishId(d.getId());
 
             dishVO.setFlavors(flavors);

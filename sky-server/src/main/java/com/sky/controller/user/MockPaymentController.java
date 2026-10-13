@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/user/order")
-@Api(tags = "模拟支付接口")
+@Api(tags = "Mock payment endpoints")
 @Profile("dev & !prod")
 @ConditionalOnProperty(prefix = "sky.payment", name = "mock-enabled", havingValue = "true")
 public class MockPaymentController {
@@ -22,14 +22,8 @@ public class MockPaymentController {
     @Autowired
     private OrderService orderService;
 
-    /**
-     * 模拟支付成功
-     *
-     * @param orderNumber 订单号
-     * @return
-     */
     @PostMapping("/mockPaySuccess/{orderNumber}/{orderId}")
-    @ApiOperation("模拟支付成功")
+    @ApiOperation("Simulate successful payment")
     public Result mockPaySuccess(@PathVariable String orderNumber, @PathVariable Long orderId) {
         orderService.mockPaySuccessForUser(orderNumber, orderId);
         return Result.success();

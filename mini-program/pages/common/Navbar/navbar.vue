@@ -1,6 +1,5 @@
 <template>
 	<view class="navBar">
-		<!-- 个人中心 -->
 		<view @click="myCenterFun" class="person-box" :style="{top:ht + 'px'}">
 			<image class="test_image" src="../../../static/center.png"></image>
 			<span class="person-title">{{ $t("my.title") }}</span>

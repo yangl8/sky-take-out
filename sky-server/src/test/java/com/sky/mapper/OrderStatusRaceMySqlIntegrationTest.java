@@ -33,9 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * 使用独立 MySQL 数据库验证真实订单 Mapper 的并发状态更新
- */
 class OrderStatusRaceMySqlIntegrationTest {
 
     private static final String JDBC_URL_ENV = "SKY_ORDER_RACE_DB_URL";
@@ -44,11 +41,6 @@ class OrderStatusRaceMySqlIntegrationTest {
     private static final String ROUNDS_ENV = "SKY_ORDER_RACE_ROUNDS";
     private static final String TEST_DATABASE = "sky_take_out_test";
 
-    /**
-     * 多轮竞争真实支付和超时取消并检查截止时间及重复更新
-     *
-     * @throws Exception 数据库并发测试失败
-     */
     @Test
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     void paymentAndTimeoutCancellationMustHaveExactlyOneWinner() throws Exception {
@@ -110,26 +102,12 @@ class OrderStatusRaceMySqlIntegrationTest {
                         + "both ordered outcomes passed%n", mysqlVersion, rounds, paymentWins, timeoutWins);
     }
 
-    /**
-     * 检查连接地址只能指向独立并发测试数据库
-     *
-     * @param jdbcUrl MySQL JDBC 连接地址
-     */
     private void assertTestDatabaseUrl(String jdbcUrl) {
         URI databaseUri = URI.create(jdbcUrl.substring("jdbc:".length()));
         assertEquals("/" + TEST_DATABASE, databaseUri.getPath(),
                 "真实并发测试只允许连接 sky_take_out_test");
     }
 
-    /**
-     * 加载项目实际订单 Mapper XML 并构造独立 MyBatis 会话工厂
-     *
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @return 加载真实 OrderMapper.xml 的会话工厂
-     * @throws Exception Mapper XML 加载失败
-     */
     private SqlSessionFactory createSqlSessionFactory(String jdbcUrl, String username, String password)
             throws Exception {
         UnpooledDataSource dataSource = new UnpooledDataSource("com.mysql.cj.jdbc.Driver", jdbcUrl, username, password);
@@ -148,14 +126,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         return new SqlSessionFactoryBuilder().build(configuration);
     }
 
-    /**
-     * 确认测试订单表使用支持行级锁的 InnoDB 引擎
-     *
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @throws Exception 数据库查询失败或存储引擎不符
-     */
     private String verifyInnoDbTestTable(String jdbcUrl, String username, String password) throws Exception {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
              PreparedStatement statement = connection.prepareStatement(
@@ -176,15 +146,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 验证订单时间恰好等于超时边界时条件更新不会取消订单
-     *
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @throws Exception 数据库边界测试失败
-     */
     private void verifyTimeoutBoundary(SqlSessionFactory sessionFactory, String jdbcUrl, String username,
                                        String password) throws Exception {
         LocalDateTime boundary = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
@@ -201,16 +162,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 使用两条独立连接同时提交支付和超时取消条件更新
-     *
-     * @param executor 并发执行线程池
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param orderId 竞争更新的订单ID
-     * @param timeoutCutoff 超时取消截止时间
-     * @return 两个更新的影响行数及 MySQL 连接编号
-     * @throws Exception 任一竞争线程失败
-     */
     private RaceResult racePaymentAndTimeout(ExecutorService executor, SqlSessionFactory sessionFactory,
                                              long orderId, LocalDateTime timeoutCutoff) throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
@@ -227,17 +178,6 @@ class OrderStatusRaceMySqlIntegrationTest {
                 paymentResult.connectionId, timeoutResult.connectionId);
     }
 
-    /**
-     * 稳定验证支付先完成和超时取消先完成时各自的最终状态
-     *
-     * @param executor 并发执行线程池
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @param testPrefix 本次测试使用的订单编号前缀
-     * @throws Exception 任一顺序验证失败
-     */
     private void verifyBothOrderedOutcomes(ExecutorService executor, SqlSessionFactory sessionFactory,
                                            String jdbcUrl, String username, String password, String testPrefix)
             throws Exception {
@@ -247,18 +187,6 @@ class OrderStatusRaceMySqlIntegrationTest {
                 testPrefix + "timeout-first", false);
     }
 
-    /**
-     * 使用两个独立事务按指定顺序竞争同一订单并检查最终状态
-     *
-     * @param executor 并发执行线程池
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @param orderNumber 本次顺序验证的订单编号
-     * @param paymentFirst 是否让支付事务先提交
-     * @throws Exception 数据库顺序竞争验证失败
-     */
     private void verifyOrderedOutcome(ExecutorService executor, SqlSessionFactory sessionFactory,
                                       String jdbcUrl, String username, String password, String orderNumber,
                                       boolean paymentFirst) throws Exception {
@@ -298,18 +226,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 在独立 MyBatis 事务中执行支付或超时取消状态更新
-     *
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param orderId 竞争更新的订单ID
-     * @param ready 两个线程均取得连接后的同步信号
-     * @param start 同时开始执行更新的同步信号
-     * @param paymentTransition 是否执行支付成功更新
-     * @param timeoutCutoff 超时取消截止时间
-     * @return 更新结果与 MySQL 连接编号
-     * @throws Exception 连接失败、同步超时或 SQL 执行失败
-     */
     private TransitionResult runTransition(SqlSessionFactory sessionFactory, long orderId, CountDownLatch ready,
                                            CountDownLatch start, boolean paymentTransition,
                                            LocalDateTime timeoutCutoff) throws Exception {
@@ -325,20 +241,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 在开始门闩同步后按指定顺序提交两个状态转换
-     *
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param orderId 竞争更新的订单ID
-     * @param ready 两个线程均取得连接后的同步信号
-     * @param start 同时启动两个事务的同步信号
-     * @param firstCommitted 先行事务提交完成的同步信号
-     * @param isFirstTransition 当前是否为先行状态转换
-     * @param paymentTransition 是否执行支付成功更新
-     * @param timeoutCutoff 超时取消截止时间
-     * @return 条件更新影响行数与 MySQL 连接编号
-     * @throws Exception 数据库更新或同步等待失败
-     */
     private TransitionResult runOrderedTransition(SqlSessionFactory sessionFactory, long orderId,
                                                   CountDownLatch ready, CountDownLatch start,
                                                   CountDownLatch firstCommitted, boolean isFirstTransition,
@@ -362,15 +264,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 通过实际订单 Mapper 执行支付或超时取消条件更新
-     *
-     * @param session 当前独立 MyBatis 事务
-     * @param orderId 需要转换状态的订单ID
-     * @param paymentTransition 是否执行支付成功更新
-     * @param timeoutCutoff 超时取消截止时间
-     * @return Mapper 返回的影响行数
-     */
     private int updateOrderTransition(SqlSession session, long orderId, boolean paymentTransition,
                                       LocalDateTime timeoutCutoff) {
         Orders targetOrder = paymentTransition
@@ -382,13 +275,6 @@ class OrderStatusRaceMySqlIntegrationTest {
                 Orders.PENDING_PAYMENT, Orders.UN_PAID, paymentTransition ? null : timeoutCutoff, targetOrder);
     }
 
-    /**
-     * 查询当前连接在 MySQL 中的唯一连接编号
-     *
-     * @param connection 当前 MySQL 连接
-     * @return MySQL 连接编号
-     * @throws Exception 查询连接编号失败
-     */
     private long readConnectionId(Connection connection) throws Exception {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("select connection_id()")) {
@@ -397,14 +283,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 重复提交支付或超时取消条件后确认终态不会被覆盖
-     *
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param orderId 已经完成状态转换的订单ID
-     * @param timeoutCutoff 超时取消截止时间
-     * @param storedOrder 当前数据库中的终态订单
-     */
     private void assertRepeatedTransitionsDoNotOverwrite(SqlSessionFactory sessionFactory, long orderId,
                                                          LocalDateTime timeoutCutoff, Orders storedOrder) {
         try (SqlSession session = sessionFactory.openSession(false)) {
@@ -424,17 +302,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         assertEquals(storedOrder.getPayStatus(), orderAfterRepeatedUpdates.getPayStatus());
     }
 
-    /**
-     * 插入本轮专用的待付款未支付订单
-     *
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @param orderNumber 本轮唯一订单编号
-     * @param orderTime 测试订单下单时间
-     * @return 新插入的订单ID
-     * @throws Exception 测试订单插入失败
-     */
     private long insertOverdueUnpaidOrder(String jdbcUrl, String username, String password, String orderNumber,
                                           LocalDateTime orderTime) throws Exception {
         String sql = "insert into orders (number, status, order_time, pay_status) values (?, ?, ?, ?)";
@@ -452,28 +319,12 @@ class OrderStatusRaceMySqlIntegrationTest {
         }
     }
 
-    /**
-     * 通过实际订单 Mapper 查询竞争后的订单状态
-     *
-     * @param sessionFactory 加载真实订单 Mapper 的会话工厂
-     * @param orderId 需要查询的订单ID
-     * @return 当前订单数据
-     */
     private Orders selectOrder(SqlSessionFactory sessionFactory, long orderId) {
         try (SqlSession session = sessionFactory.openSession()) {
             return session.getMapper(OrderMapper.class).getById(orderId);
         }
     }
 
-    /**
-     * 删除当前集成测试生成的专用订单
-     *
-     * @param jdbcUrl MySQL JDBC 连接地址
-     * @param username 测试数据库用户名
-     * @param password 测试数据库密码
-     * @param orderNumber 本轮唯一订单编号
-     * @throws Exception 测试数据清理失败
-     */
     private void deleteTestOrder(String jdbcUrl, String username, String password, String orderNumber)
             throws Exception {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
@@ -489,14 +340,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         private final long paymentConnectionId;
         private final long timeoutConnectionId;
 
-        /**
-         * 保存一轮订单状态竞争的更新结果
-         *
-         * @param paymentRows 支付更新的影响行数
-         * @param timeoutRows 超时取消更新的影响行数
-         * @param paymentConnectionId 支付线程的 MySQL 连接编号
-         * @param timeoutConnectionId 超时线程的 MySQL 连接编号
-         */
         private RaceResult(int paymentRows, int timeoutRows, long paymentConnectionId, long timeoutConnectionId) {
             this.paymentRows = paymentRows;
             this.timeoutRows = timeoutRows;
@@ -509,12 +352,6 @@ class OrderStatusRaceMySqlIntegrationTest {
         private final int updatedRows;
         private final long connectionId;
 
-        /**
-         * 保存单次条件更新的影响行数和连接编号
-         *
-         * @param updatedRows Mapper 返回的影响行数
-         * @param connectionId 执行更新的 MySQL 连接编号
-         */
         private TransitionResult(int updatedRows, long connectionId) {
             this.updatedRows = updatedRows;
             this.connectionId = connectionId;

@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController("userShopController")
 @RequestMapping("/user/shop")
-@Api(tags = "店铺相关接口")
+@Api(tags = "Shop endpoints")
 @Slf4j 
 public class ShopController {
     
@@ -41,25 +41,19 @@ public class ShopController {
     @Value("${sky.shop.delivery-fee}")
     private BigDecimal deliveryFee;
 
-    /**
-     * 获取店铺的营业状态
-     */
     @GetMapping("/status")
-    @ApiOperation("获取店铺的营业状态")
+    @ApiOperation("Get shop operating status")
     public Result<Integer> getStatus(){
         Integer status = (Integer)redisTemplate.opsForValue().get(KEY);
         if (status == null) {
             status = ShopStatusConstant.DEFAULT_STATUS;
         }
-        log.info("获取到店铺的营业状态为: {}", status == 1 ? "营业中" : "打烊中");
+        log.info("Shop operating status: {}", status == 1 ? "open" : "closed");
         return Result.success(status);
     }
 
-    /**
-     * 获取店铺基本信息
-     */
     @GetMapping("/getMerchantInfo")
-    @ApiOperation("获取店铺基本信息")
+    @ApiOperation("Get basic shop information")
     public Result<Map<String, Object>> getMerchantInfo(){
         Map<String, Object> merchantInfo = new HashMap<>();
         merchantInfo.put("shopName", shopName);

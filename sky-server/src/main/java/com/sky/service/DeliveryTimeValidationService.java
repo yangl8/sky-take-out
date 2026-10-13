@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.sky.config.DeliveryTimeProperties;
 
 /**
- * 校验立即配送营业状态与预约配送时间
+ * Validates current business hours and scheduled delivery times
  */
 @Service
 public class DeliveryTimeValidationService {
@@ -21,10 +21,10 @@ public class DeliveryTimeValidationService {
     private final Clock clock;
 
     /**
-     * 创建配送时间校验服务
+     * Creates the delivery time validator
      *
-     * @param properties 每日营业时段及准备时间配置
-     * @param clock 当前时间来源
+     * @param properties Daily business hours and preparation-time settings
+     * @param clock Source of the current time
      */
     public DeliveryTimeValidationService(DeliveryTimeProperties properties, Clock clock) {
         this.properties = properties;
@@ -32,11 +32,11 @@ public class DeliveryTimeValidationService {
     }
 
     /**
-     * 校验配送类型对应的当前营业状态或预约送达时间
+     * Validates the current opening status or the requested scheduled delivery time
      *
-     * @param deliveryStatus 配送状态，1 表示立即配送，0 表示预约配送
-     * @param estimatedDeliveryTime 预约送达时间
-     * @return 配送时间校验结果
+     * @param deliveryStatus Delivery mode: 1 for immediate delivery, 0 for scheduled delivery
+     * @param estimatedDeliveryTime Requested scheduled delivery time
+     * @return Validation result
      */
     public DeliveryTimeValidationResult validate(Integer deliveryStatus, LocalDateTime estimatedDeliveryTime) {
         if (Integer.valueOf(DELIVERY_STATUS_NOW).equals(deliveryStatus)) {
@@ -71,9 +71,9 @@ public class DeliveryTimeValidationService {
     }
 
     /**
-     * 判断当前北京时间是否处于每日营业时段，起止边界均包含
+     * Checks whether the current time falls within business hours, including both boundaries
      *
-     * @return 当前时刻处于营业时段时返回 true
+     * @return {@code true} when the current time is within business hours
      */
     public boolean isCurrentlyWithinBusinessHours() {
         LocalTime currentTime = currentTime().toLocalTime();
@@ -82,9 +82,9 @@ public class DeliveryTimeValidationService {
     }
 
     /**
-     * 将注入时钟的当前时刻转换为配置时区的本地日期时间
+     * Converts the injected clock instant to the configured business time zone
      *
-     * @return 配置时区下的当前日期时间
+     * @return Current local date and time in the configured zone
      */
     private LocalDateTime currentTime() {
         return LocalDateTime.ofInstant(clock.instant(), properties.getZoneId());

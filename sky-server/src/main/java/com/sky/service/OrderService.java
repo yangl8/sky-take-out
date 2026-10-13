@@ -18,126 +18,152 @@ import com.sky.vo.OrderVO;
 public interface OrderService {
 
     /**
-     * 用户下单
-     * @param ordersSubmitDTO
-     * @return
+     * Creates an order from the current cart using current catalog data
+     *
+     * @param ordersSubmitDTO Delivery details for the order
+     * @return The created order number and payment amount
      */
     OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO);
 
     /**
-     * 订单支付
-     * @param ordersPaymentDTO
-     * @return
+     * Creates a payment request after checking that the order belongs to the current user
+     *
+     * @param ordersPaymentDTO Order number and ID to pay
+     * @return Payment parameters for the client
+     * @throws Exception If the payment provider request fails
      */
     OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception;
 
     /**
-     * 支付成功，修改订单状态
-     * @param outTradeNo
-     * @param successTime 微信通知中的支付成功时间及其时区偏移
+     * Applies a successful payment callback using the callback timestamp and offset
+     *
+     * @param outTradeNo Merchant order number from the payment provider
+     * @param successTime Payment success timestamp and offset from the callback
      */
     void paySuccess(String outTradeNo, java.time.OffsetDateTime successTime);
 
-    /** 开发环境模拟支付成功，要求订单属于当前登录用户。 */
+    /**
+     * Applies a development payment only to an order owned by the current user
+     *
+     * @param orderNumber Order number to mark as paid
+     * @param orderId ID of the order to mark as paid
+     */
     void mockPaySuccessForUser(String orderNumber, Long orderId);
 
     /**
-     * 用户端订单分页查询
-     * @param page
-     * @param pageSize
-     * @param status
-     * @return
+     * Returns a page of orders for the current user, optionally filtered by order and payment status
+     *
+     * @param page Page number
+     * @param pageSize Number of orders per page
+     * @param status Optional order status
+     * @param payStatus Optional payment status
+     * @return The matching page of orders
      */
     PageResult pageQuery4User(int page, int pageSize, Integer status, Integer payStatus);
 
     /**
-     * 查询指定菜品的本月销量
-     * @param dishIds 菜品id集合
-     * @return 菜品id与本月销量的映射
+     * Retrieves current-month sales for the requested dishes
+     *
+     * @param dishIds Dish IDs
+     * @return Sales counts keyed by dish ID
      */
     Map<Long, Integer> getDishMonthlySales(List<Long> dishIds);
 
     /**
-     * 查询指定套餐的本月销量
-     * @param setmealIds 套餐id集合
-     * @return 套餐id与本月销量的映射
+     * Retrieves current-month sales for the requested set meals
+     *
+     * @param setmealIds Set-meal IDs
+     * @return Sales counts keyed by set-meal ID
      */
     Map<Long, Integer> getSetmealMonthlySales(List<Long> setmealIds);
 
     /**
-     * 查询订单详情
-     * @param id
-     * @return
+     * Retrieves order details for administrative use
+     *
+     * @param id Order ID
+     * @return Order details
      */
     OrderVO details(Long id);
 
-    /** 查询当前登录用户自己的订单详情。 */
+    /**
+     * Returns details only when the order belongs to the current user
+     *
+     * @param id Order ID
+     * @return Order details when the order belongs to the current user
+     */
     OrderVO detailsForUser(Long id);
 
     /**
-     * 用户取消订单
-     * @param id
+     * Cancels an eligible unpaid order owned by the current user
+     *
+     * @param id Order ID to cancel
+     * @throws Exception If a required refund operation fails
      */
     void userCancelById(Long id) throws Exception;
 
     /**
-     * 再来一单
+     * Adds the items from an order to the current user's shopping cart
      *
-     * @param id
+     * @param id Order ID to repeat
      */
     void repetition(Long id);
 
     /**
-     * 条件搜索订单
-     * @param ordersPageQueryDTO
-     * @return
+     * Searches orders using administrative filters
+     *
+     * @param ordersPageQueryDTO Pagination and order filters
+     * @return The matching page
      */
     PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 
     /**
-     * 各个状态的订单数量统计
-     * @return
+     * Counts orders awaiting confirmation, delivery, or completion
+     *
+     * @return Current order counts by workflow status
      */
     OrderStatisticsVO statistics();
 
     /**
-     * 接单
+     * Accepts an order that is awaiting confirmation
      *
-     * @param ordersConfirmDTO
+     * @param ordersConfirmDTO Confirmation request containing the order ID
      */
     void confirm(OrdersConfirmDTO ordersConfirmDTO);
 
     /**
-     * 拒单
+     * Rejects an eligible order and refunds it when required
      *
-     * @param ordersRejectionDTO
+     * @param ordersRejectionDTO Order ID and rejection reason
+     * @throws Exception If a required refund operation fails
      */
     void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception;
 
     /**
-     * 商家取消订单
+     * Cancels an eligible order on behalf of the merchant and refunds it when required
      *
-     * @param ordersCancelDTO
+     * @param ordersCancelDTO Order ID and cancellation reason
+     * @throws Exception If a required refund operation fails
      */
     void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception;
 
     /**
-     * 派送订单
+     * Advances an accepted order to delivery
      *
-     * @param id
+     * @param id Order ID to dispatch
      */
     void delivery(Long id);
 
     /**
-     * 完成订单
+     * Completes an order that is currently in delivery
      *
-     * @param id
+     * @param id Order ID to complete
      */
     void complete(Long id);
 
     /**
-     * 客户催单
-     * @param id
+     * Sends an update reminder for an order owned by the current user
+     *
+     * @param id Order ID to remind the merchant about
      */
     void reminder(Long id);
-} 
+}

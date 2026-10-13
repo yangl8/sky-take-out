@@ -1,11 +1,10 @@
 import request from '@/utils/request'
-/**
- *
- * 套餐管理
- *
- **/
 
-// 查询列表数据
+
+
+
+
+
 export const getSetmealPage = (params: any) => {
   return request({
     url: '/setmeal/page',
@@ -14,7 +13,6 @@ export const getSetmealPage = (params: any) => {
   },)
 }
 
-// 删除数据接口
 export const deleteSetmeal = (ids: string) => {
   return request({
     url: '/setmeal',
@@ -23,7 +21,6 @@ export const deleteSetmeal = (ids: string) => {
   })
 }
 
-// 修改数据接口
 export const editSetmeal = (params: any) => {
   return request({
     url: '/setmeal',
@@ -32,7 +29,6 @@ export const editSetmeal = (params: any) => {
   })
 }
 
-// 新增数据接口
 export const addSetmeal = (params: any) => {
   return request({
     url: '/setmeal',
@@ -41,7 +37,6 @@ export const addSetmeal = (params: any) => {
   })
 }
 
-// 查询详情接口
 export const querySetmealById = (id: string | (string | null)[]) => {
   return request({
     url: `/setmeal/${id}`,
@@ -49,7 +44,6 @@ export const querySetmealById = (id: string | (string | null)[]) => {
   })
 }
 
-// 批量起售禁售
 export const setmealStatusByStatus = (params: any) => {
   return request({
     url: `/setmeal/status/${params.status}`,
@@ -58,7 +52,6 @@ export const setmealStatusByStatus = (params: any) => {
   })
 }
 
-//菜品分类数据查询
 export const dishCategoryList = (params: any) => {
   return request({
     url: `/category/list`,

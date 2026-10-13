@@ -124,7 +124,7 @@ assert.match(payPage, /paymentOrder\(params\)\.then[\s\S]*?\.catch\(\(error\) =>
 assert.match(payPage, /mockPaymentSuccess[\s\S]*?catch \(error\) \{[\s\S]*?userFacingErrorMessage/)
 assert.doesNotMatch(payPage, /shopStatus/)
 
-// 乱序响应规则：只有最后一次请求序号能更新状态；页面隐藏后递增序号使进行中的请求失效
+// Out-of-order responses are ignored; only the latest request may update status, and hiding the page invalidates in-flight requests
 const mayApply = (responseSequence, latestSequence, visible) => visible && responseSequence === latestSequence
 assert.equal(mayApply(1, 2, true), false)
 assert.equal(mayApply(2, 2, true), true)

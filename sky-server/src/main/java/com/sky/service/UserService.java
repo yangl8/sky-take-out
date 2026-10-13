@@ -6,9 +6,10 @@ import com.sky.entity.User;
 public interface UserService {
 
     /**
-     * 微信登录
-     * @param userLoginDTO
-     * @return
+     * Authenticates a WeChat mini-program user and creates a local account when needed
+     *
+     * @param userLoginDTO Mini-program login code
+     * @return Authenticated user
      */
     User wxLogin(UserLoginDTO userLoginDTO);
     

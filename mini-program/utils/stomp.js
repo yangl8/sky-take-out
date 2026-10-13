@@ -473,7 +473,6 @@
     exports.Stomp = Stomp;
   }
 
-  // 小程序没有window对象
   Stomp.setInterval = function(interval, f) {
     return setInterval(f, interval);
   };

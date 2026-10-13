@@ -1,4 +1,3 @@
-<!--配送信息-->
 <template>
   <view class="box">
     <view class="orderBaseInfo">
@@ -22,9 +21,7 @@
 <script>
 import { formatDeliveryDateTime } from "@/utils/scheduledDeliveryTime.js";
 export default {
-  // 获取父级传的数据
   props: {
-    // 订单详情
     orderDetailsData: {
       type: Object,
       default: () => ({}),
@@ -39,17 +36,14 @@ export default {
       return formatDeliveryDateTime(order.estimatedDeliveryTime) ||
         (Number(order.deliveryStatus) === 1 ? this.$t("order.immediateDelivery") : order.estimatedDeliveryTime || "");
     },
-    // 处理姓名 如x先生
     cryptoName() {
       if (!this.orderDetailsData.consignee) return "";
       if (this.orderDetailsData.sex === undefined || this.orderDetailsData.sex === null || this.orderDetailsData.sex === "") {
         return this.orderDetailsData.consignee;
       }
       if (Number(this.orderDetailsData.sex) === 0) {
-        // 男
         return this.$t("common.sir", { name: this.orderDetailsData.consignee });
       } else {
-        // 女
         return this.$t("common.madam", { name: this.orderDetailsData.consignee });
       }
     },

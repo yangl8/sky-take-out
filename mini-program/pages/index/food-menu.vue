@@ -23,10 +23,8 @@
 			swiperWidth:Number
 		},
 		methods: {
-			// tab点击事件
 			tabtap(index) {
 				this.$emit('tabtap',index)
-				// 子组件相同名称的属性值改变后，父组件的对应监听事件结束后，将修改父组件的该属性和子属性一样
 				// this.tabIndex = index;
 			},
 		}

@@ -38,7 +38,6 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 import { Form as ElForm, Input } from 'element-ui'
-// 接口
 import { editPassword } from '@/api/users'
 @Component({
   name: 'Password',

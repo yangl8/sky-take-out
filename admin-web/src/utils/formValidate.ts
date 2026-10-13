@@ -13,13 +13,9 @@ function dateFormat(fmt: any, time: any) {
   let date = new Date(time);
   let ret;
   const opt = {
-    // 年
     "Y+": date.getFullYear().toString(),
-    // 月
     "m+": (date.getMonth() + 1).toString(),
-    // 日
     "d+": date.getDate().toString()
-    // 有其他格式化字符需求可以继续添加，必须转化成字符串
   } as any;
   for (const k in opt) {
     ret = new RegExp("(" + k + ")").exec(fmt);
@@ -33,7 +29,6 @@ function dateFormat(fmt: any, time: any) {
   return fmt;
 }
 
-// js获取昨日的日期
 export const get1stAndToday = () => {
   let toData = new Date(new Date().toLocaleDateString()).getTime();
   let yesterdayStart = toData - 3600 * 24 * 1000;
@@ -42,7 +37,6 @@ export const get1stAndToday = () => {
   let endDay1 = dateFormat("YYYY-mm-dd", yesterdayEnd);
   return [startDay1, endDay1];
 };
-// 获取昨日、今日日期
 export const getday = () => {
   let toData = new Date(new Date().toLocaleDateString()).getTime();
   let yesterdays= toData - 3600 * 24 * 1000;
@@ -51,7 +45,6 @@ export const getday = () => {
   return [yesterday,today];
 };
 
-// 获取近7日
 export const past7Day = () => {
   let toData = new Date(new Date().toLocaleDateString()).getTime();
   let past7daysStart = toData - 7 * 3600 * 24 * 1000;
@@ -61,7 +54,6 @@ export const past7Day = () => {
   return [days7Start, days7End];
 };
 
-// 获取近30日
 export const past30Day = () => {
   let toData = new Date(new Date().toLocaleDateString()).getTime();
   let past30daysStart = toData - 30 * 3600 * 24 * 1000;
@@ -70,7 +62,6 @@ export const past30Day = () => {
   let days30End = dateFormat("YYYY-mm-dd", past30daysEnd);
   return [days30Start, days30End];
 };
-// 获取本周
 export const pastWeek = () => {
   let toData = new Date(new Date().toLocaleDateString()).getTime();
   var nowDayOfWeek = new Date().getDay();
@@ -80,7 +71,6 @@ export const pastWeek = () => {
   let weekEnd = dateFormat("YYYY-mm-dd", weekEndData);
   return [weekStart, weekEnd];
 };
-// 获取本月
 export const pastMonth = () => {
   let year = new Date().getFullYear()
   let month =new Date().getMonth()

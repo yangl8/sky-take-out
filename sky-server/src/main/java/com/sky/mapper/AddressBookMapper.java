@@ -7,17 +7,8 @@ import java.util.List;
 @Mapper
 public interface AddressBookMapper {
 
-    /**
-     * 条件查询
-     * @param addressBook
-     * @return
-     */
     List<AddressBook> list(AddressBook addressBook);
 
-    /**
-     * 新增
-     * @param addressBook
-     */
     @Insert("insert into address_book" +
             "        (user_id, consignee, phone, sex, province_code, province_name, city_code, city_name, district_code," +
             "         district_name, detail, label, is_default)" +
@@ -25,40 +16,24 @@ public interface AddressBookMapper {
             "                #{districtCode}, #{districtName}, #{detail}, #{label}, #{isDefault})")
     void insert(AddressBook addressBook);
 
-    /**
-     * 根据id查询
-     * @param id
-     * @return
-     */
     @Select("select * from address_book where id = #{id}")
     AddressBook getById(Long id);
 
     /**
-     * 根据地址id和所属用户id查询，避免使用其他用户的收货地址下单
-     * @param id
-     * @param userId
-     * @return
+     * Queries an address only when it belongs to the specified user
+     *
+     * @param id Address ID
+     * @param userId ID of the address owner
+     * @return The address when it belongs to the specified user
      */
     @Select("select * from address_book where id = #{id} and user_id = #{userId}")
     AddressBook getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
-    /**
-     * 根据id修改
-     * @param addressBook
-     */
     int update(AddressBook addressBook);
 
-    /**
-     * 根据 用户id修改 是否默认地址
-     * @param addressBook
-     */
     @Update("update address_book set is_default = #{isDefault} where user_id = #{userId}")
     void updateIsDefaultByUserId(AddressBook addressBook);
 
-    /**
-     * 根据id删除地址
-     * @param id
-     */
     @Delete("delete from address_book where id = #{id} and user_id = #{userId}")
     int deleteById(@Param("id") Long id, @Param("userId") Long userId);
 

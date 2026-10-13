@@ -29,7 +29,7 @@ class DeliveryTimeValidationServiceTest {
     private TimeZone originalDefaultTimeZone;
 
     /**
-     * 恢复测试前进程使用的默认时区
+     * Restores the process default time zone after the test
      */
     @AfterEach
     void restoreDefaultTimeZone() {
@@ -39,7 +39,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证当前营业状态包含每日开门与关门边界
+     * Verifies that opening and closing times are inclusive
      */
     @Test
     void currentBusinessHoursIncludeOpeningAndClosingBoundaries() {
@@ -52,7 +52,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证预约允许开门准备时间和闭店时间两个边界
+     * Verifies scheduled deliveries at the opening-plus-preparation and closing boundaries
      */
     @Test
     void scheduledDeliveryAllowsBothEarliestAndLatestBoundaries() {
@@ -65,7 +65,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证预约不得早于当前时刻加最短准备时间
+     * Verifies the minimum preparation time from now
      */
     @Test
     void scheduledDeliveryMustMeetCurrentPreparationTime() {
@@ -80,7 +80,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证预约不得早于对应营业日开门后的准备时间
+     * Verifies the minimum preparation time from the scheduled business day opening
      */
     @Test
     void scheduledDeliveryMustBeAtLeastThirtyMinutesAfterBusinessOpens() {
@@ -93,7 +93,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证当前打烊时仍允许下一个营业日的有效预约
+     * Verifies that a valid next-day booking is accepted while the shop is currently closed
      */
     @Test
     void closedNowStillAllowsNextDayAppointmentWithinBusinessHours() {
@@ -107,7 +107,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证关门后的同日时间无效且跨日预约按次日时段判断
+     * Verifies same-day times after closing are rejected and next-day bookings use the next day schedule
      */
     @Test
     void timeAfterClosingCannotRollIntoNextDayButNextBusinessDayIsValid() {
@@ -120,7 +120,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证预约日期跨午夜时按预约日期的营业时段校验
+     * Verifies bookings are checked against the business hours of their delivery date across midnight
      */
     @Test
     void dateRolloverUsesTheRequestedBusinessDay() {
@@ -131,7 +131,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证空预约时间、过去时间和无效配送类型均返回失败结果
+     * Verifies missing or past booking times and unsupported delivery modes are rejected
      */
     @Test
     void scheduledDeliveryRejectsMissingPastAndInvalidTimes() {
@@ -150,7 +150,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证时间判断不受 JVM 默认时区影响且固定时钟结果稳定
+     * Verifies time checks are independent of the JVM default zone and deterministic with a fixed clock
      */
     @Test
     void timeZoneDoesNotDependOnJvmDefaultAndFixedClockIsDeterministic() {
@@ -165,7 +165,7 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 验证营业时段配置无效时启动校验会失败
+     * Verifies invalid business-hour configuration fails validation
      */
     @Test
     void invalidBusinessTimeConfigurationIsRejected() {
@@ -181,9 +181,6 @@ class DeliveryTimeValidationServiceTest {
         assertThrows(IllegalStateException.class, properties::validate);
     }
 
-    /**
-     * 验证 application.yml 中 HH:mm:ss 格式的营业时间可绑定为 LocalTime
-     */
     @Test
     void yamlStyleBusinessTimesBindToLocalTime() {
         Map<String, String> values = new HashMap<>();
@@ -204,20 +201,20 @@ class DeliveryTimeValidationServiceTest {
     }
 
     /**
-     * 使用固定时钟断言当前是否处于营业时段
+     * Checks current business hours with a fixed clock
      *
-     * @param instant 固定的 UTC 时刻
-     * @param expected 预期营业状态
+     * @param instant Fixed UTC instant
+     * @param expected Expected open status
      */
     private void assertCurrentBusinessHours(String instant, boolean expected) {
         assertEquals(expected, service(instant).isCurrentlyWithinBusinessHours());
     }
 
     /**
-     * 创建使用统一营业规则和固定时钟的校验服务
+     * Creates a validator with shared business-hour rules and a fixed clock
      *
-     * @param instant 固定的 UTC 时刻
-     * @return 配送时间校验服务
+     * @param instant Fixed UTC instant
+     * @return Delivery time validator
      */
     private DeliveryTimeValidationService service(String instant) {
         DeliveryTimeProperties properties = new DeliveryTimeProperties();

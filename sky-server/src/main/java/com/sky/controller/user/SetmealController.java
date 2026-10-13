@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @RestController("userSetmealController")
 @RequestMapping("/user/setmeal")
-@Api(tags = "C端-套餐浏览接口")
+@Api(tags = "Customer-facing set meal endpoints")
 public class SetmealController {
     @Autowired
     private SetmealService setmealService;
@@ -29,14 +29,8 @@ public class SetmealController {
     @Autowired
     private OrderService orderService;
 
-    /**
-     * 条件查询
-     *
-     * @param categoryId
-     * @return
-     */
     @GetMapping("/list")
-    @ApiOperation("根据分类id查询套餐")
+    @ApiOperation("Get set meals by category ID")
     public Result<List<Setmeal>> list(Long categoryId) {
         List<Setmeal> list = menuCacheService.getSetmeals(categoryId);
         if (list != null) {
@@ -59,14 +53,8 @@ public class SetmealController {
         return setmeals;
     }
 
-    /**
-     * 根据套餐id查询包含的菜品列表
-     *
-     * @param id
-     * @return
-     */
     @GetMapping("/dish/{id}")
-    @ApiOperation("根据套餐id查询包含的菜品列表")
+    @ApiOperation("List dishes in a set meal by set meal ID")
     public Result<List<DishItemVO>> dishList(@PathVariable("id") Long id) {
         List<DishItemVO> list = setmealService.getDishItemById(id);
         return Result.success(list);

@@ -12,7 +12,7 @@ public class CloudinaryConfiguration {
 
     @Bean
     public CloudinaryUtil cloudinaryUtil(CloudinaryProperties properties) {
-        log.info("开始创建 Cloudinary 图片上传工具类对象");
+        log.info("Creating the Cloudinary image uploader");
         return new CloudinaryUtil(
                 properties.getCloudName(),
                 properties.getApiKey(),

@@ -42,13 +42,6 @@
       <div class="table-actions-row">
           <span class="delBut non"
                 @click="deleteHandle('批量')">{{ $t('catalog.batchDelete') }}</span>
-          <!-- <span class="blueBug non" @click="statusHandle('1')">批量启售</span>
-          <span
-            style="border: none"
-            class="delBut non"
-            @click="statusHandle('0')"
-            >批量停售</span
-          > -->
           <el-button type="primary"
                      style="margin-left: 15px"
                      @click="addSetMeal('add')">+ {{ $t('catalog.newSetmeal') }}</el-button>
@@ -230,7 +223,6 @@ export default class extends Vue {
       })
   }
 
-  // 添加更改
   private addSetMeal(st: any) {
     if (st === 'add') {
       this.$router.push({ path: '/setmeal/add' })
@@ -239,7 +231,6 @@ export default class extends Vue {
     }
   }
 
-  // 删除
   private deleteHandle(type: string, id: any) {
     if (type === '批量' && id == null) {
       if (this.checkList.length === 0) {
@@ -269,7 +260,6 @@ export default class extends Vue {
     })
   }
 
-  //状态更改
   private statusHandle(row: any) {
     let params: any = {}
     if (typeof row === 'string') {
@@ -304,7 +294,6 @@ export default class extends Vue {
     })
   }
 
-  //获取套餐分类下拉数据
   private getDishCategoryList() {
     dishCategoryList({
       type: 2
@@ -323,7 +312,6 @@ export default class extends Vue {
       .catch(() => {})
   }
 
-  // 全部操作
   private handleSelectionChange(val: any) {
     let checkArr: string[] = []
     val.forEach((n: any) => {
@@ -384,7 +372,6 @@ export default class extends Vue {
         text-align: center;
         margin-top: 30px;
       }
-      //查询黑色按钮样式
       .normal-btn {
         background: #333333;
         color: white;

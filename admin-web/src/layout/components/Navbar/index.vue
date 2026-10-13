@@ -47,7 +47,6 @@
         </div>
       </div>
     </div>
-    <!-- 营业状态弹层 -->
     <el-dialog :title="String($t('nav.status'))"
                :visible.sync="dialogVisible"
                width="480px"
@@ -70,7 +69,6 @@
       </span>
     </el-dialog>
     <!-- end -->
-    <!-- 修改密码 -->
     <Password :dialog-form-visible="dialogFormVisible"
               @handleclose="handlePwdClose" />
     <!-- end -->
@@ -90,9 +88,7 @@ import { debounce, throttle } from '@/utils/common'
 import { setNewData, getNewData } from '@/utils/cookies'
 import { adminDisplayName } from '@/i18n/adminDisplayName'
 
-// 接口
 import { getCountUnread } from '@/api/inform'
-// 修改密码弹层
 import Password from '../components/password.vue'
 
 @Component({
@@ -169,7 +165,6 @@ export default class extends Vue {
     // const msg = {
     //   data: {
     //     type: 2,
-    //     content: '订单1653904906519客户催单，已下单23分钟，仍未接单。',
     //     details: '434'
     //   }
     // }
@@ -185,11 +180,10 @@ export default class extends Vue {
     this.websocketStopped = true
     window.clearTimeout(this.reconnectTimer)
     if (this.websocket) {
-      this.websocket.close() //离开路由之后断开websocket连接
+      this.websocket.close()
     }
   }
 
-  // 添加新订单提示弹窗
   webSocket() {
     const that = this as any
     let clientId = Math.random().toString(36).substr(2)
@@ -204,13 +198,10 @@ export default class extends Vue {
       })
     } else {
       this.websocket = new WebSocket(socketUrl)
-      // 监听socket打开
       this.websocket.onopen = function () {
         console.log('浏览器WebSocket已打开')
       }
-      // 监听socket消息接收
       this.websocket.onmessage = function (msg) {
-        // 转换为json对象
         that.$refs.audioVo.currentTime = 0
         that.$refs.audioVo2.currentTime = 0
 
@@ -236,13 +227,11 @@ export default class extends Vue {
               location.reload()
             }, 100)
           },
-          // 这里也可以把返回信息加入到message中显示
           message: String(that.$t(jsonMsg.type === 1 ? 'nav.newOrderMessage' : 'nav.reminderMessage', {
             orderNumber: jsonMsg.orderNumber || jsonMsg.orderId,
           })),
         })
       }
-      // 监听socket错误
       this.websocket.onerror = function () {
         that.$notify({
           title: String(that.$t('nav.error')),
@@ -252,7 +241,6 @@ export default class extends Vue {
         })
         that.websocket.close()
       }
-      // 监听socket关闭
       this.websocket.onclose = function () {
         console.log('WebSocket已关闭')
         if (!that.websocketStopped) {
@@ -266,7 +254,6 @@ export default class extends Vue {
   private toggleSideBar() {
     AppModule.ToggleSideBar(false)
   }
-  // 退出
   private async logout() {
     this.$store.dispatch('LogOut').then(() => {
       // location.href = '/'
@@ -274,42 +261,34 @@ export default class extends Vue {
     })
     // this.$router.push(`/login?redirect=${this.$route.fullPath}`)
   }
-  // 获取未读消息
   async getCountUnread() {
     const { data } = await getCountUnread()
     if (data.code === 1) {
       // this.ountUnread = data.data
       AppModule.StatusNumber(data.data)
       // setNewData(data.data)
-      // this.$message.success('操作成功！')
     } else {
       this.$message.error(data.msg)
     }
   }
-  // 营业状态
   async getStatus() {
     const { data } = await getStatus()
     this.status = data.data
     this.setStatus = this.status
   }
-  // 下拉菜单显示
   toggleShow() {
     this.shopShow = true
   }
-  // 下拉菜单隐藏
   mouseLeaves() {
     this.shopShow = false
   }
-  // 触发空白处下来菜单关闭
   handleClose() {
     // clearTimeout(this.leave)
     // this.shopShow = false
   }
-  // 设置营业状态
   handleStatus() {
     this.dialogVisible = true
   }
-  // 营业状态设置
   async handleSave() {
     const { data } = await setStatus(this.setStatus)
     if (data.code === 1) {
@@ -317,11 +296,9 @@ export default class extends Vue {
       this.getStatus()
     }
   }
-  // 修改密码
   handlePwd() {
     this.dialogFormVisible = true
   }
-  // 关闭密码编辑弹层
   handlePwdClose() {
     this.dialogFormVisible = false
   }

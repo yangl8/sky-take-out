@@ -15,15 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 验证管理端待配送订单 ETA 排序分支
+ * Verifies the administrator pending-delivery ETA ordering branch
  */
 class OrderMapperEtaOrderingTest {
 
-    /**
-     * 验证待配送查询先按送达时间排序且筛选条件仍应用于同一查询
-     *
-     * @throws Exception Mapper XML 解析失败
-     */
     @Test
     void deliveryStatusShouldSortByEtaWithNullsLastAndStableTies() throws Exception {
         OrdersPageQueryDTO query = new OrdersPageQueryDTO();
@@ -41,11 +36,6 @@ class OrderMapperEtaOrderingTest {
         assertFalse(ordering.contains("delivery_status"), "立即单与预约单应共同按 ETA 排序");
     }
 
-    /**
-     * 验证非待配送状态和未指定状态保留下单时间倒序
-     *
-     * @throws Exception Mapper XML 解析失败
-     */
     @Test
     void otherStatusesShouldKeepOrderTimeDescending() throws Exception {
         for (Integer status : new Integer[]{null, 1, 2, 4, 5, 6}) {
@@ -60,13 +50,6 @@ class OrderMapperEtaOrderingTest {
         }
     }
 
-    /**
-     * 解析订单分页查询并返回绑定后的 SQL
-     *
-     * @param query 订单筛选条件
-     * @return MyBatis 生成的分页查询 SQL
-     * @throws Exception Mapper XML 解析失败
-     */
     private String pageQuerySql(OrdersPageQueryDTO query) throws Exception {
         Configuration configuration = new Configuration();
         configuration.getTypeAliasRegistry().registerAlias("Orders", Orders.class);

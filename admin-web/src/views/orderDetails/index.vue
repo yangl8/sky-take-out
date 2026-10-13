@@ -6,7 +6,6 @@
       @tabChange="change"
     />
     <div class="container" :class="{ hContainer: tableData.length }">
-      <!-- 搜索项 -->
       <div class="tableBar">
         <div class="filter-item">
           <label>{{ $t('orders.orderNumber') }}：</label>
@@ -188,7 +187,6 @@
       />
     </div>
 
-    <!-- 查看弹框部分 -->
     <el-dialog
       :title="String($t('orders.orderInformation'))"
       :visible.sync="dialogVisible"
@@ -369,7 +367,6 @@
         >
       </span>
     </el-dialog>
-    <!-- 拒单，取消弹窗 -->
     <el-dialog
       :title="String($t(cancelDialogTitle === '取消' ? 'orders.confirmCancel' : 'orders.confirmReject'))"
       :visible.sync="cancelDialogVisible"
@@ -452,16 +449,16 @@ export default class extends Vue {
   private row = {}
   private isAutoNext = true
   private isTableOperateBtn = true
-  private currentPageIndex = 0 //记录查看详情数据的index
-  private orderId = '' //订单号
-  private input = '' //搜索条件的订单号
-  private phone = '' //搜索条件的手机号
+  private currentPageIndex = 0
+  private orderId = ''
+  private input = ''
+  private phone = ''
   private valueTime = []
-  private dialogVisible = false //详情弹窗
-  private cancelDialogVisible = false //取消，拒单弹窗
-  private cancelDialogTitle = '' //取消，拒绝弹窗标题
+  private dialogVisible = false
+  private cancelDialogVisible = false
+  private cancelDialogTitle = ''
   private cancelReason = ''
-  private remark = '' //自定义原因
+  private remark = ''
   private counts: number = 0
   private page: number = 1
   private pageSize: number = 10
@@ -473,8 +470,8 @@ export default class extends Vue {
   private autoNextExcludeOrderId = ''
   private detailRequestSequence = 0
   private isSearch: boolean = false
-  private orderStatus = 0 //列表字段展示所需订单状态,用于分页请求数据
-  private dialogOrderStatus = 0 //弹窗所需订单状态，用于详情展示字段
+  private orderStatus = 0
+  private dialogOrderStatus = 0
   private cancelOrderReasonList = [
     {
       value: 1,
@@ -617,7 +614,6 @@ export default class extends Vue {
   }
 
   mounted() {
-    //如果有值说明是消息通知点击进来的
     if (
       this.$route.query.orderId &&
       this.$route.query.orderId !== 'undefined'
@@ -646,7 +642,6 @@ export default class extends Vue {
     console.log(activeIndex, '接收到了子组件的index')
   }
 
-  //获取待处理，待派送，派送中数量
   getOrderListBy3Status() {
     getOrderListBy({})
       .then((res) => {
@@ -759,7 +754,6 @@ export default class extends Vue {
     return this.$t('orders.tablewareUnknown')
   }
 
-  // 查看详情
   async goDetail(id: any, status: number, row?: any) {
     const requestSequence = ++this.detailRequestSequence
     this.diaForm = {}
@@ -793,7 +787,6 @@ export default class extends Vue {
     }
   }
 
-  //打开拒单弹窗
   orderReject(row: any) {
     this.cancelDialogVisible = true
     this.orderId = row.id
@@ -803,7 +796,6 @@ export default class extends Vue {
     this.cancelReason = ''
   }
 
-  //接单
   orderAccept(row: any) {
     const fromDetail = !this.isTableOperateBtn
     this.orderId = row.id
@@ -829,7 +821,6 @@ export default class extends Vue {
       })
   }
 
-  //打开取消订单弹窗
   cancelOrder(row: any) {
     this.cancelDialogVisible = true
     this.orderId = row.id
@@ -839,7 +830,6 @@ export default class extends Vue {
     this.cancelReason = ''
   }
 
-  //确认取消或拒绝订单并填写原因
   confirmCancel(type) {
     if (!this.cancelReason) {
       return this.$message.error(String(this.$t('orders.selectReason')))
@@ -873,7 +863,6 @@ export default class extends Vue {
       })
   }
 
-  // 派送，完成
   cancelOrDeliveryOrComplete(status: number, id: string) {
     const params = {
       status,
@@ -1016,7 +1005,6 @@ export default class extends Vue {
         text-align: center;
         margin-top: 30px;
       }
-      //查询黑色按钮样式
       .normal-btn {
         background: #333333;
         color: white;

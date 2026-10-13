@@ -20,17 +20,13 @@
         v-if="addressList && addressList.length > 0"
         class="address_content"
       >
-        <!-- address列表 -->
         <view
           class="address_liests"
           v-for="(item, index) in addressList"
           :key="index"
         >
-          <!-- 上部 -->
           <view class="list_item_top" @click.stop="choseAddress(index, item)">
-            <!-- 左边 -->
             <view class="item_left">
-              <!-- 地址 -->
               <view class="details">
                 <text v-if="item.label" class="tag" :class="'tag' + item.label">{{
                   getLableVal(item.label)
@@ -39,7 +35,6 @@
                   >{{ $displayText(item.provinceName + item.cityName + item.districtName + item.detail, 'address') }}</text
                 >
               </view>
-              <!-- 性别及手机号 -->
               <view class="sale">
                 <text class="name">{{
                   Number(item.sex) === 0
@@ -49,7 +44,6 @@
                 <text class="num">{{ item.phone }}</text>
               </view>
             </view>
-            <!-- 右边 -->
             <view class="item_right">
               <image
                 @click.stop="addOrEdit('编辑', item)"
@@ -58,7 +52,6 @@
               ></image>
             </view>
           </view>
-          <!-- 下部 -->
           <view class="list_item_bottom">
             <label class="radio" @click.stop="getRadio(index, item)">
               <radio
@@ -73,7 +66,6 @@
           </view>
         </view>
       </view>
-      <!-- 无地址展示 -->
       <empty
         v-if="isEmpty"
         boxHeight="100%"
@@ -175,7 +167,6 @@ export default {
     },
 
     addOrEdit(type, item) {
-      // 编辑与新增
       if (type === "新增") {
         // TODO
         uni.redirectTo({
@@ -193,7 +184,6 @@ export default {
         });
       }
     },
-    // 点击整体设置为默认地址并返填订单页面
     choseAddress(e, item) {
       if (this.addressBackUrl !== "/pages/order/index") {
         return false;
@@ -204,7 +194,6 @@ export default {
       });
     },
     getRadio(index, item) {
-      // // 提供默认接口
       item.isDefault = 1;
       this.isActive = index;
       putAddressBookDefault({ id: item.id }).then((res) => {
@@ -241,20 +230,17 @@ export default {
       margin-top: 20rpx;
       padding: 0 28rpx 0 12rpx;
       box-sizing: border-box;
-      // 上部
       .list_item_top {
         flex: 1;
         min-height: 176rpx;
         width: 100%;
         box-sizing: border-box;
         display: flex;
-        // 左边
         .item_left {
           flex: 1;
           min-width: 0;
           overflow: visible;
           margin-left: 12rpx;
-          // 地址
           .details {
             margin-top: 42rpx;
             display: flex;
@@ -278,7 +264,6 @@ export default {
               margin-right: 0;
             }
 
-            // 地址描述
             .address_word {
               flex: 1 1 0;
               min-width: 0;
@@ -292,12 +277,10 @@ export default {
               overflow-wrap: anywhere;
               word-wrap: break-word;
             }
-            // 不同标签展示不同背景色
             .active {
               background: #fef8e7;
             }
           }
-          // 姓名及手机号
           .sale {
             margin-top: 20rpx;
             .name,
@@ -317,7 +300,6 @@ export default {
             }
           }
         }
-        // 右边--编辑
         .item_right {
           width: 100rpx;
           height: 100rpx;
@@ -333,7 +315,6 @@ export default {
           }
         }
       }
-      // 下部
       .list_item_bottom {
         height: 80rpx;
         line-height: 80rpx;
@@ -353,7 +334,6 @@ export default {
       }
     }
   }
-  // 暂无地址
   .no_address {
     margin: 0 auto;
     height: 50rpx;

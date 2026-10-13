@@ -53,14 +53,11 @@ export default class extends Vue {
   getNowIndex(val) {
     this.nowIndex = val
   }
-  // tab切换
   toggleTabs(index: number) {
     this.nowIndex = index
     this.value = []
     this.$emit('sendTitleInd', index + 1)
   }
-  //  数据导出
-  /** 导出按钮操作 */
   handleExport() {
     this.$confirm(String(this.$t('statistics.exportConfirm')), String(this.$t('statistics.notice')), {
       confirmButtonText: String(this.$t('common.confirm')),

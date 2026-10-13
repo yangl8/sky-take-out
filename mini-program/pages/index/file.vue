@@ -1,8 +1,6 @@
 <template>
 	<view style="display: flex;">
-		<!-- 菜单 -->
 		<food-menu :tabBars="tabBars" :tabIndexShow="tabIndexShow" :swiperWidth="menuWidth" :swiperHeight="swiperHeight" @tabtap="tabtap"></food-menu>
-		<!-- 商品 -->
 		<scroll-view scroll-y="true" @scroll="scrollGet($event)" scroll-with-animation :scroll-into-view="'tab_'+tabIndex"
 		 :style="{height:swiperHeight+'px',width:foodWidth+'px'}" style="padding-top: 20px;">
 			<block v-for="(items,index) in foodsList" :key="index">
@@ -40,7 +38,7 @@
 				foodWidth: 0,
 				tabIndexShow: 0,
 				tabIndex: 0,
-				scroNum: [], //记录商品的高度
+				scroNum: [],
 				tabBars: [{
 						name: "粑粑",
 						id: "0"
@@ -88,56 +86,56 @@
 				],
 				foodsList: [{
 						list: [{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 						},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
 							},{
-							food_name: "小米南瓜粥", //名字
-							food_price: 13.5, //价格
+							food_name: "小米南瓜粥",
+							food_price: 13.5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
@@ -145,68 +143,68 @@
 					},
 					{
 						list: [{
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
 						}, {
-							food_name: "黑米粥", //名字
-							food_price: 199, //价格
+							food_name: "黑米粥",
+							food_price: 199,
 							food_image: "../../static/test.jpg",
 							title: "我是标题",
 							num: 100
@@ -214,19 +212,19 @@
 					},
 					{
 						list: [{
-							food_name: "白米粥", //名字
-							food_price: 299, //价格
+							food_name: "白米粥",
+							food_price: 299,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100,
-							priority: 11, //优先级
-							display: 1, //是否显示
+							priority: 11,
+							display: 1,
 						}, ]
 					},
 					{
 						list: [{
-							food_name: "包子", //名字
-							food_price: 5, //价格
+							food_name: "包子",
+							food_price: 5,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
@@ -234,8 +232,8 @@
 					},
 					{
 						list: [{
-							food_name: "饺子", //名字
-							food_price: 100, //价格
+							food_name: "饺子",
+							food_price: 100,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
@@ -243,8 +241,8 @@
 					},
 					{
 						list: [{
-							food_name: "肉肉", //名字
-							food_price: 999, //价格
+							food_name: "肉肉",
+							food_price: 999,
 							food_image: "../../static/logo.jpg",
 							title: "我是标题",
 							num: 100
@@ -254,10 +252,8 @@
 			}
 		},
 		onLoad() {
-			//初始化页面的组件大小
 			uni.getSystemInfo({
 				success: (res) => {
-					// - uni.upx2px(100) 减去头部的列表
 					let height = res.windowHeight
 					let windowWidth = res.windowWidth
 					this.swiperHeight = height - uni.upx2px(153)
@@ -270,7 +266,6 @@
 			this.loadScroNum();
 		},
 		methods: {
-			//初始化右边商品的高度、起始高度数组，便于右边滑动，左边跟着动
 			loadScroNum() {
 				for (var i = 0; i < this.tabBars.length; i++) {
 					wx.createSelectorQuery().select('#tab_' + i).boundingClientRect(e => {
@@ -281,12 +276,10 @@
 					}).exec()
 				}
 			},
-			// 监听子组件的tab点击事件
 			tabtap(index) {
 				this.tabIndexShow = index;
 				this.tabIndex = index;
 			},
-			//监听右侧商品栏滑动事件，如果当前滑动的长度达到某个个区间内，则该区间的菜单为高亮
 			scrollGet(e) {
 				var now = parseInt(e.detail.scrollTop) + 40
 				for (var i = 0; i < this.tabBars.length; i++) {

@@ -1,4 +1,3 @@
-<!--订单信息-->
 <template>
   <view class="box">
     <view class="orderBaseInfo">
@@ -33,9 +32,7 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
-    // 订单详情
     orderDetailsData: {
       type: Object,
       default: () => ({}),

@@ -1,4 +1,3 @@
-<!--购买页-->
 <template>
   <view class="customer-box">
     <uni-nav-bar
@@ -116,7 +115,6 @@ export default {
     async restoreCartAndReturnToCheckout() {
       this.restoringCart = true;
       try {
-        // 下单接口已经创建了待付款订单；直接返回结算时先取消它，避免误留在“待付款”。
         const cancelResult = await cancelOrder(this.orderId);
         if (!cancelResult || cancelResult.code !== 1) {
           throw new Error(cancelResult && cancelResult.msg || this.$t("order.operationFailed"));
@@ -135,7 +133,6 @@ export default {
       this.setRemark("");
       uni.reLaunch({ url: "/pages/historyOrder/historyOrder?tab=1&orderId=" + this.orderId });
     },
-    // 支付详情
     handleSave() {
       if (this.timeout) {
         cancelOrder(this.orderId).then((res) => {});
@@ -169,7 +166,6 @@ export default {
                 this.setSelectedOrder(detail.data);
               }
             } catch (detailError) {
-              // 支付已经成功，详情页会再次请求订单数据
             }
             this.setRemark("");
             setTimeout(() => {
@@ -193,13 +189,12 @@ export default {
           if (res.code === 1) {
             const [err, payRes] = await uni.requestPayment({
               ...res.data,
-              package: res.data.packageStr, // package 为微信支付必须的字段
+              package: res.data.packageStr,
             });
             console.log(err, payRes);
             if (err) {
               await uni.showToast({ title: this.$t("payment.failed"), icon: "error" });
               setTimeout(() => {
-                // 下单失败!!
                 uni.redirectTo({
                   url: "/pages/details/index?orderId=" + this.orderId,
                 });
@@ -207,7 +202,6 @@ export default {
             } else {
               this.setRemark("");
               setTimeout(() => {
-                // 下单成功!!
                 uni.redirectTo({
                   url: "/pages/success/index?orderId=" + this.orderId,
                 });
@@ -227,7 +221,6 @@ export default {
           });
         });
     },
-    // // 订单倒计时
     runTimeBack() {
       const end = Date.parse(this.orderDataInfo.orderTime.replace(/-/g, "/"));
       const now = Date.parse(new Date());

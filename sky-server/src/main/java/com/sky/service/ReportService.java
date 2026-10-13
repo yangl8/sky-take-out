@@ -12,40 +12,45 @@ import com.sky.vo.UserReportVO;
 public interface ReportService {
     
     /**
-     * 统计指定时间区间内的营业额数据
-     * @param begin
-     * @param end
-     * @return
+     * Aggregates turnover from completed orders by day for the requested date range
+     *
+     * @param begin First date, inclusive
+     * @param end Last date, inclusive
+     * @return Daily turnover values
      */
     TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end);
 
     /**
-     * 统计指定时间区间内的用户数据
-     * @param begin
-     * @param end
-     * @return
+     * Aggregates new and total users by day for the requested date range
+     *
+     * @param begin First date, inclusive
+     * @param end Last date, inclusive
+     * @return Daily user counts
      */
     UserReportVO getUserStatistics(LocalDate begin, LocalDate end);
 
     /**
-     * 统计指定时间区间内的订单数据
-     * @param begin
-     * @param end
-     * @return
+     * Aggregates total and completed orders by day for the requested date range
+     *
+     * @param begin First date, inclusive
+     * @param end Last date, inclusive
+     * @return Daily order counts and completion rates
      */
     OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end);
 
     /**
-     * 统计指定时间区间内的销量排名前10
-     * @param begin
-     * @param end
-     * @return
+     * Ranks the ten best-selling dishes for the requested date range
+     *
+     * @param begin First date, inclusive
+     * @param end Last date, inclusive
+     * @return Top-selling dish names and quantities
      */
     SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end);
 
     /**
-     * 导出运营数据报表
-     * @param response
+     * Exports the recent business summary using the configured workbook template
+     *
+     * @param response HTTP response used to deliver the workbook
      */
     void exportBusinessData(HttpServletResponse response);
 }

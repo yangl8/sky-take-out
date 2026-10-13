@@ -105,7 +105,6 @@ export default class extends mixins(ResizeMixin) {
   }
 }
 
-/* for mobile response 适配移动端 */
 .mobile {
   .main-container {
     margin-left: 0px;

@@ -42,13 +42,6 @@
       <div class="table-actions-row">
           <span class="delBut non"
                 @click="deleteHandle('批量', null)">{{ $t('catalog.batchDelete') }}</span>
-          <!-- <span class="blueBug non" @click="statusHandle('1')">批量启售</span>
-          <span
-            style="border: none"
-            class="delBut non"
-            @click="statusHandle('0')"
-            >批量停售</span
-          > -->
           <el-button type="primary"
                      style="margin-left: 15px"
                      @click="addDishtype('add')">+ {{ $t('catalog.newDish') }}</el-button>
@@ -227,7 +220,6 @@ export default class extends Vue {
       })
   }
 
-  // 添加
   private addDishtype(st: string) {
     if (st === 'add') {
       this.$router.push({ path: '/dish/add' })
@@ -236,7 +228,6 @@ export default class extends Vue {
     }
   }
 
-  // 删除
   private deleteHandle(type: string, id: any) {
     if (type === '批量' && id === null) {
       if (this.checkList.length === 0) {
@@ -262,7 +253,6 @@ export default class extends Vue {
         })
     })
   }
-  //获取菜品分类下拉数据
   private getDishCategoryList() {
     dishCategoryList({
       type: 1
@@ -281,7 +271,6 @@ export default class extends Vue {
       .catch(() => {})
   }
 
-  //状态更改
   private statusHandle(row: any) {
     let params: any = {}
     if (typeof row === 'string') {
@@ -301,7 +290,6 @@ export default class extends Vue {
       cancelButtonText: String(this.$t('catalog.cancel')),
       type: 'warning'
     }).then(() => {
-      // 起售停售---批量起售停售接口
       dishStatusByStatus(this.dishState)
         .then(res => {
           if (res && res.data && res.data.code === 1) {
@@ -317,7 +305,6 @@ export default class extends Vue {
     })
   }
 
-  // 全部操作
   private handleSelectionChange(val: any) {
     let checkArr: any[] = []
     val.forEach((n: any) => {
@@ -352,7 +339,6 @@ export default class extends Vue {
       z-index: 1;
       padding: 30px 28px;
       border-radius: 4px;
-      //查询黑色按钮样式
       .normal-btn {
         background: #333333;
         color: white;

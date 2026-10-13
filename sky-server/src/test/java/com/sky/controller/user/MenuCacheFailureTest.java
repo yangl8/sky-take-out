@@ -35,9 +35,6 @@ class MenuCacheFailureTest {
     private OrderService orderService;
     private MenuCacheService menuCacheService;
 
-    /**
-     * 初始化用户菜单接口及其 Redis 和业务依赖
-     */
     @BeforeEach
     void setUp() {
         redisTemplate = mock(RedisTemplate.class);
@@ -52,9 +49,6 @@ class MenuCacheFailureTest {
         when(orderService.getSetmealMonthlySales(anyList())).thenReturn(Collections.emptyMap());
     }
 
-    /**
-     * 验证 Redis 连接异常时菜品和套餐接口均回源业务查询并返回数据
-     */
     @Test
     void shouldLoadBothMenusFromDatabaseAfterCacheReadFailure() {
         when(valueOperations.get(anyString()))
@@ -82,9 +76,6 @@ class MenuCacheFailureTest {
         verify(redisTemplate, never()).delete(anyString());
     }
 
-    /**
-     * 验证数据库回源成功后缓存写入失败不影响菜品和套餐接口返回
-     */
     @Test
     void shouldFailBothMenuRequestsWhenCacheWriteFailsAfterDatabaseRead() {
         when(valueOperations.get(anyString())).thenReturn(null);

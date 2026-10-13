@@ -1,4 +1,3 @@
-<!--选择多规格弹层-->
 <template>
   <view v-if="moreNormDishdata" class="more_norm_pop">
     <view class="title">{{ $displayText(moreNormDishdata.name, 'name') }}</view>
@@ -42,9 +41,7 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
-    // 空页面提示
     moreNormDishdata: {
       type: Object,
       default: () => ({}),

@@ -6,15 +6,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 提供可注入的系统时钟，供时间规则使用并支持固定时钟测试
+ * Provides an injectable clock for delivery rules and deterministic tests
  */
 @Configuration
 public class DeliveryTimeConfiguration {
 
     /**
-     * 创建不依赖服务器默认时区的系统时钟
+     * Creates a system clock independent of the server default time zone
      *
-     * @return UTC 系统时钟，业务时区由配送时间配置显式转换
+     * @return UTC system clock; delivery rules convert explicitly to the configured business zone
      */
     @Bean
     public Clock applicationClock() {

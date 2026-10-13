@@ -1,4 +1,3 @@
-<!-- 订单状态 -->
 <template>
   <view>
     <view class="box">
@@ -55,48 +54,38 @@
 <script>
 import { statusWord } from "@/utils/index";
 export default {
-  // 获取父级传的数据
   props: {
-    // 订单详情
     orderDetailsData: {
       type: Object,
       default: () => ({}),
     },
-    // 倒计时间
     timeout: {
       type: Boolean,
       default: false,
     },
-    // 支付时间
     rocallTime: {
       type: String,
       default: "",
     },
   },
   methods: {
-    // 地址选择
     statusWord(status, payStatus) {
       this.$emit("statusWord", status);
       // return errr;
       return statusWord(status, null, this.$store.state.locale, payStatus);
     },
-    //取消订单
     handleCancel(type, obj) {
       this.$emit("handleCancel", { type: type, obj: obj });
     },
-    // 立即支付
     handlePay(id) {
       this.$emit("handlePay", id);
     },
-    // 催单
     handleReminder(type, id) {
       this.$emit("handleReminder", { type: type, id: id });
     },
-    // 申请退款
     handleRefund(type) {
       this.$emit("handleRefund", type);
     },
-    // 再来一单
     oneMoreOrder(id) {
       this.$emit("oneMoreOrder", id);
     },

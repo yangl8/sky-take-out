@@ -13,55 +13,63 @@ import com.sky.vo.DishVO;
 public interface DishService {
 
     /**
-     * 新增菜品和对应的口味
-     * @param dishDTO
+     * Saves a dish and its flavors in one transaction, then invalidates the category cache
+     *
+     * @param dishDTO Dish data and flavor options to save
      */
     public void saveWithFlavor(DishDTO dishDTO);
 
     /**
-     * 菜品分页查询
-     * @param dishPageQueryDTO
-     * @return
+     * Returns a page of dishes matching the supplied filters
+     *
+     * @param dishPageQueryDTO Pagination and dish filters
+     * @return The matching page
      */
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
 
     /**
-     * 菜品批量删除
-     * @param ids
+     * Deletes dishes that are not on sale or referenced by set meals, then invalidates affected category caches
+     *
+     * @param ids Dish IDs to delete
      */
     public void deleteBatch(List<Long> ids);
 
     /**
-     * 根据id查询菜品和对应的口味数据
-     * @param id
-     * @return
+     * Retrieves a dish with its configured flavors
+     *
+     * @param id Dish ID
+     * @return Dish details and available flavors
      */
     public DishVO getByIdWithFlavor(Long id);
 
     /**
-     * 根据id修改菜品基本信息和对应的口味信息
-     * @param dishDTO
+     * Updates a dish and its flavors, then invalidates the affected category cache
+     *
+     * @param dishDTO Updated dish data and flavor options
      */
     public void updateWithFlavor(DishDTO dishDTO);
 
     /**
-     * 菜品起售停售
-     * @param status
-     * @param id
-    */
+     * Changes whether a dish is available for sale
+     *
+     * @param status New sale status
+     * @param id Dish ID
+     */
     void startOrStop(Integer status, Long id);
 
     /**
-     * 根据分类id查询菜品
-     * @param categoryId
-     * @return
-    */
+     * Lists dishes in a category
+     *
+     * @param categoryId Category ID
+     * @return Dishes in the category
+     */
     public List<Dish> list(Long categoryId);
 
     /**
-     * 条件查询菜品和口味
-     * @param dish
-     * @return
+     * Lists dishes matching the supplied criteria with their flavors
+     *
+     * @param dish Dish filters
+     * @return Matching dishes with flavor options
      */
     List<DishVO> listWithFlavor(Dish dish);
     

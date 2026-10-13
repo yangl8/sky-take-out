@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * 构造高德地理编码地址并校验定位及驾车路线响应
+ * Builds geocoding addresses and validates geocoding and driving-route responses
  */
 final class DeliveryLocationValidator {
 
@@ -30,17 +30,17 @@ final class DeliveryLocationValidator {
     private static final List<String> PLACEHOLDER_NAMES = Arrays.asList("市辖区", "县", "请选择", "请选择省份", "请选择城市", "请选择区县");
 
     /**
-     * 禁止实例化纯校验工具
+     * Prevents instantiation of this validation utility
      */
     private DeliveryLocationValidator() {
     }
 
     /**
-     * 根据地址簿原始中文行政区划字段生成供高德查询的完整地址
+     * Builds the Chinese address sent to AMap from the original address-book fields
      *
-     * @param addressBook 用户保存的结构化收货地址
-     * @return 省、市、区县及详细地址组成的中文地址
-     * @throws OrderBusinessException 行政区划或详细地址缺失、代码关系不合法
+     * @param addressBook User's structured delivery address
+     * @return Chinese address composed of province, city, district, and address details
+     * @throws OrderBusinessException If a required address field is missing or administrative codes are inconsistent
      */
     static String buildGeocodingAddress(AddressBook addressBook) {
         if (addressBook == null) {
@@ -78,7 +78,7 @@ final class DeliveryLocationValidator {
         addressParts.add(provinceName);
 
         if (municipality && (cityName.isEmpty() || isPlaceholder(cityName) || cityName.equals(provinceName))) {
-            // 四个直辖市的“市辖区/县”是层级占位值，省级名称已表达城市。
+            // Municipality-level district or county labels are placeholders; the province name already identifies the city
         } else {
             if (!isChineseRegionName(cityName) || isPlaceholder(cityName)) {
                 throw invalidDeliveryAddress();
@@ -94,14 +94,14 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 从高德地理编码响应中选出唯一、行政区匹配且定位级别足够精确的坐标
+     * Selects the unique geocoding result that matches the district and has sufficient address precision
      *
-     * @param responseBody 高德 JSON 响应
-     * @param requestedDetail 用户填写的详细地址原文
-     * @param expectedDistrictCode 用户所选区县代码；查询商家地址时传空
-     * @param addressLabel 用于业务错误提示的地址名称
-     * @return 高德返回的经度、纬度字符串
-     * @throws OrderBusinessException 服务响应失败、匹配不准确或结果存在歧义
+     * @param responseBody AMap JSON response
+     * @param requestedDetail Original address details entered by the user
+     * @param expectedDistrictCode Selected district code, or {@code null} for the merchant address
+     * @param addressLabel Address label used in business errors
+     * @return Longitude and latitude returned by AMap
+     * @throws OrderBusinessException If the service fails, the match is imprecise, or results are ambiguous
      */
     static String resolveGeocodeCoordinate(
             String responseBody,
@@ -152,13 +152,13 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 校验高德驾车路线响应、请求起终点回显及首条推荐路线距离
+     * Validates the AMap route response, echoed endpoints, and distance of the first recommended route
      *
-     * @param responseBody 高德驾车路线 JSON 响应
-     * @param expectedOrigin 请求的起点坐标
-     * @param expectedDestination 请求的终点坐标
-     * @return 首条推荐路线的距离，单位为米
-     * @throws OrderBusinessException 路线不可用、坐标回显不符或距离无效
+     * @param responseBody AMap driving-route JSON response
+     * @param expectedOrigin Requested origin coordinates
+     * @param expectedDestination Requested destination coordinates
+     * @return Distance of the first recommended route, in meters
+     * @throws OrderBusinessException If the route is unavailable, endpoints do not match, or distance is invalid
      */
     static BigDecimal resolveDrivingDistance(String responseBody, String expectedOrigin, String expectedDestination) {
         JSONObject response = parseResponse(responseBody, "配送路线服务暂不可用");
@@ -194,10 +194,10 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 按现有五公里驾车距离边界判断是否允许配送
+     * Applies the existing five-kilometer driving-distance limit
      *
-     * @param distance 高德返回的驾车距离，单位为米
-     * @throws OrderBusinessException 距离超过五公里
+     * @param distance Driving distance returned by AMap, in meters
+     * @throws OrderBusinessException If the driving distance exceeds five kilometers
      */
     static void requireWithinDeliveryRange(BigDecimal distance) {
         if (distance == null || distance.signum() < 0) {
@@ -209,12 +209,12 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 安全解析高德 JSON 响应
+     * Safely parses an AMap JSON response
      *
-     * @param responseBody HTTP 响应正文
-     * @param errorMessage 解析失败时返回的业务错误
-     * @return JSON 对象
-     * @throws OrderBusinessException 响应为空、格式错误或根对象无效
+     * @param responseBody HTTP response body
+     * @param errorMessage Business error to raise when parsing fails
+     * @return Parsed JSON object
+     * @throws OrderBusinessException If the response is empty, malformed, or has an invalid root object
      */
     private static JSONObject parseResponse(String responseBody, String errorMessage) {
         if (responseBody == null || responseBody.trim().isEmpty()) {
@@ -232,10 +232,10 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 校验高德成功状态，并在服务确实返回 infocode 时检查其成功值
+     * Checks the AMap success status and validates infocode when provided
      *
-     * @param response 高德响应对象
-     * @return 响应状态有效时返回 true
+     * @param response AMap response object
+     * @return {@code true} when the response status is valid
      */
     private static boolean isSuccessfulResponse(JSONObject response) {
         String infocode = response.getString("infocode");
@@ -244,11 +244,11 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 校验可选的结果数量字段与实际返回列表一致
+     * Checks that the optional result count matches the returned list
      *
-     * @param countText 服务返回的结果数量
-     * @param actualSize 实际列表长度
-     * @return 数量缺省或与列表一致时返回 true
+     * @param countText Result count reported by the service
+     * @param actualSize Actual list size
+     * @return {@code true} when count is absent or matches the list size
      */
     private static boolean hasConsistentCount(String countText, int actualSize) {
         if (countText == null || countText.trim().isEmpty()) {
@@ -262,28 +262,28 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 判断高德匹配级别是否能提供具体地址位置
+     * Determines whether the AMap match level identifies a specific location
      *
-     * @param level 高德匹配级别
-     * @param expectedDetail 标准化后的用户详细地址，店铺地址可为空
-     * @param formattedAddress 标准化后的格式化地址
-     * @return 匹配级别满足当前地址用途时返回 true
+     * @param level AMap match level
+     * @param expectedDetail Normalized address details; empty for the merchant address
+     * @param formattedAddress Normalized formatted address
+     * @return {@code true} when the match level is sufficient for this address type
      */
     private static boolean isAcceptableLevel(String level, String expectedDetail, String formattedAddress) {
         if (PRECISE_LEVELS.contains(level)) {
             return true;
         }
-        // POI/住宅区只在结果地址明确包含用户填写的具体地点时接受，避免把行政区或商圈中心点当作收货点。
+        // Accept a POI or residential area only when the result includes the specific place entered by the user; an administrative area or business-district center is not a delivery point
         return NAMED_PLACE_LEVELS.contains(level) && !expectedDetail.isEmpty() && formattedAddress.contains(expectedDetail);
     }
 
     /**
-     * 校验返回地址是否对应用户输入，并容忍高德省略末尾楼层、单元或房间描述
+     * Checks that the returned address matches the user input while allowing AMap to omit a trailing floor, unit, or room
      *
-     * @param expectedDetail 标准化后的用户详细地址
-     * @param formattedAddress 标准化后的高德地址
-     * @param candidate 地理编码候选
-     * @return 地址精确对应或仅省略末级室内描述时返回 true
+     * @param expectedDetail Normalized user address details
+     * @param formattedAddress Normalized AMap address
+     * @param candidate Geocoding candidate
+     * @return {@code true} when the address matches or only a trailing indoor detail is omitted
      */
     private static boolean matchesRequestedDetail(String expectedDetail, String formattedAddress, JSONObject candidate) {
         if (expectedDetail.isEmpty()) {
@@ -309,16 +309,17 @@ final class DeliveryLocationValidator {
                 return false;
             }
         }
-        // formatted_address 未列入当前官方地理编码字段表；缺省时只依赖文档明确列出的 street/number。
+        // formatted_address is not listed in the current official geocoding fields; when it is absent, rely only on documented street and number fields
         return structuredStreetAndNumberConsistent(baseAddress, candidate, true);
     }
 
     /**
-     * 使用高德地理编码响应中的道路与门牌字段核对输入地址
+     * Matches the input against road and street-number fields in the AMap geocoding result
      *
-     * @param baseAddress 用户详细地址或去除末尾室内信息后的基础地址
-     * @param candidate 高德候选结果
-     * @return 返回字段均能在输入中核对且至少有道路或门牌字段时返回 true
+     * @param baseAddress User address details, optionally without trailing indoor details
+     * @param candidate AMap candidate
+     * @param requireField Whether at least one structured street or number field must be present
+     * @return {@code true} when returned fields match the input and include a road or street number
      */
     private static boolean structuredStreetAndNumberConsistent(String baseAddress, JSONObject candidate, boolean requireField) {
         String street = normalizeAddressPart(candidate.getString("street"));
@@ -329,10 +330,10 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 将同一地理位置的重复候选合并，保留不同坐标以便歧义检查
+     * Deduplicates identical coordinates while retaining distinct locations for ambiguity checks
      *
-     * @param coordinates 已收集的候选坐标
-     * @param candidate 待检查坐标
+     * @param coordinates Coordinates collected so far
+     * @param candidate Candidate coordinate
      */
     private static void addDistinctCoordinate(List<String> coordinates, String candidate) {
         for (String coordinate : coordinates) {
@@ -344,10 +345,10 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 判断地理编码坐标格式及经纬度范围
+     * Validates coordinate format and longitude/latitude bounds
      *
-     * @param location 高德返回的经度、纬度
-     * @return 坐标有效时返回 true
+     * @param location Longitude and latitude returned by AMap
+     * @return {@code true} when the coordinate is valid
      */
     private static boolean isValidCoordinate(String location) {
         if (location == null) {
@@ -371,11 +372,11 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 比较路线响应回显的坐标和本次请求坐标
+     * Compares route-response coordinates with the requested coordinates
      *
-     * @param actual 高德响应坐标
-     * @param expected 本次请求坐标
-     * @return 两组坐标在六位小数精度范围内一致时返回 true
+     * @param actual Coordinates echoed by AMap
+     * @param expected Coordinates from this request
+     * @return {@code true} when the coordinates match to six decimal places
      */
     private static boolean sameCoordinate(String actual, String expected) {
         if (!isValidCoordinate(actual) || !isValidCoordinate(expected)) {
@@ -388,31 +389,31 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 检查行政区划名称是否为中文名称
+     * Checks whether an administrative-area name contains Chinese characters
      *
-     * @param value 行政区划名称
-     * @return 名称含中文字符时返回 true
+     * @param value Administrative-area name
+     * @return {@code true} when the name contains Chinese characters
      */
     private static boolean isChineseRegionName(String value) {
         return value != null && value.matches(".*\\p{IsHan}+.*");
     }
 
     /**
-     * 检查名称是否为地址选择器中的占位值
+     * Checks whether a name is an address-picker placeholder
      *
-     * @param value 行政区划名称
-     * @return 名称为空或占位时返回 true
+     * @param value Administrative-area name
+     * @return {@code true} when the name is empty or a placeholder
      */
     private static boolean isPlaceholder(String value) {
         return value == null || value.isEmpty() || PLACEHOLDER_NAMES.contains(value);
     }
 
     /**
-     * 判断直辖市省级代码和名称是否对应
+     * Checks that a municipality code matches its province-level name
      *
-     * @param provinceCode 省级行政区代码
-     * @param provinceName 省级行政区名称
-     * @return 代码与名称匹配时返回 true
+     * @param provinceCode Province-level administrative code
+     * @param provinceName Province-level administrative name
+     * @return {@code true} when the code and name match
      */
     private static boolean isExpectedMunicipalityName(String provinceCode, String provinceName) {
         switch (provinceCode) {
@@ -425,59 +426,59 @@ final class DeliveryLocationValidator {
     }
 
     /**
-     * 标准化地址文本用于比对，不改变实际发送给高德的原文
+     * Normalizes address text for matching without changing the text sent to AMap
      *
-     * @param value 地址字段
-     * @return 去除空白的比较文本
+     * @param value Address field
+     * @return Comparison text with whitespace removed
      */
     private static String normalizeAddressPart(String value) {
         return value == null ? "" : value.replaceAll("[\\s，。,.、:：;；（）()【】\\[\\]·]", "").toLowerCase(Locale.ROOT);
     }
 
     /**
-     * 检查地址字段是否包含控制字符
+     * Checks whether an address field contains control characters
      *
-     * @param value 地址字段
-     * @return 包含控制字符时返回 true
+     * @param value Address field
+     * @return {@code true} when control characters are present
      */
     private static boolean containsControlCharacter(String value) {
         return value.chars().anyMatch(Character::isISOControl);
     }
 
     /**
-     * 构造地址数据无效的业务异常
+     * Creates the standard invalid-address exception
      *
-     * @return 统一地址错误
+     * @return Standard address error
      */
     private static OrderBusinessException invalidDeliveryAddress() {
         return new OrderBusinessException("收货地址行政区划或详细地址无效，请重新选择并补充地址");
     }
 
     /**
-     * 构造地址匹配精度不足的业务异常
+     * Creates the standard insufficient-precision exception
      *
-     * @param addressLabel 地址用途名称
-     * @return 统一精确定位错误
+     * @param addressLabel Address label
+     * @return Standard precise-location error
      */
     private static OrderBusinessException inaccurateGeocode(String addressLabel) {
         return new OrderBusinessException(addressLabel + "无法准确定位，请补充完整门牌地址");
     }
 
     /**
-     * 将 null 字符串转为空字符串
+     * Converts a null string to an empty string
      *
-     * @param value 原始文本
-     * @return 非空文本或空字符串
+     * @param value Original text
+     * @return Non-null text or an empty string
      */
     private static String valueOrEmpty(String value) {
         return value == null ? "" : value;
     }
 
     /**
-     * 去除地址字段外围空白
+     * Trims surrounding whitespace from an address field
      *
-     * @param value 原始字段
-     * @return 去除外围空白后的字段
+     * @param value Original field
+     * @return Field with surrounding whitespace removed
      */
     private static String trim(String value) {
         return value == null ? "" : value.trim();

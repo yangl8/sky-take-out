@@ -12,10 +12,6 @@ import com.sky.mapper.OrderMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 定时任务类，定时处理订单状态
- * OrderTask
- */
 @Component 
 @Slf4j 
 public class OrderTask {
@@ -23,17 +19,13 @@ public class OrderTask {
     @Autowired 
     private OrderMapper orderMapper;
 
-    /**
-     * 取消超时未付款订单
-     */
-    @Scheduled(cron = "0 * * * * ?") //每分钟触发一次
+    @Scheduled(cron = "0 * * * * ?")
     public void processTimeoutOrder(){
 
-        log.info("定时处理超时订单: {}", LocalDateTime.now());
+        log.info("Processing expired orders: {}", LocalDateTime.now());
 
         LocalDateTime pendingPaymentCutoff = LocalDateTime.now().plusMinutes(-15);
 
-        //select * from orders where status = ? and order_time < (当前时间 - 15分钟)
         List<Orders> pendingPaymentOrders = orderMapper.getByStatusAndOrderTimeLT(
                 Orders.PENDING_PAYMENT, pendingPaymentCutoff);
 
@@ -49,18 +41,15 @@ public class OrderTask {
                 int updatedRows = orderMapper.updateStatusIfCurrent(currentOrder.getId(),
                         Orders.PENDING_PAYMENT, Orders.UN_PAID, pendingPaymentCutoff, cancelledOrder);
                 if (updatedRows != 1) {
-                    log.debug("超时订单状态已变化，跳过自动取消，订单ID：{}", currentOrder.getId());
+                    log.debug("Expired order state changed; skipping automatic cancellation for order {}", currentOrder.getId());
                 }
             }
         }
     }
 
-    /**
-     * 完成超时配送订单
-     */
-    @Scheduled(cron = "0 0 1 * * ?") //每天凌晨1点触发一次
+    @Scheduled(cron = "0 0 1 * * ?")
     public void processDeliveryOrder(){
-        log.info("定时处理处于派送中的订单: {}", LocalDateTime.now());
+        log.info("Processing orders in delivery: {}", LocalDateTime.now());
 
         LocalDateTime deliveryCutoff = LocalDateTime.now().plusMinutes(-60);
 
@@ -76,7 +65,7 @@ public class OrderTask {
                 int updatedRows = orderMapper.updateStatusIfCurrent(currentOrder.getId(),
                         Orders.DELIVERY_IN_PROGRESS, Orders.PAID, deliveryCutoff, completedOrder);
                 if (updatedRows != 1) {
-                    log.debug("配送订单状态已变化，跳过自动完成，订单ID：{}", currentOrder.getId());
+                    log.debug("Delivery order state changed; skipping automatic completion for order {}", currentOrder.getId());
                 }
             }
         }

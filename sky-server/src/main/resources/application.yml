@@ -17,11 +17,11 @@ spring:
     database: ${sky.redis.database}
 
 mybatis:
-  #mapper配置文件
+  # Mapper XML locations
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.sky.entity
   configuration:
-    #开启驼峰命名
+    # Enable underscore-to-camel-case mapping
     map-underscore-to-camel-case: true
 
 logging:
@@ -32,15 +32,20 @@ logging:
         service: info
         controller: info
 
+knife4j:
+  enable: true
+  setting:
+    language: en-US
+
 sky:
   payment:
     mock-enabled: false
   jwt:
-    # 设置jwt签名加密时使用的秘钥
+    # JWT signing keys
     admin-secret-key: ${JWT_ADMIN_SECRET_KEY:}
-    # 设置jwt过期时间
+    # JWT expiration settings
     admin-ttl: 7200000
-    # 设置前端传递过来的令牌名称
+    # Token header names
     admin-token-name: token
     user-secret-key: ${JWT_USER_SECRET_KEY:}
     user-ttl: 7200000

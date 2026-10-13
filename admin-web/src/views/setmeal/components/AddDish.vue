@@ -99,14 +99,10 @@ export default class extends Vue {
   }
 
   public init() {
-    // 菜单列表数据获取
     this.getDishType()
-    // 初始化选项
     this.checkedList = this.checkList.map((it: any) => it.name)
-    // 已选项的菜品-详细信息
     this.checkedListAll = this.checkList.reverse()
   }
-  // 获取套餐分类
   public getDishType() {
     getCategoryList({ type: 1 }).then(res => {
       if (res && res.data && res.data.code === 1) {
@@ -125,7 +121,6 @@ export default class extends Vue {
     })
   }
 
-  // 通过套餐ID获取菜品列表分类
   private getDishList(id: number) {
     queryDishList({ categoryId: id }).then(res => {
       if (res && res.data && res.data.code === 1) {
@@ -151,7 +146,6 @@ export default class extends Vue {
     })
   }
 
-  // 关键词收搜菜品列表分类
   private getDishForName(name: any) {
     queryDishList({ name }).then(res => {
       if (res && res.data && res.data.code === 1) {
@@ -166,18 +160,12 @@ export default class extends Vue {
       }
     })
   }
-  // 点击分类
   private checkTypeHandle(ind: number, id: any) {
     this.keyInd = ind
     this.getDishList(id)
   }
-  // 添加菜品
   private checkedListHandle(value: [string]) {
-    // TODO 实现倒序 由于value是组件内封装无法从前面添加 所有取巧处理倒序添加
-    // 倒序展示 - 数据处理前反正 为正序
     this.checkedListAll.reverse()
-    // value 是一个只包含菜品名的数组 需要从 dishList中筛选出 对应的详情
-    // 操作添加菜品
     const list = this.allDishList.filter((item: any) => {
       let data
       value.forEach((it: any) => {
@@ -187,8 +175,6 @@ export default class extends Vue {
       })
       return data
     })
-    // 编辑的时候需要与已有菜品合并
-    // 与当前请求下的选择性 然后去重就是当前的列表
     const dishListCat = [...this.checkedListAll, ...list]
     let arrData: any[] = []
     this.checkedListAll = dishListCat.filter((item: any) => {
@@ -205,7 +191,6 @@ export default class extends Vue {
       }
       return allArrDate
     })
-    // 如果是减菜 走这里
     if (value.length < arrData.length) {
       this.checkedListAll = this.checkedListAll.filter((item: any) => {
         if (value.some(it => it == item.name)) {
@@ -214,7 +199,6 @@ export default class extends Vue {
       })
     }
     this.$emit('checkList', this.checkedListAll)
-    // 数据处理完反转为倒序
     this.checkedListAll.reverse()
   }
 
@@ -226,7 +210,6 @@ export default class extends Vue {
     this.checkList = this.dishListCache
   }
 
-  // 删除
   private delCheck(name: any) {
     const index = this.checkedList.findIndex(it => it === name)
     const indexAll = this.checkedListAll.findIndex(

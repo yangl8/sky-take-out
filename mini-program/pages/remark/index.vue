@@ -81,7 +81,6 @@ export default {
         url: "/pages/order/index",
       });
     },
-    // 保存返回订单页
     handleSaveRemark() {
       uni.redirectTo({
         url: "/pages/order/index",
@@ -89,7 +88,6 @@ export default {
       this.setRemark(this.remark);
     },
     validateTextLength(value) {
-      // 中文、中文标点、全角字符按1长度，英文、英文符号、数字按0.5长度计算
       let cnReg = /([\u4e00-\u9fa5]|[\u3000-\u303F]|[\uFF00-\uFF60])/g;
       let mat = value.match(cnReg);
       let length;

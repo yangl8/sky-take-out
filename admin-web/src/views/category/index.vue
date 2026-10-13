@@ -252,7 +252,6 @@ export default class extends Vue {
     this.init()
   }
 
-  // 初始化信息
   private async init(isSearch?) {
     this.isSearch = isSearch
     await getCategoryPage({
@@ -276,7 +275,6 @@ export default class extends Vue {
       })
   }
 
-  // 添加
   private addClass(st: any) {
     if (st == 'class') {
       this.classData.title = 'catalog.addDishCategory'
@@ -292,7 +290,6 @@ export default class extends Vue {
     this.actionType = 'add'
   }
 
-  // 修改
   private editHandle(dat: any) {
     this.classData.title = 'catalog.editCategory'
     this.action = 'edit'
@@ -303,15 +300,12 @@ export default class extends Vue {
     this.actionType = 'edit'
   }
 
-  // 关闭弹窗
   private handleClose(st: string) {
     console.log(this.$refs.classData, 'this.$refs.classData')
     this.classData.dialogVisible = false
-    //对该表单项进行重置，将其值重置为初始值并移除校验结果
     this.$refs.classData.resetFields()
   }
 
-  //状态修改
   private statusHandle(row: any) {
     this.id = row.id
     this.status = row.status
@@ -334,7 +328,6 @@ export default class extends Vue {
     })
   }
 
-  //删除
   private deleteHandle(id: any) {
     this.$confirm(String(this.$t('catalog.categoryDelete')), String(this.$t('catalog.deleteTitle')), {
       confirmButtonText: String(this.$t('catalog.delete')),
@@ -360,7 +353,6 @@ export default class extends Vue {
     classData: any
   }
 
-  //数据提交
   submitForm(st: any) {
     if (this.action === 'add') {
       this.$refs.classData.validate((value: boolean) => {
@@ -413,7 +405,6 @@ export default class extends Vue {
     }
   }
 
-  //分页
   private handleSizeChange(val: any) {
     this.pageSize = val
     this.init()
@@ -453,7 +444,6 @@ export default class extends Vue {
         text-align: center;
         margin-top: 30px;
       }
-      //查询黑色按钮样式
       .normal-btn {
         background: #333333;
         color: white;

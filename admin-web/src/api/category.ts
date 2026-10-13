@@ -1,11 +1,10 @@
 import request from '@/utils/request';
-/**
- *
- * 分类管理
- *
- **/
 
-// 查询分类列表接口
+
+
+
+
+
 export const getCategoryPage = (params: any) => {
   return request({
     url: '/category/page',
@@ -14,7 +13,6 @@ export const getCategoryPage = (params: any) => {
   });
 };
 
-// 删除当前列的接口
 export const deleCategory = (ids: string) => {
   return request({
     url: '/category',
@@ -23,7 +21,6 @@ export const deleCategory = (ids: string) => {
   });
 };
 
-// 修改接口
 export const editCategory = (params: any) => {
   return request({
     url: '/category',
@@ -32,7 +29,6 @@ export const editCategory = (params: any) => {
   });
 };
 
-// 新增接口
 export const addCategory = (params: any) => {
   return request({
     url: '/category',
@@ -41,7 +37,6 @@ export const addCategory = (params: any) => {
   });
 };
 
-// 修改---启用禁用接口
 export const enableOrDisableEmployee = (params: any) => {
   return request({
     url: `/category/status/${params.status}`,

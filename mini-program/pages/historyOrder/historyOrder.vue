@@ -1,31 +1,22 @@
-<!--历史订单-->
 <template>
   <view class="history_order">
     <uni-nav-bar @clickLeft="goBack" left-icon="back" leftIcon="arrowleft" :title="$t('history.title')" statusBar="true" fixed="true"
       color="#ffffff" backgroundColor="#333333"></uni-nav-bar>
-    <!-- 根据scrollinto和:id="'tab'+index"切换下方轮播 -->
     <scroll-view scroll-x class="scroll-row" :scroll-into-view="scrollinto" :scroll-with-animation="true" enable-flex>
       <view v-for="(item, index) in tabBars" :key="index" :id="'tab' + index" class="scroll-row-item"
         @click="changeTab(index)">
         <view :class="tabIndex == index ? 'scroll-row-item-act' : ''"><text class="line"></text>{{ item }}</view>
       </view>
     </scroll-view>
-    <!--  滑块内容 对应的是顶部选项卡的切换 :current="tabIndex"  设置的是y方向上可以滚动-->
     <swiper :current="tabIndex" @change="onChangeSwiperTab" :style="{ height: scrollH + 'px' }">
       <swiper-item v-for="(item, index) in tabBars" :key="index">
-        <!-- 垂直滚动区域  scroll和swiper的高度都要给且是一样的高度-->
         <scroll-view scroll-y="true" :style="{ height: scrollH + 'px' }" @scrolltolower="lower">
-          <!-- 可垂直滚动区域 显示真正内容-->
           <view class="main recent_orders" v-if="recentOrdersList && recentOrdersList.length > 0">
-            <!-- 历史订单列表 -->
             <view class="box order_lists" v-for="(item, index) in recentOrdersList" :key="index" :class="{
               'item-last': Number(index) + 1 === recentOrdersList.length,
             }">
-              <!-- 时间和支付状态 -->
               <view class="date_type">
-                <!-- 时间 -->
                 <text class="time">{{ item.orderTime }}</text>
-                <!-- 支付状态 -->
                 <text class="type status" :class="{ status: item.status == 2 }">{{
                   statusWord(item.status, item.payStatus)
                 }}</text>
@@ -33,7 +24,6 @@
               <view class="payment_countdown" v-if="Number(item.status) === 1 && paymentRemaining(item.orderTime) > 0">
                 {{ $t("payment.remaining") }} {{ formatPaymentRemaining(item.orderTime) }}
               </view>
-              <!-- 点菜的内容 -->
               <view class="orderBox" v-if="item.orderDetailList && numes(item.orderDetailList).count > 0" @click="goDetail(item)">
                 <view class="food_num">
                   <scroll-view scroll-x="true" class="pic" style="width: 100%; overflow: hidden; white-space: nowrap">
@@ -45,7 +35,6 @@
                     </view>
                   </scroll-view>
                 </view>
-                <!-- 商品数量及金额 -->
                 <view class="numAndAum">
                   <view><text>￥{{ item.amount.toFixed(2) }}</text></view>
                   <view><text>{{ $t("common.items", { count: numes(item.orderDetailList).count }) }}</text></view>
@@ -124,8 +113,6 @@ export default {
       tabIndex: 0,
       clockNow: Date.now(),
       countdownTimer: null,
-      // tabBars: ["全部订单", "待付款", "退款", "已完成", "派送中"],
-      // 状态对应的接口和参数
       urlMap: {
         0: {
           fn: getOrderPage,
@@ -234,7 +221,6 @@ export default {
       const remainingSeconds = String(seconds % 60).padStart(2, "0");
       return `${minutes}:${remainingSeconds}`;
     },
-    // 获取历史订单列表
     getList() {
       const key = this.urlMap[this.tabIndex].key;
       const fn = this.urlMap[this.tabIndex].fn;
@@ -259,13 +245,11 @@ export default {
           uni.hideLoading();
         });
     },
-    // 再来一单
     async oneMoreOrder(id) {
       let pages = getCurrentPages();
       let routeIndex = pages.findIndex(
         (item) => item.route === "pages/index/index"
       );
-      // 先清空购物车
       await delShoppingCart();
       repetitionOrder(id).then((res) => {
         if (res.code === 1) {
@@ -275,24 +259,19 @@ export default {
         }
       });
     },
-    // tab选项卡切换轮播
     changeTab(index) {
-      // 点击的还是当前数据的时候直接return
       if (this.tabIndex == index) {
         return;
       }
       this.tabIndex = index;
       if (index === 1) {
-        // 待付款
         this.status = 1;
         this.payStatus = 0
       } else if (index === 2) {
-        // 退款
         this.status = 6;
         this.payStatus = 2
       }
       else {
-        // 全部
         this.status = "";
         this.payStatus = ""
       }
@@ -300,14 +279,13 @@ export default {
       this.recentOrdersList = [];
       this.isEmpty = false;
       this.getList();
-      // 滑动
       this.scrollinto = "tab" + index;
     },
     onChangeSwiperTab(e) {
       this.changeTab(e.detail.current);
     },
     dataAdd() {
-      const pages = Math.ceil(this.pageInfo.total / 10); //计算总页数
+      const pages = Math.ceil(this.pageInfo.total / 10);
       if (this.pageInfo.page === pages) {
         this.loadingText = this.$t("common.noMore");
         this.loading = true;
@@ -322,18 +300,15 @@ export default {
       this.loading = true;
       this.dataAdd();
     },
-    // 去详情页面
     goDetail(order) {
       this.setAddressBackUrl("/pages/historyOrder/historyOrder");
       this.setSelectedOrder(order);
       uni.navigateTo({ url: "/pages/details/index?orderId=" + order.id });
     },
-    // 继续支付时进入支付页，不经过订单详情
     continuePayment(order) {
       this.setSelectedOrder(order);
       uni.navigateTo({ url: "/pages/pay/index?orderId=" + order.id });
     },
-    // 催单
     handleReminder(type, id) {
       reminderOrder(id).then((res) => {
         if (res.code === 1) {
@@ -344,7 +319,6 @@ export default {
         }
       });
     },
-    // 取消订单
     handleCancel(order) {
       if ([3, 4].includes(order.status)) {
         this.showMerchantPhone();
@@ -387,11 +361,9 @@ export default {
     closePhonePopup(type) {
       this.$refs.phone.$refs.popup.close(type);
     },
-    // 关闭弹层
     closePopup(type) {
       this.$refs.commonPopup.close(type);
     },
-    // 返回我的
     goBack() {
       uni.redirectTo({
         url: "/pages/my/my",

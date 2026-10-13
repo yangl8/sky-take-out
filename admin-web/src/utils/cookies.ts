@@ -31,7 +31,6 @@ export const getPrint = () => Cookies.get(printKey);
 export const setPrint = (useInfor: Object) => Cookies.set(printKey, useInfor);
 export const removePrint = () => Cookies.remove(printKey);
 
-// 获取消息
 const newData = 'new';
 export const getNewData = () => Cookies.get(newData);
 export const setNewData = (val: Object) => Cookies.set(newData, val);

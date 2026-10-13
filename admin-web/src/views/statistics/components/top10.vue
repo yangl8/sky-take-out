@@ -35,11 +35,11 @@ export default class extends Vue {
     option = {
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#fff', //背景颜色（此时为默认色）
-        borderRadius: 2, //边框圆角
+        backgroundColor: '#fff',
+        borderRadius: 2,
         textStyle: {
-          color: '#333', //字体颜色
-          fontSize: 12, //字体大小
+          color: '#333',
+          fontSize: 12,
           fontWeight: 300,
         },
       },
@@ -54,11 +54,9 @@ export default class extends Vue {
         show: false,
       },
       yAxis: {
-        //   隐藏y轴坐标轴
         axisLine: {
           show: false,
         },
-        // 隐藏y轴刻度线
         axisTick: {
           show: false,
           alignWithLabel: true,
@@ -70,7 +68,6 @@ export default class extends Vue {
             color: '#666',
             fontSize: '12px',
           },
-          // formatter: "{value} ml",//单位
         },
         data: this.top10data.nameList.map((name) => this.menuName(name)),
       },
@@ -83,33 +80,30 @@ export default class extends Vue {
             color: '#F3F4F7',
           },
           barWidth: 20,
-          barGap: '80%' /*多个并排柱子设置柱子之间的间距*/,
-          barCategoryGap: '80%' /*多个并排柱子设置柱子之间的间距*/,
+          barGap: '80%' ,
+          barCategoryGap: '80%' ,
 
           itemStyle: {
             emphasis: {
               barBorderRadius: 30,
             },
             normal: {
-              barBorderRadius: [0, 10, 10, 0], // 圆角
-              color: new echarts.graphic.LinearGradient( // 渐变色
+              barBorderRadius: [0, 10, 10, 0],
+              color: new echarts.graphic.LinearGradient(
                 1,
                 0,
                 0,
-                0, // 渐变色的起止位置, 右/下/左/上
+                0,
                 [
-                  // offset 位置
                   { offset: 0, color: '#FFBD00' },
                   { offset: 1, color: '#FFD000' },
                 ]
               ),
               label: {
-                //内容样式
                 show: true,
                 formatter: '{@score}',
                 color: '#333',
-                // position: "insideLeft", //内部左对齐
-                position: ['8', '5'], //自定义位置第一个参数为x轴方向，第二个参数为y轴方向，左上角为起点，向右向下为正数，向上向左为负数
+                position: ['8', '5'],
               },
             },
           },

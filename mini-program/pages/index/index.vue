@@ -1,13 +1,10 @@
 <template>
   <view>
-    <!-- 导航 -->
     <navBar></navBar>
     <!-- end -->
     <view class="home_content" :style="{ paddingTop: ht + 'px' }">
-      <!-- 店铺基本信息 -->
       <view class="restaurant_info_box">
         <view class="restaurant_info">
-          <!-- 上部 -->
           <view class="info_top">
             <view class="info_top_left">
               <image class="logo_ruiji" src="../../static/logo_ruiji.png"></image>
@@ -19,7 +16,6 @@
                 <view class="businessStatus close" v-else-if="shopStatus === 0">{{ $t("home.closed") }}</view>
               </view>
               <view class="right_details">
-                <!-- 中 -->
                 <view class="details_flex">
                   <image class="top_icon" src="../../static/money.png"></image>
                   <text class="icon_text">{{ $t("home.deliveryFee", { amount: deliveryFee() }) }}</text>
@@ -27,7 +23,6 @@
               </view>
             </view>
           </view>
-          <!-- 下部---信息简介 -->
           <view class="info_bottom">
             <view>
               <view class="word">{{ $t("home.description") }}</view>
@@ -49,7 +44,6 @@
         </view>
       </view>
       <!-- end -->
-      <!-- 菜单列表 -->
       <view class="restaurant_menu_list">
         <view class="type_list">
           <scroll-view scroll-y scroll-with-animation class="u-tab-view menu-scroll-view" :scroll-top="scrollTop + 100"
@@ -63,7 +57,6 @@
         <scroll-view class="vegetable_order_list" scroll-y="true" scroll-top="0rpx"
           v-if="dishListItems && dishListItems.length > 0">
           <view class="type_item" v-for="(item, index) in dishListItems" :key="index">
-            <!-- 点击查看详情 -->
             <view class="dish_img" @click="openDetailHandle(item)">
               <image mode="aspectFill" :src="item.image" class="dish_img_url"></image>
             </view>
@@ -81,13 +74,11 @@
               </view>
               <view class="dish_action_area">
                 <view class="dish_active" v-if="!item.flavors || item.flavors.length === 0">
-                  <!-- 减菜 -->
                   <image v-if="item.dishNumber >= 1" src="../../static/btn_red.png" @click="redDishAction(item, '普通')"
                     class="dish_red"></image>
                   <text v-if="item.dishNumber > 0" class="dish_number">{{
                     item.dishNumber
                   }}</text>
-                  <!-- 加菜 -->
                   <image src="../../static/btn_add.png" class="dish_add" @click="addDishAction(item, '普通')"></image>
                 </view>
                 <view class="dish_active_btn" v-else>
@@ -105,8 +96,6 @@
         </view>
       </view>
       <view class="mask-box"></view>
-      <!-- 底部去结算 -->
-      <!-- 购物车里没有订单的状态 -->
       <view class="footer_order_buttom" v-if="orderListData().length === 0">
         <view class="order_number">
           <image src="../../static/btn_waiter_nor.png" class="order_number_icon" mode=""></image>
@@ -118,7 +107,6 @@
         <view class="order_but">{{ $t("home.checkout") }}</view>
       </view>
       <!-- end -->
-      <!-- 购物车里有订单结算 -->
       <view class="footer_order_buttom order_form" v-else>
         <view class="orderCar" @click="() => (openOrderCartList = !openOrderCartList)">
           <view class="order_number">
@@ -133,32 +121,24 @@
         <view class="order_but" @click="goOrder()">{{ $t("home.checkout") }}</view>
       </view>
       <!-- end -->
-      <!-- 选择多规格弹层 - start -->
       <view class="pop_mask" v-if="openMoreNormPop && moreNormDishdata">
         <popMask :moreNormDishdata="moreNormDishdata" :moreNormdata="moreNormdata" :flavorDataes="flavorDataes"
           @checkMoreNormPop="checkMoreNormPop" @addShop="addShop" @closeMoreNorm="closeMoreNorm"></popMask>
       </view>
-      <!-- 选择多规格 - end -->
-      <!-- 菜品详情弹层 - start -->
-      <!-- openDetailHandle 这个函数触发的菜品详情 -->
       <view class="pop_mask" v-show="openDetailPop" style="z-index: 9999">
         <dishDetail :dishDetailes="dishDetailes" :openDetailPop="openDetailPop" :dishMealData="dishMealData"
           @redDishAction="redDishAction" @addDishAction="addDishAction" @moreNormDataesHandle="moreNormDataesHandle"
           @dishClose="dishClose"></dishDetail>
       </view>
-      <!-- 菜品详情 - end -->
-      <!-- 购物车弹框 - start -->
       <view class="pop_mask" v-show="openOrderCartList" @click="openOrderCartList = !openOrderCartList">
         <popCart :openOrderCartLis="openOrderCartList" :orderAndUserInfo="orderAndUserInfo"
           @clearCardOrder="clearCardOrder" @addDishAction="addDishAction" @redDishAction="redDishAction"></popCart>
       </view>
-      <!-- 购物车弹框 - end -->
       <view class="pop_mask" v-show="loaddingSt">
         <view class="lodding">
           <image class="lodding_ico" src="../../static/lodding.gif" mode=""></image>
         </view>
       </view>
-      <!-- 电话弹层 -->
       <phone ref="phone" :phoneData="phoneData" @closePopup="closePopup"></phone>
       <!-- end -->
     </view>

@@ -1,6 +1,4 @@
-<!--选择多规格弹层-->
 <template>
-  <!-- 餐品详情 -->
   <view class="dish_detail_pop" v-if="dishDetailes.type == 1">
     <image
       mode="aspectFill"
@@ -58,7 +56,6 @@
     ></view>
   </view>
   <!-- end -->
-  <!-- 套餐详情 -->
   <view class="dish_detail_pop" v-else>
     <scroll-view class="dish_items" scroll-y="true" scroll-top="0rpx">
       <view
@@ -117,7 +114,6 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
     dishDetailes: {
       type: Object,
@@ -133,7 +129,6 @@ export default {
     },
   },
   methods: {
-    // 加入购物车
     addDishAction(obj, item) {
       console.log(obj, item);
       this.$emit("addDishAction", obj, item);
@@ -141,11 +136,9 @@ export default {
     redDishAction(obj, item) {
       this.$emit("redDishAction", obj, item);
     },
-    // 选择规格
     moreNormDataesHandle(obj) {
       this.$emit("moreNormDataesHandle", obj);
     },
-    // 关闭菜单详情
     dishClose() {
       this.$emit("dishClose");
     },

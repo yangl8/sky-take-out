@@ -51,7 +51,6 @@ $desc-font-color: #818693;
     color: $min-font-color;
     width: 100%;
     height: 160rpx;
-    // 注释掉背景色
     // background: linear-gradient(90deg, #E94E3C, #E9793C);
     .restaurant_info {
       position: absolute;
@@ -88,7 +87,6 @@ $desc-font-color: #818693;
     }
   }
 
-  // 新写逻辑
   ::v-deep .new_address {
     // width: 730rpx;
     // height:200rpx;
@@ -102,7 +100,6 @@ $desc-font-color: #818693;
     font-size: 24rpx;
     padding-top: 32rpx;
 
-    // 上部
     .top {
       margin: 0 20rpx 10rpx;
       flex: 1;
@@ -216,7 +213,6 @@ $desc-font-color: #818693;
     .infoTip {
       padding-right: 30rpx;
     }
-    // 下部
     .bottom {
       margin: 18rpx 20rpx 28rpx;
       // height: 94rpx;
@@ -633,7 +629,6 @@ $desc-font-color: #818693;
     padding: 20rpx 0;
   }
 }
-// 添加的备注
 .uni-textarea {
   position: relative;
   .beizhu_text {
@@ -751,7 +746,6 @@ $desc-font-color: #818693;
   background: transparent;
   color: transparent;
 }
-// 订单详情
 ::v-deep .orderInfoTip {
   text-align: center;
   padding: 30rpx 0 0;
@@ -877,7 +871,6 @@ $desc-font-color: #818693;
   left: 20rpx;
   right: 20rpx;
 }
-// 支付订单
 .orderPay {
   text-align: center;
   font-size: 26rpx;

@@ -56,9 +56,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
-/**
- * 订单提交配送规则测试
- */
 @ExtendWith(MockitoExtension.class)
 class OrderDeliveryRulesTest {
 

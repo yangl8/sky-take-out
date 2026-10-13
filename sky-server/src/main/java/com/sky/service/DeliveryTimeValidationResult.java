@@ -1,8 +1,5 @@
 package com.sky.service;
 
-/**
- * 配送时间校验结果
- */
 public enum DeliveryTimeValidationResult {
     VALID,
     INVALID_DELIVERY_STATUS,

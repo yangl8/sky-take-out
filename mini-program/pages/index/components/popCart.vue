@@ -1,4 +1,3 @@
-<!--购物车弹层-->
 <template>
   <view class="cart_pop" @click.stop="openOrderCartList = openOrderCartList">
     <view class="top_title">
@@ -66,7 +65,6 @@
 </template>
 <script>
 export default {
-  // 获取父级传的数据
   props: {
     orderAndUserInfo: {
       type: Array,
@@ -81,7 +79,6 @@ export default {
     clearCardOrder() {
       this.$emit("clearCardOrder");
     },
-    // 加入购物车
     addDishAction(obj, item) {
       this.$emit("addDishAction", obj, item);
     },
@@ -139,7 +136,6 @@ export default {
     background-color: #fff;
     padding-top: 40rpx;
     box-sizing: border-box;
-    // 扣除购物车标题栏，并为底部固定结算栏保留滚动空间
     height: calc(100% - 88rpx);
     flex: 1;
     position: relative;

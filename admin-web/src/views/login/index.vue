@@ -11,7 +11,6 @@
               style="width: 149px; height: 38px"
               alt=""
             />
-            <!-- <span class="title-label">苍穹外卖</span> -->
           </div>
           <el-form-item prop="username">
             <el-input
@@ -99,7 +98,6 @@ export default class extends Vue {
     this.$nextTick(() => (this.$refs.loginForm as ElForm).clearValidate())
   }
 
-  // 登录
   private handleLogin() {
     ;(this.$refs.loginForm as ElForm).validate(async (valid: boolean) => {
       if (valid) {

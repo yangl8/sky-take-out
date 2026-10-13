@@ -1,13 +1,10 @@
-<!--我的头部-->
 <template>
   <view class="box address_order">
-    <!-- 地址管理 -->
     <view class="address" @click="goAddress">
       <image class="location" src="../../../static/address.png"></image>
       <text class="address_word">{{ $t("my.addressManagement") }}</text>
       <image class="to_right" src="../../../static/toRight.png" mode=""></image>
     </view>
-    <!-- 历史订单 -->
     <view class="order" @click="goOrder">
       <image class="location" src="../../../static/order.png"></image>
       <text class="order_word">{{ $t("my.orderHistory") }}</text>
@@ -18,11 +15,9 @@
 <script>
 export default {
   methods: {
-    //去地址列表页
     goAddress() {
       this.$emit("goAddress");
     },
-    //去历史订单页
     goOrder() {
       this.$emit("goOrder");
     },
@@ -30,13 +25,11 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-    // 地址及订单
     .address_order {
       width: 710rpx;
       height: 200rpx;
       margin: 20rpx auto;
       margin-top: 0;
-      // 地址
       .address {
         line-height: 100rpx;
         position: relative;
@@ -70,7 +63,6 @@ export default {
           transform: translateY(-50%);
         }
       }
-      // 订单
       .order {
         line-height: 100rpx;
         position: relative;
@@ -108,7 +100,6 @@ export default {
       }
     }
 
-    // 最近订单
     .recent {
       height: 60rpx;
       padding: 0 16rpx 0 22rpx;

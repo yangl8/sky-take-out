@@ -18,7 +18,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
   name: 'Empty'
 })
 export default class extends Vue {
-  @Prop({ default: false }) isSearch: boolean //用来区分是搜索还是默认无数据
+  @Prop({ default: false }) isSearch: boolean
 }
 </script>
 <style scoped lang="scss">
@@ -36,5 +36,4 @@ export default class extends Vue {
     color: #818693;
   }
 }
-/* @import url(); 引入css类 */
 </style>

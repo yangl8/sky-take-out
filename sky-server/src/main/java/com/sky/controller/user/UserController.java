@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController 
 @Slf4j 
 @RequestMapping("/user/user")
-@Api(tags = "C端用户相关接口")
+@Api(tags = "Customer-facing user endpoints")
 public class UserController {
 
     @Autowired 
@@ -33,22 +33,15 @@ public class UserController {
     @Autowired 
     private JwtProperties jwtProperties;
 
-    /**
-     * 微信登录
-     * @param userLoginDTO
-     * @return
-     */
     @PostMapping("/login")
-    @ApiOperation("微信登录")
+    @ApiOperation("WeChat login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO){
-        log.info("微信用户登录: {}", userLoginDTO.getCode());
+        log.info("WeChat user login with code: {}", userLoginDTO.getCode());
 
-        //微信登录
         User user = userSevice.wxLogin(userLoginDTO);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.USER_ID, user.getId());
-        //为微信用户生成JWT令牌
         String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(),jwtProperties.getUserTtl(), claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
             .id(user.getId())

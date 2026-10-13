@@ -146,7 +146,6 @@ export default class extends Vue {
           this.counts = res.data.data.total
         }
         // if (!res.data.data.records.length && type === 'search') {
-        //   this.$message.error('未搜索到相关员工，请核对员工姓名是否正确')
         // }
       })
       .catch((err) => {
@@ -154,7 +153,6 @@ export default class extends Vue {
       })
   }
 
-  // 添加
   private addEmployeeHandle(st: string, username: string) {
     if (st === 'add') {
       this.$router.push({ path: '/employee/add' })
@@ -166,7 +164,6 @@ export default class extends Vue {
     }
   }
 
-  //状态修改
   private statusHandle(row: any) {
     if (row.username === 'admin') {
       return

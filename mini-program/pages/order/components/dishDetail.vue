@@ -1,4 +1,3 @@
-<!--菜品信息-->
 <template>
   <view class="box order_list">
     <view class="word_text">
@@ -49,29 +48,23 @@
 <script>
 import { mapState } from "vuex";
 export default {
-  // 获取父级传的数据
   props: {
-    // 菜品数据
     orderDataes: {
       type: Array,
       default: () => [],
     },
-    // 是否显示更多收起
     showDisplay: {
       type: Boolean,
       default: false,
     },
-    // 菜品数据
     orderListDataes: {
       type: Array,
       default: () => [],
     },
-    // 打包费
     orderDishNumber: {
       type: Number,
       default: 0,
     },
-    // 合计总钱数
     orderDishPrice: {
       type: Number,
       default: 0,

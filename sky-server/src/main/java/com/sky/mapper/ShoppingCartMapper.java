@@ -16,48 +16,21 @@ public interface ShoppingCartMapper {
     
     List<ShoppingCart> list(ShoppingCart shoppingCart);
 
-    /**
-     * 根据购物车记录id和用户id查询单条购物车数据
-     * @param id 购物车记录id
-     * @param userId 用户id
-     * @return 购物车数据
-     */
     @Select("select * from shopping_cart where id = #{id} and user_id = #{userId}")
     ShoppingCart getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
-    /**
-     * 根据商品id扩展数量
-     * @param shoppingCart
-     */
     @Update("update shopping_cart set number = #{number} where id = #{id}")
     void updateNumberById(ShoppingCart shoppingCart);
 
-    /**
-     * 插入购物车数据
-     * @param shoppingCart
-     */
     @Insert("insert into shopping_cart " + "(name, user_id, dish_id, setmeal_id, dish_flavor, number, amount, image, create_time) " +
         "values " + "(#{name}, #{userId}, #{dishId}, #{setmealId}, #{dishFlavor}, #{number}, #{amount}, #{image}, #{createTime})")
     void insert(ShoppingCart shoppingCart);
 
-    /**
-     * 根据用户id删除购物车数据
-     * @param userId
-     */
     @Delete("delete from shopping_cart where user_id = #{userId}")
     void deleteByUserId(Long userId);
 
-    /**
-     * 根据id删除购物车商品
-     * @param id
-     */
     @Delete("delete from shopping_cart where id = #{id}")
     void deleteById(Long id);
 
-    /**
-     * 批量插入购物车数据
-     *
-     * @param shoppingCartList
-     */
     void insertBatch(List<ShoppingCart> shoppingCartList);
 }

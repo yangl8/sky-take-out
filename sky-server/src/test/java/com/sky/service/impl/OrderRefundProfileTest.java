@@ -47,11 +47,6 @@ class OrderRefundProfileTest {
         BaseContext.removeCurrentId();
     }
 
-    /**
-     * 验证已付款待接单订单取消成功后生产 profile 使用真实退款客户端
-     *
-     * @throws Exception 订单取消或退款失败
-     */
     @Test
     void devAndProdProfilesMustUseRealRefundPath() throws Exception {
         BaseContext.setCurrentId(42L);
@@ -67,11 +62,6 @@ class OrderRefundProfileTest {
                 any(BigDecimal.class), any(BigDecimal.class));
     }
 
-    /**
-     * 验证已付款待接单订单取消成功后仅 dev profile 保持模拟退款
-     *
-     * @throws Exception 订单取消或退款失败
-     */
     @Test
     void devOnlyProfileMustKeepMockRefundForLocalTesting() throws Exception {
         BaseContext.setCurrentId(42L);

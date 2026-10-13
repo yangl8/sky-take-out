@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import lombok.Data;
 
 /**
- * 集中维护服务端每日营业时段和配送准备时间
+ * Centralizes daily business hours and delivery preparation time
  */
 @Data
 @Component
@@ -27,7 +27,7 @@ public class DeliveryTimeProperties {
     private int minimumPreparationMinutes = 30;
 
     /**
-     * 校验营业时间配置，避免无效时段进入订单校验流程
+     * Validates business-hour settings before they are used to check orders
      */
     @PostConstruct
     public void validate() {
@@ -47,9 +47,9 @@ public class DeliveryTimeProperties {
     }
 
     /**
-     * 获取配置的营业时区
+     * Returns the configured business time zone
      *
-     * @return 解析后的时区
+     * @return Parsed time zone
      */
     public ZoneId getZoneId() {
         return ZoneId.of(timeZone);

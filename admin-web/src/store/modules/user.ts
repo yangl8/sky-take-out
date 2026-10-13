@@ -78,7 +78,6 @@ class User extends VuexModule implements IUserState {
       // const dataParams = {
       //   // status: 200,
       //   token: data.data.token,
-      //   // msg: '登录成功',
       //   // ...data.data
       //   ...data
       // }
