@@ -1,83 +1,138 @@
-# Sky Take Out
+# Sky Takeout — Plateforme de commande et de livraison de repas
 
-## Configuration locale
+**Auteur : Liu Yang**
 
-1. Copiez `.env.example` vers `.env`.
-2. Renseignez dans `.env` les paramètres locaux de la base de données, de JWT et d’OSS.
-3. Dans VS Code, lancez la configuration de démarrage `SkyApplication`.
+Sky Takeout est une plateforme métier de commande et de livraison composée d’une API REST Spring Boot, d’un back-office web et d’une interface mobile de commande. Le backend Java porte les règles de commande, de paiement, de livraison et de gestion du catalogue, avec MySQL pour les données et Redis pour le cache et l’état d’ouverture de la boutique. Le scénario correspond à la livraison de cuisine chinoise sur le marché chinois ; les données de démonstration et certains écrans contiennent donc des plats, noms et adresses en chinois.
 
-Le fichier `.env` contient des identifiants locaux et est volontairement exclu de Git. La configuration de démarrage VS Code `SkyApplication` utilise explicitement le profil `dev` et charge ce fichier.
+## Réalisations backend
 
-### Clés JWT
+### Transitions de commande concurrentes
 
-L’application nécessite deux clés de signature HS256 indépendantes dans le fichier local `.env` : `JWT_ADMIN_SECRET_KEY` et `JWT_USER_SECRET_KEY`. Générez chaque valeur une seule fois sur macOS avec :
+Les changements d’état reposent sur des mises à jour SQL conditionnelles qui vérifient les statuts attendus de la commande et du paiement. Elles sont exécutées dans les transactions métier et contrôlent le nombre de lignes modifiées afin qu’une confirmation de paiement tardive ne remplace pas une annulation déjà validée.
 
-```sh
-openssl rand -base64 32 | tr -d '\n'
-```
+Le test d’intégration charge le véritable `OrderMapper.xml` contre MySQL et met en concurrence la confirmation du paiement et l’annulation pour expiration. Sur 100 exécutions, une seule transition est validée par concurrence et aucune incohérence entre l’état de commande et celui du paiement n’est observée. Les deux ordres d’exécution sont également vérifiés de manière déterministe. Le test dédié est [`OrderStatusRaceMySqlIntegrationTest.java`](sky-server/src/test/java/com/sky/mapper/OrderStatusRaceMySqlIntegrationTest.java).
 
-Exécutez la commande séparément pour chaque variable, puis placez les deux résultats dans les entrées correspondantes de `.env`. La commande génère 32 octets aléatoires et les encode en Base64. Conservez `.env` en local, ne copiez aucune des deux valeurs dans des fichiers suivis par Git ou dans des journaux, et ne régénérez pas les clés à chaque démarrage de l’application : tout changement invalide les jetons signés avec la valeur précédente. Le démarrage échoue avec une erreur de configuration si une clé est absente, mal formée, trop courte ou identique à l’autre.
+### Pagination des commandes sans requête N+1
 
-### Paiement simulé
+La page utilisateur conserve le comptage et le filtrage PageHelper, puis récupère en une requête groupée les détails des commandes de la page courante.
 
-Le point d’accès de paiement simulé est activé uniquement par le profil local `dev`. La configuration de base le désactive, tout comme le profil `prod`, même si `dev` est activé accidentellement en même temps. Utilisez la configuration de démarrage VS Code fournie pour tester localement le parcours de commande. Les déploiements en production doivent activer explicitement `prod` ; l’absence de configuration réelle pour le paiement WeChat n’active pas le paiement simulé et n’entraîne aucun repli vers celui-ci.
+| Commandes par page | Requêtes SQL avant → après | Médiane avant → après |
+| :--- | :--- | :--- |
+| 10 | 12 → 3 (−75,0 %) | 10,398 → 9,072 ms (−12,8 %) |
+| 20 | 22 → 3 (−86,4 %) | 12,666 → 9,123 ms (−28,0 %) |
+| 50 | 52 → 3 (−94,2 %) | 18,663 → 9,611 ms (−48,5 %) |
 
-## Vérification de la concurrence des changements de statut des commandes
+Mesures locales sur MySQL 9.2.0 avec 10 000 commandes et 30 000 lignes de détail. Les temps couvrent le parcours Mapper/JDBC, après 30 préchauffages et sur 100 échantillons par taille de page. Le protocole et les résultats détaillés figurent dans le [rapport de performance](docs/performance/order-pagination.md).
 
-Les tests Mockito vérifient les décisions du service et les arguments des mises à jour conditionnelles sans se connecter à une base de données. Le test d’intégration MySQL distinct charge le véritable `OrderMapper.xml` du projet et met en concurrence la confirmation du paiement et l’annulation pour expiration, dans des transactions et connexions indépendantes. Il vérifie qu’une mise à jour l’emporte, que l’autre ne modifie aucune ligne, que les états finaux de la commande et du paiement concordent, qu’une commande dont l’horodatage correspond exactement à la limite d’expiration n’est pas annulée et que des transitions répétées ne remplacent pas un état terminal. Il s’agit d’un test de correction, pas d’un test de charge ou de performance.
+### Cache de menu et invalidation après commit
 
-Le test a été vérifié avec MySQL 9.2.0 en local. Chaque tour de concurrence simultanée insère une ligne au nom unique dans `sky_take_out_test.orders`, puis la supprime ; la base de données de l’application `sky_take_out` n’est pas utilisée. Le test exécute également deux vérifications avec un ordre coordonné afin de couvrir de manière déterministe les deux scénarios gagnants, sans que les 100 assertions de concurrence simultanée dépendent de l’équité de l’ordonnanceur.
+Redis met en cache les plats et formules par catégorie. En cas de cache absent ou indisponible, les contrôleurs utilisateur chargent les données depuis MySQL ; un échec d’écriture dans Redis ne bloque pas la réponse. Après la validation d’une transaction qui modifie le catalogue, les services invalident les clés concernées. Une durée de vie avec variation aléatoire et des tentatives limitées d’invalidation réduisent les expirations simultanées et le risque de données périmées.
 
-### Résultats des tests
+## Aperçu
 
-| Vérification | Résultat |
-| --- | ---: |
-| Version de MySQL | 9.2.0 |
-| Concurrences simultanées formelles | 100/100 réussies |
-| Victoires du paiement / de l’annulation pour expiration | 72 / 28 |
-| États finaux commande/paiement incohérents | 0 |
-| Scénarios déterministes paiement d’abord et expiration d’abord | Les deux réussis |
+### Back-office
 
-Pour effectuer la vérification préalable en 10 tours, utilisez la même commande ci-dessous en définissant `SKY_ORDER_RACE_ROUNDS=10`. Le nombre de victoires varie selon l’ordonnancement des threads ; chaque tour doit néanmoins comporter exactement une mise à jour conditionnelle réussie. Les deux vérifications avec un ordre coordonné garantissent les deux états finaux possibles sans faire dépendre la correction de l’équité de l’ordonnanceur. Il s’agit de vérifications de correction, pas de tests de charge ou de performance.
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <strong>Tableau de bord</strong><br>
+      <a href="docs/screenshots/admin-dashboard-fr.png"><img src="docs/screenshots/admin-dashboard-fr.png" width="100%" alt="Tableau de bord du back-office"></a><br>
+      <a href="docs/screenshots/admin-dashboard-fr.png">Vue d’ensemble de l’activité du jour et disponibilité du catalogue</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <strong>Statistiques</strong><br>
+      <a href="docs/screenshots/admin-statistiques-fr.png"><img src="docs/screenshots/admin-statistiques-fr.png" width="100%" alt="Statistiques du back-office"></a><br>
+      <a href="docs/screenshots/admin-statistiques-fr.png">Évolution du chiffre d’affaires et des commandes, avec classement des plats</a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <strong>Gestion du catalogue</strong><br>
+      <a href="docs/screenshots/admin-catalogue-fr.png"><img src="docs/screenshots/admin-catalogue-fr.png" width="100%" alt="Gestion du catalogue"></a><br>
+      <a href="docs/screenshots/admin-catalogue-fr.png">Administration des plats, de leurs prix et de leur disponibilité</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <strong>Gestion des commandes</strong><br>
+      <a href="docs/screenshots/admin-commandes-fr.png"><img src="docs/screenshots/admin-commandes-fr.png" width="100%" alt="Gestion des commandes"></a><br>
+      <a href="docs/screenshots/admin-commandes-fr.png">Liste des commandes, montants et statuts</a>
+    </td>
+  </tr>
+</table>
 
-Créez une seule fois la base et la table de test InnoDB isolées à l’aide du script fourni :
+### Interface mobile de commande
 
-```sh
-mysql --protocol=TCP -h localhost -P 3306 -u root -p < sky-server/src/test/resources/mysql/order-status-race-schema.sql
-```
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <strong>Menu</strong><br>
+      <a href="docs/screenshots/mobile-menu-fr.png"><img src="docs/screenshots/mobile-menu-fr.png" height="320" alt="Menu de l’interface mobile"></a><br>
+      <a href="docs/screenshots/mobile-menu-fr.png">Consultation des catégories et des plats disponibles</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <strong>Panier</strong><br>
+      <a href="docs/screenshots/mobile-panier-fr.png"><img src="docs/screenshots/mobile-panier-fr.png" height="320" alt="Panier de l’interface mobile"></a><br>
+      <a href="docs/screenshots/mobile-panier-fr.png">Articles sélectionnés, quantités et montant du panier</a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <strong>Validation de commande</strong><br>
+      <a href="docs/screenshots/mobile-validation-fr.png"><img src="docs/screenshots/mobile-validation-fr.png" height="320" alt="Validation d’une commande"></a><br>
+      <a href="docs/screenshots/mobile-validation-fr.png">Vérification de l’adresse, des modalités de livraison et du récapitulatif</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <strong>Détail de commande</strong><br>
+      <a href="docs/screenshots/mobile-order-detail-fr.png"><img src="docs/screenshots/mobile-order-detail-fr.png" height="320" alt="Détail d’une commande validée"></a><br>
+      <a href="docs/screenshots/mobile-order-detail-fr.png">Suivi du statut et consultation du récapitulatif après validation</a>
+    </td>
+  </tr>
+</table>
 
-Chargez les valeurs locales existantes de `.env` dans le shell courant, puis définissez les variables de connexion au test. Conservez le mot de passe dans une variable d’environnement locale et ne l’inscrivez pas dans un fichier suivi par Git :
+## Fonctionnalités
 
-```sh
-set -a
-source ./.env
-set +a
-export SKY_ORDER_RACE_DB_URL='jdbc:mysql://localhost:3306/sky_take_out_test?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true'
-export SKY_ORDER_RACE_DB_USER='root'
-export SKY_ORDER_RACE_DB_PASSWORD="$DB_PASSWORD"
-```
+### Back-office
 
-Exécutez séparément la vérification préalable et le test formel :
+**Gestion opérationnelle** — Création, modification, recherche et activation ou désactivation des comptes employés ; gestion des catégories, plats, saveurs et formules ; suivi et traitement des commandes ; contrôle de l’ouverture de la boutique et notifications WebSocket après confirmation du paiement d’une commande.
 
-```sh
-SKY_ORDER_RACE_ROUNDS=10 mvn -pl sky-server -am -Dtest=OrderStatusRaceMySqlIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
-SKY_ORDER_RACE_ROUNDS=100 mvn -pl sky-server -am -Dtest=OrderStatusRaceMySqlIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
-```
+**Tableau de bord** — Chiffre d’affaires des commandes terminées, attribué à leur date de création, nombre de commandes terminées, taux de réalisation, panier moyen, nouveaux clients, compteurs des commandes à confirmer, en attente de livraison, terminées et annulées, ainsi que disponibilité des plats et formules.
 
-Le test d’intégration est ignoré si ses variables de connexion dédiées sont absentes et rejette toute URL JDBC qui ne cible pas `sky_take_out_test`. Il nécessite une table InnoDB `orders` créée par le script de schéma du test. L’exécution MySQL valide l’atomicité des mises à jour conditionnelles du mapper pour les scénarios de concurrence testés ; elle ne remplace pas des tests plus larges du service, du fournisseur de paiement ou de la charge en production.
+**Statistiques et rapports** — Tendances du chiffre d’affaires, des commandes et des nouveaux clients, classement des dix plats les plus vendus et export des données au format Excel.
 
-## Optimisation N+1 de la pagination des commandes
+### Interface mobile de commande
 
-La pagination utilisateur `GET /user/order/page` chargeait auparavant les détails avec une requête par commande. Le service conserve PageHelper pour le COUNT, les filtres et l’ordre de la page, puis charge en une seule requête les détails des ID de la page courante et les regroupe par commande.
+Consultation des catégories, plats et formules, choix des saveurs, panier, gestion des adresses, commandes immédiates ou programmées, suivi et historique. L’interface propose des libellés en français, anglais et chinois ; les noms de plats, catégories, formules et adresses restent des données métier.
 
-Mesure locale sur MySQL 9.2.0, avec 10 000 commandes, 30 000 détails, 30 exécutions de préchauffage et 100 mesures intercalées par taille de page :
+### Règles métier
 
-| Commandes par page | SQL avant → après | Médiane avant → après | P95 avant → après |
-| ---: | ---: | ---: | ---: |
-| 10 | 12 → 3 (−75,0 %) | 10,398 → 9,072 ms | 11,138 → 9,701 ms |
-| 20 | 22 → 3 (−86,4 %) | 12,666 → 9,123 ms | 13,713 → 9,880 ms |
-| 50 | 52 → 3 (−94,2 %) | 18,663 → 9,611 ms | 20,251 → 10,898 ms |
+Transitions d’état des commandes contrôlées en base, vérification de la propriété des commandes et des adresses, clés JWT distinctes pour les espaces administrateur et utilisateur, calcul du montant côté serveur et validation des créneaux et de la distance de livraison.
 
-Les mesures avant et après optimisation ont été réalisées lors de sessions distinctes. Les différences de latence observées peuvent donc également être influencées par les variations de charge du système, de cache et d’environnement d’exécution. La réduction du nombre de requêtes SQL est vérifiée directement ; les gains de latence présentés correspondent aux résultats observés dans cet environnement de test local.
+## Architecture
 
-Ces latences mesurent le parcours Mapper local, pas le temps de réponse HTTP complet. Le protocole, les variations et les limites de la mesure figurent dans la [documentation de performance de la pagination](docs/performance/order-pagination.md), avec les échantillons et plans complets avant et après optimisation.
+Le backend est un **monolithe modulaire organisé en couches** : les contrôleurs REST exposent les opérations, les services appliquent les règles métier et les transactions, puis les mappers MyBatis accèdent à MySQL.
+
+[![Architecture du système Sky Takeout](docs/architecture/sky-takeout-architecture.svg)](docs/architecture/sky-takeout-architecture.svg)
+
+| Module | Responsabilité |
+| --- | --- |
+| `sky-server` | API REST Spring Boot, services et intégrations backend |
+| `sky-pojo` | Entités, DTO et VO |
+| `sky-common` | Configuration partagée, constantes, propriétés, exceptions et utilitaires |
+| `admin-web` | Back-office Vue 2 et TypeScript |
+| `mini-program` | Interface de commande uni-app pour WeChat |
+
+La stack comprend Java, Spring Boot 2.7.3, MyBatis, MySQL, Redis, JWT et WebSocket ; le back-office utilise Vue.js et TypeScript, et l’interface client uni-app.
+
+## Installation locale
+
+Le guide [`docs/installation.md`](docs/installation.md) détaille l’initialisation MySQL, la configuration locale, le lancement de Spring Boot et Vue, ainsi que la compilation optionnelle du mini-programme.
+
+## Vérifications
+
+Le dépôt comprend des tests unitaires et des tests d’intégration MySQL ciblés. Les mesures de pagination et leur protocole sont décrits dans le [rapport de performance](docs/performance/order-pagination.md).
+
+## Notes sur l’environnement de démonstration
+
+- Le profil `dev` simule le paiement ; il ne réalise pas de transaction réelle.
+- La connexion complète au mini-programme nécessite un AppID et un AppSecret WeChat valides.
+- La validation de livraison par géocodage et itinéraire nécessite une clé Web Service AMap (`AMAP_KEY`).
+- Les images des plats utilisent des URL Cloudinary externes ; leur affichage dépend de leur disponibilité.
