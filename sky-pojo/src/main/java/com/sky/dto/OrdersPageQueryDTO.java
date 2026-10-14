@@ -19,6 +19,8 @@ public class OrdersPageQueryDTO implements Serializable {
 
     private Integer status;
 
+    private Integer payStatus;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime beginTime;
 

@@ -1,0 +1,161 @@
+<template>
+  <view class="success_content">
+    <view class="success_info">
+      <image
+        class="success_icon"
+        src="../../static/success.png"
+        mode=""
+      ></image>
+      <view class="success_title">{{ $t("payment.successful") }}</view>
+      <view class="word-box">
+        <text class="word_bottom"
+          ><text class="word_date">{{ $t(presentation.arrivalKey, { time: arrivalTime }) }}</text></text
+        >
+      </view>
+      <view class="success_desc">{{ $t(presentation.messageKey) }}</view>
+      <view class="btns">
+        <view class="go_dish defaultBtn" @click="goIndex()">{{ $t("success.home") }}</view>
+        <view class="go_dish" @click="goOrder">{{ $t("success.order") }}</view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import { mapState } from "vuex";
+import { getOrderDetail } from "@/pages/api/api.js";
+import { formatDeliveryDateTime } from "@/utils/scheduledDeliveryTime.js";
+import { getPaymentSuccessPresentation } from "@/utils/paymentSuccessPresentation.js";
+export default {
+  data() {
+    return {
+      arrivalTime: "",
+      orderId: null,
+      deliveryStatus: null,
+    };
+  },
+  computed: {
+    presentation() {
+      return getPaymentSuccessPresentation(this.deliveryStatus);
+    },
+    tableInfo: function () {
+      return this.shopInfo();
+    },
+  },
+  async onLoad(options) {
+    this.orderId = options.orderId;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      try {
+        const result = await getOrderDetail(this.orderId);
+        if (result && result.code === 1 && result.data && Number(result.data.payStatus) === 1) {
+          this.arrivalTime = formatDeliveryDateTime(result.data.estimatedDeliveryTime);
+          this.deliveryStatus = result.data.deliveryStatus;
+          return;
+        }
+      } catch (error) {
+        // Payment has succeeded; retry briefly while the server finalizes the payment record
+      }
+      if (attempt < 9) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  },
+  onShow() {
+    uni.setNavigationBarTitle({ title: this.$t("payment.successful") });
+  },
+  methods: {
+    ...mapState(["shopInfo"]),
+    goIndex() {
+      uni.reLaunch({
+        url: "/pages/index/index",
+      });
+    },
+    goOrder() {
+      uni.redirectTo({
+        url: "/pages/details/index?orderId=" + this.orderId + "&fromSuccess=1&sex=" + this.$store.state.gender,
+      });
+    },
+  },
+};
+</script>
+<style src="./../common/Navbar/navbar.scss" lang="scss" scoped></style>
+<style lang="scss" scoped>
+.success_content {
+  padding-top: 260rpx;
+  .success_info {
+    text-align: center;
+    .success_icon {
+      width: 144rpx;
+      height: 138rpx;
+      text-align: center;
+    }
+    .success_title {
+      font-size: 40rpx;
+      font-family: PingFangSC, PingFangSC-Medium;
+      font-weight: 500;
+      color: #333333;
+      margin-top: 16rpx;
+      height: 56rpx;
+      line-height: 56rpx;
+    }
+    .success_desc {
+      font-size: 32rpx;
+      margin-top: 24rpx;
+      font-family: PingFangSC, PingFangSC-Regular;
+      font-weight: 400;
+      text-align: center;
+      color: #666666;
+      line-height: 1.4;
+      padding: 0 36rpx;
+      box-sizing: border-box;
+    }
+    .word-box {
+      margin-top: 38rpx;
+      min-height: 44rpx;
+      line-height: 1.4;
+      padding: 0 36rpx;
+      box-sizing: border-box;
+    }
+    .word_bottom {
+      display: block;
+      font-family: PingFangSC, PingFangSC-Regular;
+      font-weight: 400;
+      text-align: center;
+      font-size: 32rpx;
+      color: #666666;
+      .word_date {
+        color: #ffc200;
+        overflow-wrap: break-word;
+      }
+    }
+
+    .btns {
+      margin-top: 32rpx;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 24rpx;
+      display: flex;
+      justify-content: center;
+      gap: 24rpx;
+      .go_dish {
+        flex: 1 1 0;
+        position: relative;
+        font-size: 30rpx;
+        // margin: 0 auto;
+        min-width: 0;
+        width: auto;
+        padding: 0 16rpx;
+        box-sizing: border-box;
+        white-space: nowrap;
+        font-size: 28rpx;
+        height: 72rpx;
+        line-height: 72rpx;
+        margin-top: 0;
+        background: #ffc200;
+        border-radius: 8rpx;
+      }
+      .defaultBtn {
+        border: 1px solid #e5e4e4;
+        background: none;
+      }
+    }
+  }
+}
+</style>

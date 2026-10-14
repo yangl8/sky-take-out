@@ -1,0 +1,559 @@
+<template>
+  <div :key="vueRest"
+       class="addBrand-container">
+    <div :key="restKey"
+         class="container">
+      <el-form ref="ruleForm"
+               :model="ruleForm"
+               :rules="rules"
+               :inline="true"
+               label-width="180px"
+               class="demo-ruleForm">
+        <div>
+          <el-form-item :label="String($t('catalog.dishName'))"
+                        prop="name">
+            <el-input v-model="ruleForm.name"
+                      :placeholder="String($t('catalog.dishRequired'))"
+                      maxlength="20" />
+            <p v-if="menuName(ruleForm.name) !== ruleForm.name" class="translation-preview">{{ $t('catalog.translationPreview') }}: {{ menuName(ruleForm.name) }}</p>
+          </el-form-item>
+          <el-form-item :label="String($t('catalog.dishCategory'))"
+                        prop="categoryId">
+            <el-select v-model="ruleForm.categoryId"
+                       :placeholder="String($t('catalog.chooseDishCategory'))">
+              <el-option v-for="(item, index) in dishList"
+                         :key="index"
+                         :label="categoryLabel(item.name)"
+                         :value="item.id" />
+            </el-select>
+          </el-form-item>
+        </div>
+        <div>
+          <el-form-item :label="String($t('catalog.dishPrice'))"
+                        prop="price">
+            <el-input v-model="ruleForm.price"
+                      :placeholder="String($t('catalog.pricePlaceholder'))" />
+          </el-form-item>
+        </div>
+        <el-form-item :label="String($t('catalog.flavors'))">
+          <el-form-item>
+            <div class="flavorBox">
+              <span v-if="dishFlavors.length == 0"
+                    class="addBut"
+                    @click="addFlavore">+ {{ $t('catalog.addFlavor') }}</span>
+              <div v-if="dishFlavors.length != 0"
+                   class="flavor">
+                <div class="title">
+                  <span>{{ $t('catalog.flavorName') }}</span>
+                </div>
+                <div class="cont">
+                  <div v-for="(item, index) in dishFlavors"
+                       :key="index"
+                       class="items">
+                    <div class="itTit">
+                      <!-- :dish-flavors-data="filterDishFlavorsData()" -->
+                      <SelectInput :dish-flavors-data="leftDishFlavors"
+                                   :index="index"
+                                   :value="item.name"
+                                   @select="selectHandle" />
+                    </div>
+                    <div class="labItems"
+                         style="display: flex">
+                      <span v-for="(it, ind) in item.value"
+                            :key="ind">{{ flavorLabel(it) }}
+                        <i @click="delFlavorLabel(index, ind)">X</i></span>
+                      <div class="inputBox"
+                           :style="inputStyle" />
+                    </div>
+                    <span class="delFlavor delBut non"
+                          @click="delFlavor(item.name)">{{ $t('catalog.delete') }}</span>
+                  </div>
+                </div>
+                <div v-if="
+                       !!this.leftDishFlavors.length &&
+                         this.dishFlavors.length < this.dishFlavorsData.length
+                     "
+                     class="addBut"
+                     @click="addFlavore">{{ $t('catalog.addFlavor') }}</div>
+              </div>
+            </div>
+          </el-form-item>
+        </el-form-item>
+        <div>
+          <el-form-item :label="String($t('catalog.dishImage'))"
+                        prop="image">
+            <image-upload :prop-image-url="imageUrl"
+                          @imageChange="imageChange">{{ $t('catalog.imageSize') }}<br>{{ $t('catalog.imageTypes') }}<br>{{ $t('catalog.imageDimensions') }}</image-upload>
+          </el-form-item>
+        </div>
+        <div class="address">
+          <el-form-item :label="String($t('catalog.dishDescription'))"
+                        prop="region">
+            <el-input v-model="ruleForm.description"
+                      type="textarea"
+                      :rows="3"
+                      maxlength="200"
+                      :placeholder="String($t('catalog.descriptionHint'))" />
+            <p v-if="menuDescription(ruleForm.description) !== ruleForm.description" class="translation-preview">{{ $t('catalog.translationPreview') }}: {{ menuDescription(ruleForm.description) }}</p>
+          </el-form-item>
+        </div>
+        <div class="subBox address">
+          <el-button @click="() => $router.back()">{{ $t('catalog.cancel') }}</el-button>
+          <el-button type="primary"
+                     :class="{ continue: actionType === 'add' }"
+                     @click="submitForm('ruleForm')">{{ $t('catalog.save') }}</el-button>
+          <el-button v-if="actionType == 'add'"
+                     type="primary"
+                     @click="submitForm('ruleForm', 'goAnd')">{{ $t('catalog.saveContinue') }}</el-button>
+        </div>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import { menuName, menuDescription } from '@/i18n/menu'
+import { categoryLabel } from '@/i18n/categories'
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import { flavorLabel } from '@/i18n/flavors'
+import HeadLable from '@/components/HeadLable/index.vue'
+import SelectInput from './components/SelectInput.vue'
+import ImageUpload from '@/components/ImgUpload/index.vue'
+import {
+  queryDishById,
+  addDish,
+  editDish,
+  getCategoryList,
+  commonDownload
+} from '@/api/dish'
+import { baseUrl } from '@/config.json'
+import { getToken } from '@/utils/cookies'
+@Component({
+  name: 'addShop',
+  components: {
+    HeadLable,
+    SelectInput,
+    ImageUpload
+  }
+})
+export default class extends Vue {
+  menuName = menuName
+  menuDescription = menuDescription
+  categoryLabel = categoryLabel
+  flavorLabel = flavorLabel
+  @Watch('$i18n.locale')
+  onLanguageChange() {
+    this.$nextTick(() => {
+      const form = this.$refs.ruleForm as any
+      if (form) form.clearValidate()
+    })
+  }
+
+  private restKey: number = 0
+  private textarea: string = ''
+  private value: string = ''
+  private imageUrl: string = ''
+  private actionType: string = ''
+  private dishList: string[] = []
+  private dishFlavorsData: any[] = []
+  private dishFlavors: any[] = []
+  private leftDishFlavors: any[] = []
+  private vueRest = '1'
+  private index = 0
+  private inputStyle = { flex: 1 }
+  private headers = {
+    token: getToken()
+  }
+  private ruleForm = {
+    name: '',
+    id: '',
+    price: '',
+    code: '',
+    image: '',
+    description: '',
+    dishFlavors: [],
+    status: true,
+    categoryId: ''
+  }
+
+  get rules() {
+    return {
+      name: [
+        {
+          required: true,
+          validator: (rule: any, value: string, callback: Function) => {
+            if (!value || !value.trim()) {
+              callback(new Error(String(this.$t('catalog.dishRequired'))))
+            } else {
+              const reg = /^[\p{L}\p{M}\p{N} '\u2019-]{2,20}$/u
+              if (!reg.test(value)) {
+                callback(new Error(String(this.$t('catalog.dishLength'))))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }
+      ],
+      categoryId: [
+        { required: true, message: String(this.$t('catalog.chooseDishCategory')), trigger: 'change' }
+      ],
+      image: {
+        required: true,
+        message: String(this.$t('catalog.imageRequired'))
+      },
+      price: [
+        {
+          required: true,
+          validator: (rules: any, value: string, callback: Function) => {
+            const reg = /^([1-9]\d{0,5}|0)(\.\d{1,2})?$/
+            if (!reg.test(value) || Number(value) <= 0) {
+              callback(
+                new Error(
+                  String(this.$t('catalog.priceInvalid'))
+                )
+              )
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ],
+      code: [{ required: true, message: String(this.$t('catalog.codeRequired')), trigger: 'blur' }]
+    }
+  }
+
+  created() {
+    this.getDishList()
+    this.getFlavorListHand()
+    this.actionType = this.$route.query.id ? 'edit' : 'add'
+    if (this.$route.query.id) {
+      this.init()
+    }
+  }
+
+  mounted() {}
+  @Watch('dishFlavors')
+  changeDishFlavors() {
+    this.getLeftDishFlavors()
+  }
+
+  getLeftDishFlavors() {
+    let arr = []
+    this.dishFlavorsData.map(item => {
+      if (
+        this.dishFlavors.findIndex(item1 => item.name === item1.name) === -1
+      ) {
+        arr.push(item)
+      }
+    })
+    this.leftDishFlavors = arr
+  }
+
+  private selectHandle(val: any, key: any, ind: any) {
+    const arrDate = [...this.dishFlavors]
+    const index = this.dishFlavorsData.findIndex(item => item.name === val)
+    arrDate[key] = JSON.parse(JSON.stringify(this.dishFlavorsData[index]))
+    this.dishFlavors = arrDate
+  }
+
+  private async init() {
+    queryDishById(this.$route.query.id).then(res => {
+      if (res && res.data && res.data.code === 1) {
+        this.ruleForm = { ...res.data.data }
+        this.ruleForm.price = String(res.data.data.price)
+        this.ruleForm.status = res.data.data.status == '1'
+        this.dishFlavors =
+          res.data.data.flavors &&
+          res.data.data.flavors.map(obj => ({
+            ...obj,
+            value: JSON.parse(obj.value)
+          }))
+        let arr = []
+        this.getLeftDishFlavors()
+        this.imageUrl = res.data.data.image
+      } else {
+        this.$message.error(res.data.msg)
+      }
+    })
+  }
+
+  private addFlavore() {
+    this.dishFlavors.push({ name: '', value: [] }) // JSON.parse(JSON.stringify(this.dishFlavorsData))
+  }
+
+  private delFlavor(name: string) {
+    let ind = this.dishFlavors.findIndex(item => item.name === name)
+    this.dishFlavors.splice(ind, 1)
+  }
+
+  private delFlavorLabel(index: number, ind: number) {
+    this.dishFlavors[index].value.splice(ind, 1)
+  }
+
+  private flavorPosition(index: number) {
+    this.index = index
+  }
+
+  private keyDownHandle(val: any) {
+    if (event) {
+      event.cancelBubble = true
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    if (val.target.innerText.trim() != '') {
+      this.dishFlavors[this.index].flavorData.push(val.target.innerText)
+      val.target.innerText = ''
+    }
+  }
+
+  private getDishList() {
+    getCategoryList({ type: 1 }).then(res => {
+      if (res.data.code === 1) {
+        this.dishList = res && res.data && res.data.data
+      } else {
+        this.$message.error(res.data.msg)
+      }
+      // if (res.data.code == 200) {
+      //   const {data} = res.data
+      //   this.dishList = data
+      // } else {
+      //   this.$message.error(res.data.desc)
+      // }
+    })
+  }
+
+  private getFlavorListHand() {
+    // flavor flavorData
+    this.dishFlavorsData = [
+      { name: '甜味', value: ['无糖', '少糖', '半糖', '多糖', '全糖'] },
+      { name: '温度', value: ['热饮', '常温', '去冰', '少冰', '多冰'] },
+      { name: '忌口', value: ['不要葱', '不要蒜', '不要香菜', '不要辣'] },
+      { name: '辣度', value: ['不辣', '微辣', '中辣', '重辣'] }
+    ]
+  }
+
+  private submitForm(formName: any, st: any) {
+    ;(this.$refs[formName] as any).validate((valid: any) => {
+      console.log(valid, 'valid')
+      if (valid) {
+        if (!this.ruleForm.image) return this.$message.error(String(this.$t('catalog.imageRequired')))
+        let params: any = { ...this.ruleForm }
+        // params.flavors = this.dishFlavors
+        params.status =
+          this.actionType === 'add' ? 0 : this.ruleForm.status ? 1 : 0
+        // params.price *= 100
+        params.categoryId = this.ruleForm.categoryId
+        params.flavors = this.dishFlavors.map(obj => ({
+          ...obj,
+          value: JSON.stringify(obj.value)
+        }))
+        delete params.dishFlavors
+        if (this.actionType == 'add') {
+          delete params.id
+          addDish(params)
+            .then(res => {
+              if (res.data.code === 1) {
+                this.$message.success(String(this.$t('catalog.dishAdded')))
+                if (!st) {
+                  this.$router.push({ path: '/dish' })
+                } else {
+                  this.dishFlavors = []
+                  // this.dishFlavorsData = []
+                  this.imageUrl = ''
+                  this.ruleForm = {
+                    name: '',
+                    id: '',
+                    price: '',
+                    code: '',
+                    image: '',
+                    description: '',
+                    dishFlavors: [],
+                    status: true,
+                    categoryId: ''
+                  }
+                  this.restKey++
+                }
+              } else {
+                this.$message.error(res.data.desc || res.data.msg)
+              }
+            })
+            .catch(err => {
+              this.$message.error(String(this.$t('catalog.requestFailed')))
+            })
+        } else {
+          delete params.createTime
+          delete params.updateTime
+          editDish(params)
+            .then(res => {
+              if (res && res.data && res.data.code === 1) {
+                this.$router.push({ path: '/dish' })
+                this.$message.success(String(this.$t('catalog.dishEdited')))
+              } else {
+                this.$message.error(res.data.desc || res.data.msg)
+              }
+              // if (res.data.code == 200) {
+              //   this.$router.push({'path': '/dish'})
+              //   this.$message.success(String(this.$t('catalog.dishEdited')))
+              // } else {
+              //   this.$message.error(res.data.desc || res.data.message)
+              // }
+            })
+            .catch(err => {
+              this.$message.error(String(this.$t('catalog.requestFailed')))
+            })
+        }
+      } else {
+        return false
+      }
+    })
+  }
+
+  imageChange(value: any) {
+    this.ruleForm.image = value
+  }
+}
+</script>
+<style lang="scss" scoped>
+.addBrand-container {
+  .el-form--inline .el-form-item__content {
+    width: 293px;
+  }
+
+  .el-input {
+    width: 350px;
+  }
+
+  .address {
+    .el-form-item__content {
+      width: 777px !important;
+    }
+  }
+}
+</style>
+<style lang="scss" scoped>
+.addBrand {
+  &-container {
+    margin: 30px;
+
+    .container {
+      position: relative;
+      z-index: 1;
+      background: #fff;
+      padding: 30px;
+      border-radius: 4px;
+      min-height: 500px;
+
+      .subBox {
+        padding-top: 30px;
+        text-align: center;
+        border-top: solid 1px $gray-5;
+      }
+      .upload-item {
+        .el-form-item__error {
+          top: 90%;
+        }
+      }
+    }
+  }
+}
+
+.flavorBox {
+  width: 777px;
+
+  .addBut {
+    background: #ffc200;
+    display: inline-block;
+    padding: 0px 20px;
+    border-radius: 3px;
+    line-height: 40px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #333333;
+    font-weight: 500;
+  }
+
+  .flavor {
+    border: solid 1px #dfe2e8;
+    border-radius: 3px;
+    padding: 15px;
+    background: #fafafb;
+
+    .title {
+      color: #606168;
+      .des-box {
+        padding-left: 44px;
+      }
+    }
+
+    .cont {
+      .items {
+        display: flex;
+        margin: 10px 0;
+
+        .itTit {
+          width: 150px;
+          margin-right: 15px;
+
+          input {
+            width: 100%;
+            // line-height: 40px;
+            // border-radius: 3px;
+            // padding: 0 10px;
+          }
+        }
+
+        .labItems {
+          flex: 1;
+          display: flex;
+          flex-wrap: wrap;
+          border-radius: 3px;
+          min-height: 39px;
+          border: solid 1px #d8dde3;
+          background: #fff;
+          padding: 0 5px;
+
+          span {
+            display: inline-block;
+            color: #ffc200;
+            margin: 5px;
+            line-height: 26px;
+            padding: 0 10px;
+            background: #fffbf0;
+            border: 1px solid #fbe396;
+            border-radius: 4px;
+            font-size: 12px;
+
+            i {
+              cursor: pointer;
+              font-style: normal;
+            }
+          }
+
+          .inputBox {
+            display: inline-block;
+            width: 100%;
+            height: 36px;
+            line-height: 36px;
+            overflow: hidden;
+          }
+        }
+
+        .delFlavor {
+          display: inline-block;
+          padding: 0 10px;
+          color: #f19c59;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+</style>
+
+<style scoped>
+.translation-preview { max-width: 480px; margin: 6px 0 0; color: #666; font-size: 12px; line-height: 1.5; overflow-wrap: break-word; }
+</style>

@@ -1,4 +1,8 @@
 sky:
+  payment:
+    mock-enabled: true
+  shop:
+    address: 北京市朝阳区工人体育场北路8号
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     host: localhost
@@ -6,3 +10,22 @@ sky:
     database: sky_take_out
     username: root
     password: ${DB_PASSWORD}
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME}
+    api-key: ${CLOUDINARY_API_KEY}
+    api-secret: ${CLOUDINARY_API_SECRET}
+  redis:
+    host: localhost
+    port: 6379
+    password: ${REDIS_PASSWORD}
+    database: 0
+  wechat:
+    appid: ${WECHAT_APPID}
+    secret: ${WECHAT_SECRET}
+    mchid: ${WECHAT_MCHID:}
+    mchSerialNo: ${WECHAT_MCH_SERIAL_NO:}
+    privateKeyFilePath: ${WECHAT_PRIVATE_KEY_FILE_PATH:}
+    apiV3Key: ${WECHAT_API_V3_KEY:}
+    weChatPayCertFilePath: ${WECHAT_PAY_CERT_FILE_PATH:}
+    notifyUrl: ${WECHAT_NOTIFY_URL:}
+    refundNotifyUrl: ${WECHAT_REFUND_NOTIFY_URL:}

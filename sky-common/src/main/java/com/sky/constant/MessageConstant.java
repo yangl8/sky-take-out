@@ -1,13 +1,11 @@
 package com.sky.constant;
 
-/**
- * 信息提示常量类
- */
 public class MessageConstant {
 
     public static final String PASSWORD_ERROR = "密码错误";
     public static final String ACCOUNT_NOT_FOUND = "账号不存在";
     public static final String ACCOUNT_LOCKED = "账号被锁定";
+    public static final String ALREADY_EXISTS = "已存在";
     public static final String UNKNOWN_ERROR = "未知错误";
     public static final String USER_NOT_LOGIN = "用户未登录";
     public static final String CATEGORY_BE_RELATED_BY_SETMEAL = "当前分类关联了套餐,不能删除";
@@ -23,5 +21,15 @@ public class MessageConstant {
     public static final String DISH_BE_RELATED_BY_SETMEAL = "当前菜品关联了套餐,不能删除";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";
+    public static final String DELIVERY_TYPE_INVALID = "配送方式无效，无法下单";
+    public static final String DELIVERY_TIME_REQUIRED = "请选择有效的预约送达时间";
+    public static final String DELIVERY_PREPARATION_TIME_NOT_MET = "预约送达时间不足最短准备时间";
+    public static final String DELIVERY_TIME_OUTSIDE_BUSINESS_HOURS = "预约送达时间不在允许营业时段内";
+    public static final String SHOP_CLOSED_FOR_IMMEDIATE_DELIVERY = "店铺当前未营业，无法提交立即配送订单";
+    public static final String SHOP_STATUS_UNAVAILABLE = "店铺营业状态暂不可用，请稍后重试";
+    public static final String ORDER_PAYMENT_EXPIRED = "订单超过15分钟付款期限，无法继续支付";
+    public static final String ORDER_PAYMENT_NOT_ALLOWED = "订单当前状态不允许支付";
+    public static final String SCHEDULED_ORDER_PREPARATION_TIME_NOT_MET = "预约送达时间不足30分钟准备时间，无法支付";
+    public static final String SHOP_CLOSED_FOR_IMMEDIATE_PAYMENT = "店铺当前未营业，无法发起立即配送支付";
 
 }

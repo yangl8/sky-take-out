@@ -1,0 +1,45 @@
+{
+  "finalBaselineRun": "interleavedFollowup",
+  "previousBaseline": {
+  "environment": {
+    "mysqlVersion": "9.2.0",
+    "javaVersion": "17.0.18",
+    "os": "Mac OS X",
+    "architecture": "aarch64",
+    "availableProcessors": 8,
+    "capturedAt": "2026-10-10T09:54:54.366037Z",
+    "database": "sky_take_out_perf_test",
+    "orders": 10000,
+    "orderDetails": 30000
+  },
+  "method": {"warmups": 5, "samples": 40, "queryPath": "OrderMapper.pageQuery + PageHelper + OrderDetailMapper.getByOrderId per row"},
+  "pages": [
+    {"pageSize": 10, "returnedOrders": 10, "totalSqlQueries": 12, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 10, "medianMs": 18.457, "p95Ms": 35.062, "latencySamplesMs": [16.284, 16.313, 16.382, 16.389, 16.419, 16.596, 16.745, 17.040, 17.081, 17.092, 17.133, 17.271, 17.474, 17.558, 17.733, 17.880, 18.072, 18.077, 18.136, 18.398, 18.517, 18.878, 19.876, 20.030, 20.252, 20.970, 21.208, 21.239, 21.330, 21.612, 21.793, 22.453, 23.903, 24.176, 27.261, 29.375, 30.969, 35.062, 47.692, 71.729]},
+    {"pageSize": 20, "returnedOrders": 20, "totalSqlQueries": 22, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 20, "medianMs": 17.936, "p95Ms": 26.090, "latencySamplesMs": [15.166, 16.552, 16.716, 16.730, 16.786, 16.857, 16.863, 17.108, 17.209, 17.226, 17.227, 17.279, 17.406, 17.520, 17.522, 17.666, 17.705, 17.777, 17.797, 17.909, 17.962, 17.963, 18.009, 18.043, 18.086, 18.402, 18.680, 18.804, 18.940, 18.972, 19.276, 19.720, 19.866, 20.541, 22.496, 23.521, 24.540, 26.090, 32.656, 36.236]},
+    {"pageSize": 50, "returnedOrders": 50, "totalSqlQueries": 52, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 50, "medianMs": 20.030, "p95Ms": 21.645, "latencySamplesMs": [18.629, 18.969, 19.083, 19.132, 19.298, 19.302, 19.352, 19.378, 19.397, 19.411, 19.425, 19.465, 19.496, 19.598, 19.655, 19.769, 19.796, 19.971, 19.975, 19.984, 20.076, 20.094, 20.122, 20.123, 20.224, 20.343, 20.412, 20.430, 20.445, 20.721, 20.872, 20.884, 20.940, 21.249, 21.340, 21.356, 21.642, 21.645, 21.776, 25.086]}
+  ],
+  "explain": "EXPLAIN SELECT count(0) FROM orders WHERE user_id = 9001 AND EXISTS (SELECT 1 FROM order_detail od WHERE od.order_id = orders.id)\n1 | SIMPLE | orders | null | ref | PRIMARY,idx_orders_user_time | idx_orders_user_time | 9 | const | 5000 | 100.0 | Using index\n1 | SIMPLE | <subquery2> | null | eq_ref | <auto_distinct_key> | <auto_distinct_key> | 8 | sky_take_out_perf_test.orders.id | 1 | 100.0 | null\n2 | MATERIALIZED | od | null | index | idx_order_detail_order_id | idx_order_detail_order_id | 8 | null | 30000 | 100.0 | Using index\nEXPLAIN SELECT * FROM orders WHERE user_id = 9001 AND EXISTS (SELECT 1 FROM order_detail od WHERE od.order_id = orders.id) ORDER BY order_time DESC LIMIT 0, 10\n1 | SIMPLE | orders | null | ref | PRIMARY,idx_orders_user_time | idx_orders_user_time | 9 | const | 5000 | 100.0 | Backward index scan\n1 | SIMPLE | <subquery2> | null | eq_ref | <auto_distinct_key> | <auto_distinct_key> | 8 | sky_take_out_perf_test.orders.id | 1 | 100.0 | null\n2 | MATERIALIZED | od | null | index | idx_order_detail_order_id | idx_order_detail_order_id | 8 | null | 30000 | 100.0 | Using index\nEXPLAIN SELECT * FROM order_detail WHERE order_id = 1\n1 | SIMPLE | order_detail | null | ref | idx_order_detail_order_id | idx_order_detail_order_id | 8 | const | 3 | 100.0 | null\n"
+}
+,
+  "interleavedFollowup": {
+  "environment": {
+    "mysqlVersion": "9.2.0",
+    "javaVersion": "17.0.18",
+    "os": "Mac OS X",
+    "architecture": "aarch64",
+    "availableProcessors": 8,
+    "capturedAt": "2026-10-10T10:00:01.918549Z",
+    "database": "sky_take_out_perf_test",
+    "orders": 10000,
+    "orderDetails": 30000
+  },
+  "method": {"warmupsPerPageSize": 30, "samplesPerPageSize": 100, "schedule": "cyclic-interleaved", "orderRotation": "10,20,50 / 20,50,10 / 50,10,20", "sampleOrder": "chronological", "queryPath": "OrderMapper.pageQuery + PageHelper + OrderDetailMapper.getByOrderId per row"},
+  "pages": [
+    {"pageSize": 10, "returnedOrders": 10, "totalSqlQueries": 12, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 10, "medianMs": 10.398, "p95Ms": 11.138, "latencySamplesMs": [10.679, 11.089, 10.623, 10.437, 10.258, 12.625, 10.579, 11.066, 10.497, 11.037, 10.522, 10.301, 11.045, 10.248, 10.170, 10.687, 10.220, 113.764, 11.528, 10.440, 10.549, 10.879, 10.525, 10.384, 10.659, 10.056, 10.406, 10.975, 10.420, 10.482, 11.039, 10.422, 10.307, 11.049, 10.350, 10.389, 10.956, 10.580, 10.701, 11.049, 10.193, 10.899, 10.749, 10.277, 10.268, 10.951, 10.441, 10.507, 10.804, 10.299, 11.138, 11.016, 10.267, 10.323, 10.200, 10.126, 10.251, 10.944, 10.343, 10.329, 11.036, 10.341, 10.222, 10.285, 10.289, 10.439, 10.370, 9.820, 9.618, 10.024, 10.041, 10.544, 11.497, 10.181, 10.130, 10.996, 10.843, 10.250, 10.905, 10.294, 10.046, 10.058, 9.947, 10.414, 11.099, 10.105, 10.002, 10.213, 10.152, 10.179, 10.213, 10.074, 9.956, 10.023, 10.418, 12.456, 10.383, 10.332, 10.128, 10.042]},
+    {"pageSize": 20, "returnedOrders": 20, "totalSqlQueries": 22, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 20, "medianMs": 12.666, "p95Ms": 13.713, "latencySamplesMs": [13.583, 12.999, 12.705, 13.340, 12.662, 12.468, 13.202, 12.462, 12.289, 13.434, 13.030, 11.902, 13.817, 12.577, 12.500, 13.417, 13.262, 30.838, 13.591, 11.963, 12.329, 13.293, 13.190, 12.590, 13.045, 12.263, 12.456, 13.218, 13.470, 13.063, 13.362, 12.872, 12.503, 13.430, 13.090, 12.394, 13.220, 13.095, 12.770, 13.468, 12.095, 13.382, 13.465, 12.179, 12.025, 13.375, 12.378, 11.960, 13.713, 12.169, 13.253, 13.063, 12.473, 12.149, 17.275, 13.896, 11.911, 12.920, 11.918, 12.280, 13.216, 12.253, 12.467, 11.947, 12.039, 12.204, 12.609, 12.140, 11.771, 12.065, 12.192, 13.281, 13.387, 12.833, 12.867, 13.411, 12.438, 12.055, 13.878, 12.960, 12.147, 13.181, 13.387, 12.257, 13.432, 12.669, 12.064, 13.084, 11.792, 12.090, 13.115, 12.345, 11.912, 13.137, 12.637, 12.191, 12.426, 12.180, 11.996, 12.115]},
+    {"pageSize": 50, "returnedOrders": 50, "totalSqlQueries": 52, "countQueries": 1, "orderPageQueries": 1, "detailQueries": 50, "medianMs": 18.663, "p95Ms": 20.251, "latencySamplesMs": [19.427, 18.539, 17.585, 19.279, 18.232, 17.733, 19.293, 19.025, 18.308, 20.055, 18.445, 18.736, 20.487, 18.954, 18.135, 20.026, 18.437, 19.645, 20.005, 17.773, 18.848, 20.830, 18.166, 19.476, 19.287, 17.354, 17.673, 21.972, 20.315, 19.053, 20.019, 18.693, 17.885, 19.734, 17.834, 19.079, 18.979, 18.628, 19.239, 20.023, 19.085, 18.677, 19.126, 17.306, 19.072, 19.563, 18.377, 19.059, 18.655, 17.493, 19.398, 18.962, 17.779, 16.990, 19.954, 18.443, 16.965, 19.853, 18.670, 18.552, 19.103, 19.228, 17.716, 18.369, 18.355, 18.129, 18.773, 17.633, 17.044, 16.375, 16.522, 18.694, 21.356, 18.407, 17.688, 19.925, 18.332, 18.605, 18.939, 19.118, 17.623, 19.485, 18.342, 16.975, 19.668, 18.546, 18.119, 20.251, 19.159, 17.774, 19.452, 17.654, 18.502, 18.939, 18.610, 17.102, 18.463, 17.456, 17.887, 18.561]}
+  ],
+  "explain": "EXPLAIN SELECT count(0) FROM orders WHERE user_id = 9001 AND EXISTS (SELECT 1 FROM order_detail od WHERE od.order_id = orders.id)\n1 | SIMPLE | orders | null | ref | PRIMARY,idx_orders_user_time | idx_orders_user_time | 9 | const | 4904 | 100.0 | Using index\n1 | SIMPLE | od | null | ref | idx_order_detail_order_id | idx_order_detail_order_id | 8 | sky_take_out_perf_test.orders.id | 2 | 100.0 | Using index; FirstMatch(orders)\nEXPLAIN SELECT * FROM orders WHERE user_id = 9001 AND EXISTS (SELECT 1 FROM order_detail od WHERE od.order_id = orders.id) ORDER BY order_time DESC LIMIT 0, 10\n1 | SIMPLE | orders | null | ref | PRIMARY,idx_orders_user_time | idx_orders_user_time | 9 | const | 4904 | 100.0 | Backward index scan\n1 | SIMPLE | od | null | ref | idx_order_detail_order_id | idx_order_detail_order_id | 8 | sky_take_out_perf_test.orders.id | 2 | 100.0 | Using index; FirstMatch(orders)\nEXPLAIN SELECT * FROM order_detail WHERE order_id = 1\n1 | SIMPLE | order_detail | null | ref | idx_order_detail_order_id | idx_order_detail_order_id | 8 | const | 3 | 100.0 | null\n"
+}
+
+}

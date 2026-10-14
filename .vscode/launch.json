@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "SkyApplication",
+      "request": "launch",
+      "mainClass": "com.sky.SkyApplication",
+      "projectName": "sky-server",
+      "vmArgs": "-Dspring.profiles.active=dev",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
